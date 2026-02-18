@@ -24,7 +24,9 @@ module.exports = {
             "border-light": "#dbdee6",
             "success": "#07883d",
             "warning": "#eab308",
+            "error-red": "#DC2626",
             "danger": "#e73c08"
+
       },
 
       fontFamily: {
