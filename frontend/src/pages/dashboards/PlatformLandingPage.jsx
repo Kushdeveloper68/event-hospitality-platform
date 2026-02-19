@@ -1,5 +1,5 @@
 import React from "react";
-import Footer from './../../components';
+import {Footer} from '../../components';
 
 function PlatformLandingPage() {
   return (
@@ -189,7 +189,7 @@ function PlatformLandingPage() {
                 },
                 ].map((item , index)=> (
                     // Steps 
-                <div className="flex flex-col items-center text-center bg-white px-4">
+                <div className="flex flex-col items-center text-center bg-white px-4" key={index}>
                   <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center font-bold text-2xl mb-6 shadow-lg z-10">
                    {item.step}
                   </div>
