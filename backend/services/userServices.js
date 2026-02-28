@@ -7,6 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
 const JWT_EXPIRE = '7d';
 const OTP_EXPIRY_MINUTES = 10;
 
+
 class UserServiceClass {
     // Generate JWT token
     generateToken(userId) {

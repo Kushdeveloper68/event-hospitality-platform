@@ -15,6 +15,8 @@ const api = axios.create({
  * @param {Object} userData - {email, password, name, organizationName, termCondition}
  * @returns {Promise}
  */
+
+
 export const signupInitiate = async (userData) => {
     try {
         const response = await api.post('/signup', userData);

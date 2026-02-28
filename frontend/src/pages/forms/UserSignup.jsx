@@ -183,7 +183,7 @@ function UserSignup() {
           )}
 
           {/* <!-- STEP 1: Signup Form --> */}
-          {step === 1 && (
+          { step === 1 && (
             <form className="space-y-5" onSubmit={handleSignupSubmit}>
               {/* <!-- Full Name --> */}
               <div className="space-y-2">

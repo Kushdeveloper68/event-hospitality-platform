@@ -34,7 +34,7 @@ import EmptyStateWorkSpace from "./others/EmptyStateWorkSpace";
 import GuestProfileView from "./others/GuestProfileView";
 import LogoutConfirmation from "./others/LogoutConfirmation";
 import OprationSuccessIndicator from "./others/OprationSuccessIndicator";
-import PageNotFound from "./../../../../apex-web/frontend/src/pages/PageNotFound";
+import PageNotFound from "./others/PageNotFound";
 import SystemLoadingState from "./others/SystemLoadingState";
 import UnauthorizedAccessWarning from "./others/UnauthorizedAccessWarning";
 
