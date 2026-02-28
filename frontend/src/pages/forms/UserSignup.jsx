@@ -3,17 +3,17 @@ import React, {useState, useEffect} from "react"
 function UserSignup() {
   const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-   const [fullName, setFullName] = useState('')
-   const [oragnizationName, setOragnizationName] = useState('')
-   const [isTermConditions, setIsTermConditions] = useState(false)
+   const [name, setName] = useState('')
+   const [organizationName, setOrganizationName] = useState('')
+   const [termConditions, setTermConditions] = useState(false)
 
    useEffect(() => {
      console.log(email)
      console.log(password )
-     console.log(fullName )  
-     console.log(oragnizationName)  
-     console.log(isTermConditions)  
-   }, [email, password, fullName, oragnizationName, isTermConditions])
+     console.log(name )  
+     console.log(organizationName)  
+     console.log(termConditions)  
+   }, [email, password, name, organizationName, termConditions])
    
    const submit = () =>  {
     // api login here.....
@@ -63,7 +63,7 @@ function UserSignup() {
               <div className="relative">
                 <input
                   className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                  placeholder="John Doe" type="text" value={fullName} onChange={(e) => {setFullName(e.target.value)}} />
+                  placeholder="John Doe" type="text" value={name} onChange={(e) => {setName(e.target.value)}} />
               </div>
             </div>
             {/* <!-- Business Email --> */}
@@ -78,7 +78,7 @@ function UserSignup() {
               <label className="block text-sm font-semibold text-neutral-text dark:text-gray-200">Organization Name</label>
               <input
                 className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                placeholder="Acme Events Corp" type="text" value={oragnizationName} onChange={(e) => {setOragnizationName(e.target.value)}} />
+                placeholder="Acme Events Corp" type="text" value={organizationName} onChange={(e) => {setOrganizationName(e.target.value)}} />
             </div>
             {/* <!-- Password --> */}
             <div className="space-y-2">
@@ -100,7 +100,7 @@ function UserSignup() {
             {/* <!-- Terms --> */}
             <div className="flex items-start gap-3 py-2">
               <input className="mt-1 size-4 rounded border-border-subtle text-primary focus:ring-primary" id="terms"
-                type="checkbox" value={isTermConditions}  onChange={(e) => {setIsTermConditions(e.target.checked)}}/>
+                type="checkbox" value={termConditions}  onChange={(e) => {setTermConditions(e.target.checked)}}/>
               <label className="text-sm text-gray-500 dark:text-gray-400 leading-tight" for="terms">
                 I agree to the
                 <a className="text-primary hover:underline" href="#">Terms of Service</a>
