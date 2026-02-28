@@ -1,9 +1,9 @@
 import './App.css'
-import {PlatformLandingPage} from "./pages"
+import {UserSignup} from "./pages"
 function App() {
   return (
     <>
-   < PlatformLandingPage/>
+   < UserSignup/>
     </>
   )
 }
