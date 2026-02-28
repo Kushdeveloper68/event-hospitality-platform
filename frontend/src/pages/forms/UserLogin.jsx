@@ -1,13 +1,43 @@
-import React, {useState, useEffect} from "react"
+import React, {useState} from "react"
+import { loginUser } from "../../api/userApi"
 
 function UserLogin() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
-const submit = () => {
-  // here api logic define
-}
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    // Validation
+    if (!email || !password) {
+      setError('Email and password are required')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await loginUser(email, password)
+
+      if (response.success) {
+        setSuccess('Login successful! Redirecting...')
+        setTimeout(() => {
+          window.location.href = '/dashboard' // Redirect to dashboard
+        }, 2000)
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <>
@@ -43,8 +73,21 @@ const submit = () => {
               Please enter your details to sign in.
             </p>
           </div>
+
+          {/* <!-- Alert Messages --> */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            </div>
+          )}
+          {success && (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm text-green-700 dark:text-green-400">{success}</p>
+            </div>
+          )}
+
           {/* <!-- Login Form --> */}
-          <form action="#" className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* <!-- Email Field --> */}
             <div>
               <label
@@ -55,16 +98,18 @@ const submit = () => {
               </label>
               <div className="relative">
                 <input
-                  className="block w-full rounded-lg border border-[#d1d5db] dark:border-[#374151] bg-white dark:bg-[#111621] px-4 py-3 text-[#111827] dark:text-white placeholder-[#9ca3af] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                  className="block w-full rounded-lg border border-[#d1d5db] dark:border-[#374151] bg-white dark:bg-[#111621] px-4 py-3 text-[#111827] dark:text-white placeholder-[#9ca3af] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm disabled:bg-gray-100 dark:disabled:bg-gray-800"
                   id="email"
                   placeholder="Enter your email"
-                  required=""
+                  required
                   type="email"
                   value={email}
-                  onChange={(e)=>{setEmail(e.target.value)}}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
                 />
               </div>
             </div>
+
             {/* <!-- Password Field --> */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -76,31 +121,35 @@ const submit = () => {
                 </label>
                 <a
                   className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                  href="#"
+                  href="/forgot-password"
                 >
                   Forgot password?
                 </a>
               </div>
               <div className="relative">
                 <input
-                  className="block w-full rounded-lg border border-[#d1d5db] dark:border-[#374151] bg-white dark:bg-[#111621] px-4 py-3 text-[#111827] dark:text-white placeholder-[#9ca3af] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm"
+                  className="block w-full rounded-lg border border-[#d1d5db] dark:border-[#374151] bg-white dark:bg-[#111621] px-4 py-3 text-[#111827] dark:text-white placeholder-[#9ca3af] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm disabled:bg-gray-100 dark:disabled:bg-gray-800"
                   id="password"
                   placeholder="Enter your password"
-                  required=""
-                  type="password"
+                  required
+                  type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={(e)=>{setPassword(e.target.value)}}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                 />
                 <button
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6b7280] hover:text-[#111827] dark:hover:text-white transition-colors"
                   type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={loading}
                 >
                   <span className="material-symbols-outlined text-lg">
-                    visibility
+                    {showPassword ? 'visibility_off' : 'visibility'}
                   </span>
                 </button>
               </div>
             </div>
+
             {/* <!-- Remember Me & Terms (Optional context placeholder) --> */}
             <div className="flex items-center">
               <input
@@ -108,8 +157,9 @@ const submit = () => {
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                value={rememberMe}
-                onChange={(e)=>{setRememberMe(e.target.checked)}}
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                disabled={loading}
               />
               <label
                 className="ml-2 block text-xs text-[#6b7280] dark:text-[#9ca3af]"
@@ -118,27 +168,31 @@ const submit = () => {
                 Remember me for 30 days
               </label>
             </div>
+
             {/* <!-- Sign In Button --> */}
             <button
-              className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
+              className="flex w-full items-center justify-center rounded-lg bg-primary disabled:bg-gray-400 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
               type="submit"
+              disabled={loading}
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
+
           {/* <!-- Footer Section --> */}
           <div className="mt-8 border-t border-[#f3f4f6] dark:border-[#2d3646] pt-6 text-center">
             <p className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
               Don't have an account?
               <a
                 className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                href="#"
+                href="/signup"
               >
                 Create an account
               </a>
             </p>
           </div>
         </div>
+
         {/* <!-- Decorative Background Element (Subtle context indicator) --> */}
         <div className="mt-8 text-center opacity-40">
           <p className="text-xs font-medium uppercase tracking-widest text-[#6b7280] dark:text-[#9ca3af]">
@@ -146,6 +200,7 @@ const submit = () => {
           </p>
         </div>
       </div>
+
       {/* <!-- Image Placeholder Context (Background decorative pattern) --> */}
       <div className="fixed top-0 left-0 -z-10 h-full w-full pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"></div>

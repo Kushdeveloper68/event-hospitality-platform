@@ -1,6 +1,9 @@
 const UserService = require("../services/userServices")
+const UserModel = require("../models/userModel");
+const bcrypt = require("bcryptjs");
 
-async function CreateUser(req, res) {
+// Step 1: Initiate signup and send OTP
+async function SignupInitiate(req, res) {
     try {
         const { email, password, name, organizationName, termCondition } = req.body;
 
@@ -19,14 +22,68 @@ async function CreateUser(req, res) {
             });
         }
 
-        // Create user
-        const user = await UserService.createUser({
-            email,
-            password,
-            name,
-            organizationName,
-            termCondition
+        // Check if email already exists and is verified
+        const existingUser = await UserModel.findOne({ email });
+        if (existingUser && existingUser.isEmailVerified) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email already registered' 
+            });
+        }
+
+        let user = existingUser;
+
+        // If user doesn't exist, create a temporary user (not verified yet)
+        if (!user) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            user = new UserModel({
+                email,
+                password: hashedPassword,
+                name,
+                organizationName,
+                termCondition,
+                isEmailVerified: false
+            });
+            await user.save();
+        }
+
+        // Send OTP
+        await UserService.sendOTPToEmail(email, name);
+
+        return res.status(200).json({
+            success: true,
+            message: 'OTP sent to your email. Please verify to complete signup.',
+            email
         });
+
+    } catch (error) {
+        return res.status(400).json({ 
+            success: false, 
+            message: error.message || 'Error initiating signup' 
+        });
+    }
+}
+
+// Step 2: Verify OTP and complete signup
+async function VerifyOTP(req, res) {
+    try {
+        const { email, otp } = req.body;
+
+        // Validation
+        if (!email || !otp) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email and OTP are required' 
+            });
+        }
+
+        // Verify OTP
+        await UserService.verifyOTP(email, otp);
+
+        // Get user
+        const user = await UserModel.findOne({ email });
 
         // Generate JWT token
         const token = UserService.generateToken(user._id);
@@ -38,9 +95,9 @@ async function CreateUser(req, res) {
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
-        return res.status(201).json({
+        return res.status(200).json({
             success: true,
-            message: 'User created successfully',
+            message: 'Email verified successfully. Welcome!',
             token,
             user: {
                 id: user._id,
@@ -53,7 +110,43 @@ async function CreateUser(req, res) {
     } catch (error) {
         return res.status(400).json({ 
             success: false, 
-            message: error.message || 'Error creating user' 
+            message: error.message || 'Error verifying OTP' 
+        });
+    }
+}
+
+// Resend OTP
+async function ResendOTP(req, res) {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Email is required' 
+            });
+        }
+
+        const user = await UserModel.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'User not found' 
+            });
+        }
+
+        // Send OTP
+        await UserService.sendOTPToEmail(email, user.name);
+
+        return res.status(200).json({
+            success: true,
+            message: 'OTP resent to your email'
+        });
+
+    } catch (error) {
+        return res.status(400).json({ 
+            success: false, 
+            message: error.message || 'Error resending OTP' 
         });
     }
 }
@@ -74,6 +167,14 @@ async function LoginUser(req, res) {
 
         // Authenticate user
         const user = await UserService.loginUser(email, password);
+
+        // Check if email is verified
+        if (!user.isEmailVerified) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Please verify your email first' 
+            });
+        }
 
         // Generate JWT token
         const token = UserService.generateToken(user._id);
@@ -106,4 +207,4 @@ async function LoginUser(req, res) {
 }
 
 
-module.exports = { CreateUser, LoginUser }
+module.exports = { SignupInitiate, VerifyOTP, ResendOTP, LoginUser }

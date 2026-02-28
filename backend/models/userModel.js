@@ -24,6 +24,18 @@ const User = Schema({
         type:Boolean,
         required:true,
         default:false
+    },
+    isEmailVerified:{
+        type:Boolean,
+        default:false
+    },
+    otp:{
+        type:String,
+        default:null
+    },
+    otpExpiry:{
+        type:Date,
+        default:null
     }
 }, {timestamps:true})
 
