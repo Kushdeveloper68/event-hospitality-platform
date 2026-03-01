@@ -12,8 +12,9 @@ class UserServiceClass {
     // Generate JWT token
     generateToken(userId) {
         try {
+            // include `id` claim so middleware/controllers can read `req.user.id`
             const token = jwt.sign(
-                { userId, email: userId },
+                { id: userId },
                 JWT_SECRET,
                 { expiresIn: JWT_EXPIRE }
             );

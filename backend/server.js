@@ -8,7 +8,7 @@ const path = require('path')
 const port = process.env.PORT || 5000
 const connectToMongoDB = require('./connections/mongodbConnection')
 const userRoutes = require('./routes/userRoutes')
-
+const eventRoutes = require('./routes/eventRoutes')
 // connect to MongoDB
 connectToMongoDB(process.env.MONGO_URI)
 
@@ -25,7 +25,7 @@ app.use(cors({
 
 
 app.use('/api/users', userRoutes)
-
+app.use('/api/events', eventRoutes)
 
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)
