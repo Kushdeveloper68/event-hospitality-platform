@@ -2,87 +2,7 @@ import React from 'react'
 
 function OrganizationAnalyticsDashboards() {
   return (
-    <div className="flex h-screen overflow-hidden">
-    {/* <!-- Sidebar Navigation --> */}
-    <aside className="w-64 bg-white border-r border-[#e5e7eb] flex flex-col shrink-0">
-      <div className="p-6 flex items-center gap-3">
-        <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
-          <span className="material-symbols-outlined text-2xl">rocket_launch</span>
-        </div>
-        <div>
-          <h1 className="text-[#111318] text-base font-bold leading-none">EventOps Pro</h1>
-          <p className="text-[#616e89] text-xs mt-1">Enterprise SaaS</p>
-        </div>
-      </div>
-      <nav className="flex-1 px-4 space-y-1 mt-4">
-        <a className="flex items-center gap-3 px-3 py-2 text-[#616e89] hover:bg-background-light rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined">dashboard</span>
-          <span className="text-sm font-medium">Dashboard</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-[#616e89] hover:bg-background-light rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined">calendar_today</span>
-          <span className="text-sm font-medium">Events</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
-          <span className="material-symbols-outlined">monitoring</span>
-          <span className="text-sm font-medium">Analytics</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-[#616e89] hover:bg-background-light rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined">group</span>
-          <span className="text-sm font-medium">Teams</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-[#616e89] hover:bg-background-light rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined">description</span>
-          <span className="text-sm font-medium">Reports</span>
-        </a>
-      </nav>
-      <div className="p-4 border-t border-[#e5e7eb]">
-        <a className="flex items-center gap-3 px-3 py-2 text-[#616e89] hover:bg-background-light rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined">settings</span>
-          <span className="text-sm font-medium">Settings</span>
-        </a>
-        <div className="mt-4 flex items-center gap-3 px-3">
-          <div className="size-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-primary text-xs font-bold">JD</span>
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold truncate text-[#111318]">Jane Doe</p>
-            <p className="text-xs text-[#616e89] truncate">jane@eventops.com</p>
-          </div>
-        </div>
-      </div>
-    </aside>
-    {/* <!-- Main Content Area --> */}
-    <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-      {/* <!-- Header --> */}
-      <header className="h-16 bg-white border-b border-[#e5e7eb] flex items-center justify-between px-8 shrink-0">
-        <div className="flex items-center gap-4 flex-1">
-          <h2 className="text-xl font-bold text-[#111318]">Global Reports</h2>
-          <div className="h-6 w-px bg-[#e5e7eb]"></div>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[#616e89] text-xl">search</span>
-            <input className="border-none bg-transparent focus:ring-0 text-sm placeholder:text-[#616e89] w-64"
-              placeholder="Search analytics..." type="text" />
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="size-10 flex items-center justify-center text-[#616e89] hover:bg-background-light rounded-lg">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div className="flex items-center gap-2 bg-background-light rounded-lg p-1">
-            <button className="px-4 py-1.5 bg-white shadow-sm rounded-md text-sm font-bold text-[#111318]">Live
-              View</button>
-            <button className="px-4 py-1.5 text-sm font-medium text-[#616e89]">Static Reports</button>
-          </div>
-        </div>
-      </header>
-      {/* <!-- Dashboard Content --> */}
-      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
         {/* <!-- Top Actions & Title --> */}
         <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
           <div>
@@ -387,8 +307,6 @@ function OrganizationAnalyticsDashboards() {
           </div>
         </div>
       </div>
-    </main>
-  </div>
   )
 }
 

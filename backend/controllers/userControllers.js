@@ -1,6 +1,7 @@
 const UserService = require("../services/userServices")
 const UserModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
+const { sendWelcomeEmail, sendWelcomeBackEmail } = require("../helpers/emailHelper");
 
 // Step 1: Initiate signup and send OTP
 async function SignupInitiate(req, res) {
@@ -94,6 +95,12 @@ async function VerifyOTP(req, res) {
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
+        // Send welcome email (non-blocking — failures should not break flow)
+        try {
+            await sendWelcomeEmail(user.email, user.name);
+        } catch (err) {
+            console.error('Error sending welcome email:', err.message);
+        }
 
         return res.status(200).json({
             success: true,
@@ -185,6 +192,13 @@ async function LoginUser(req, res) {
             sameSite: 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
+
+        // Send welcome-back email (non-blocking)
+        try {
+            await sendWelcomeBackEmail(user.email, user.name);
+        } catch (err) {
+            console.error('Error sending welcome-back email:', err.message);
+        }
 
         return res.status(200).json({
             success: true,

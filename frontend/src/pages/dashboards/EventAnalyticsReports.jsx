@@ -2,82 +2,7 @@ import React from 'react'
 
 function EventAnalyticsReports() {
   return (
-    <div className="flex min-h-screen">
-    {/* <!-- Sidebar Navigation --> */}
-    <aside className="w-64 border-r border-[#f0f1f4] bg-white flex flex-col fixed h-full">
-      <div className="p-6 flex flex-col gap-8 h-full">
-        <div className="flex items-center gap-3">
-          <div className="bg-primary rounded-lg size-10 flex items-center justify-center text-white">
-            <span className="material-symbols-outlined">event_seat</span>
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-[#111318] text-base font-bold leading-tight">EventOps Pro</h1>
-            <p className="text-[#616e89] text-xs font-medium">Enterprise SaaS</p>
-          </div>
-        </div>
-        <nav className="flex flex-col gap-1 flex-1">
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-background-light transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-sm font-medium">Dashboard</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-background-light transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">calendar_today</span>
-            <span className="text-sm font-medium">Events</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-background-light transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">group</span>
-            <span className="text-sm font-medium">Attendees</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="#">
-            <span className="material-symbols-outlined" style={{fontVariationSettings: 'FILL 1'}}>bar_chart</span>
-            <span className="text-sm font-semibold">Reports</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-background-light transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">settings</span>
-            <span className="text-sm font-medium">Settings</span>
-          </a>
-        </nav>
-        <div className="pt-6 border-t border-[#f0f1f4]">
-          <button
-            className="w-full flex items-center justify-center gap-2 bg-primary text-white py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors">
-            <span className="material-symbols-outlined text-sm">add</span>
-            <span>New Event</span>
-          </button>
-        </div>
-      </div>
-    </aside>
-    {/* <!-- Main Content Area --> */}
-    <main className="flex-1 ml-64 flex flex-col">
-      {/* <!-- Header --> */}
-      <header className="h-16 border-b border-[#f0f1f4] bg-white flex items-center justify-between px-8 sticky top-0 z-10">
-        <div className="flex items-center gap-4">
-          <nav className="flex items-center gap-2 text-sm text-[#616e89]">
-            <span>Dashboard</span>
-            <span className="material-symbols-outlined text-xs">chevron_right</span>
-            <span className="text-[#111318] font-medium">Reports</span>
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <span
-              className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#616e89] text-xl">search</span>
-            <input
-              className="pl-10 pr-4 py-2 bg-background-light border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20"
-              placeholder="Search analytics..." type="text" />
-          </div>
-          <button className="p-2 rounded-lg hover:bg-background-light text-[#616e89]">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div className="size-8 rounded-full bg-primary/20 border border-primary/10" data-alt="User avatar placeholder">
-          </div>
-        </div>
-      </header>
-      {/* <!-- Dashboard Body --> */}
-      <div className="p-8 flex flex-col gap-8 max-w-7xl mx-auto w-full">
+    <div className="p-8 flex flex-col gap-8 max-w-7xl mx-auto w-full">
         {/* <!-- Title & Actions --> */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -359,8 +284,6 @@ function EventAnalyticsReports() {
           </div>
         </div>
       </div>
-    </main>
-  </div>
   )
 }
 

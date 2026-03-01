@@ -4,36 +4,6 @@ function EventDirectory() {
   return (
     <div className="relative flex h-auto min-screen w-full flex-col group/design-root overflow-x-hidden">
     <div className="layout-container flex h-full grow flex-col">
-      {/* <!-- Top Navigation Bar --> */}
-      <header
-        className="flex items-center justify-between whitespace-nowrap border-b border-solid border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark px-10 py-3">
-        <div className="flex items-center gap-4 text-gray-900 dark:text-white">
-          <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-            <span className="material-symbols-outlined">event_seat</span>
-          </div>
-          <h2 className="text-gray-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">EventOps</h2>
-        </div>
-        <div className="flex flex-1 justify-end gap-8">
-          <div className="flex items-center gap-9">
-            <a className="text-gray-900 dark:text-gray-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-              href="#">Dashboard</a>
-            <a className="text-primary text-sm font-bold leading-normal" href="#">Events</a>
-            <a className="text-gray-900 dark:text-gray-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-              href="#">Analytics</a>
-            <a className="text-gray-900 dark:text-gray-300 text-sm font-medium leading-normal hover:text-primary transition-colors"
-              href="#">Settings</a>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="text-gray-500 hover:text-primary transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border border-gray-200"
-              data-alt="User profile avatar of a professional manager"
-              style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuC65BqNzW-IiP8UY7kKjvdW_YD7btUTEnHxrOWjnb4r8vBDisckPW4sj7CVXMpAqqSKyXaQBSkmA16G-M5K30SBdKkT1mjgTHYTP54bSHqAuiIsodBPHe35aITIwo3JmP1LTR4C8Dr8PnKBfPPOtwHIa8kldFgwhcjaiVTDmDG--jMVDhZZw-BJteEzlJKmFJDxoeem6a9odi4EVQIcT31g8JMCTHHXH8Uc5fLc4DZxC86CK7Nx2YqS54QQpoZVIM_c0MvTtES_Jbga")'}}>
-            </div>
-          </div>
-        </div>
-      </header>
       <main className="flex flex-col flex-1 px-4 md:px-10 lg:px-20 xl:px-40 py-8">
         {/* <!-- Breadcrumbs --> */}
         <nav className="flex items-center gap-2 mb-6">
