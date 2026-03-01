@@ -1,46 +1,81 @@
-import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import DashboardLayout from "./layouts/DashboardLayout";
+import './App.css'
+import {BrowserRouter , Routes, Route} from "react-router-dom"
+import DashboardLayout from './layouts/DashboardLayout'
+// auth context + guard
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './context/ProtectedRoute';
+
 // dashboard pages
-import {
-  PlatformLandingPage,
-  EventDirectory,
-  MainOprationDashboard,
-  EventAnalyticsReports,
-  OrganizationAnalyticsDashboards,
-} from "./pages";
+import {PlatformLandingPage, EventDirectory, MainOprationDashboard, EventAnalyticsReports, OrganizationAnalyticsDashboards} from "./pages"
 // form pages
-import { UserSignup, UserLogin, CreateNewEvent } from "./pages";
+import {UserSignup, UserLogin, CreateNewEvent} from "./pages"
 // settings / others
-import { OragnizationSetting, PageNotFound } from "./pages";
+import {OragnizationSetting, PageNotFound} from "./pages"
 
 function App() {
   return (
-    <BrowserRouter>
-      <DashboardLayout>
+    <AuthProvider>
+      <BrowserRouter>
         <Routes>
-          {/* Dashboard routes wrapped with layout */}
-          <Route path="/dashboard" element={<MainOprationDashboard />} />
-          <Route path="/events" element={<EventDirectory />} />
-          <Route path="/reports" element={<EventAnalyticsReports />} />
+          <Route path="/" element={<PlatformLandingPage />} />
+          <Route path="/signup" element={<UserSignup />} />
+          <Route path="/login" element={<UserLogin />} />
+          
+          {/* Dashboard routes wrapped with layout and protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><MainOprationDashboard /></DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><EventDirectory /></DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><EventAnalyticsReports /></DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/analytics"
-            element={<OrganizationAnalyticsDashboards />}
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><OrganizationAnalyticsDashboards /></DashboardLayout>
+              </ProtectedRoute>
+            }
           />
-          <Route path="/settings" element={<OragnizationSetting />} />
-          <Route path="/create-event" element={<CreateNewEvent />} />
-        </Routes>
-      </DashboardLayout>
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><OragnizationSetting /></DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/create-event"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><CreateNewEvent /></DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
 
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<PlatformLandingPage />} />
-        <Route path="/signup" element={<UserSignup />} />
-        <Route path="/login" element={<UserLogin />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </BrowserRouter>
-  );
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  )
 }
 
-export default App;
+export default App

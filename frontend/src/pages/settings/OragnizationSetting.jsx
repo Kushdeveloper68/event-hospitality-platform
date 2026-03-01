@@ -2,48 +2,7 @@ import React from 'react'
 
 function OragnizationSetting() {
   return (
-   <><header
-    className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 md:px-8 lg:px-20 py-3">
-    <div className="max-w-[1280px] mx-auto flex items-center justify-between">
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-3">
-          <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-            <span className="material-symbols-outlined text-2xl">star_rate</span>
-          </div>
-          <h1 className="text-xl font-bold tracking-tight">Event Hospitality OS</h1>
-        </div>
-        <nav className="hidden md:flex items-center gap-6">
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium"
-            href="#">Dashboard</a>
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium"
-            href="#">Events</a>
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium"
-            href="#">Operations</a>
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-medium"
-            href="#">Reports</a>
-          <a className="text-primary text-sm font-semibold border-b-2 border-primary pb-1" href="#">Settings</a>
-        </nav>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="relative hidden sm:block">
-          <span
-            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-          <input
-            className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all"
-            placeholder="Search..." type="text" />
-        </div>
-        <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-        <div
-          className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
-          <img alt="User Profile" className="h-full w-full object-cover"
-            data-alt="Close up portrait of a professional male user"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQWTwllVFZn8wDy8Xw3iAzyml8caC1sq0BrcHNZisbYmLFONVhHz7zGK3WpVmIX1hDyff9noAjLrlGf0Jz0Vm-Oa5RQVJ7Of18xgZDtProWIPXEAsdPnp1ZlTJJPt4E415LSgkFZjEjLhiuVR7FGxUMIn_zJSZicn4kEDKT6lWLwNyTlqWeLMvfvi0iA-NigLvuemvChYKHW33LB00a5OselpPn5LRp--7gWAJs5gtzO2KibivrRDCqI5QSvvzgNB9qQ2QFZYEIh3I" />
-        </div>
-      </div>
-    </div>
-  </header>
+   <>
   <main className="max-w-[1280px] mx-auto px-4 md:px-8 lg:px-20 py-8">
     {/* <!-- Breadcrumbs --> */}
     <nav className="flex items-center gap-2 text-sm mb-6 text-slate-500 dark:text-slate-400">

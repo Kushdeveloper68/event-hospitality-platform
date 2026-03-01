@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
 // email , name , password , organization name, term&conditions agree or not
-const User = Schema({
+const User = new Schema({
     name:{
        type: String,
        required: true

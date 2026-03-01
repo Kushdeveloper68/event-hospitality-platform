@@ -1,5 +1,5 @@
 import React from 'react'
-
+import { Link } from 'react-router-dom'
 function MainOprationDashboard() {
   return (
     //  <!-- Wrapper -->
@@ -274,6 +274,7 @@ function MainOprationDashboard() {
       </main>
     </div>
     {/* <!-- Floating Action Button --> */}
+    <Link to="/create-event">
     <button
       className="fixed bottom-8 right-8 size-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all group z-50">
       <span className="material-symbols-outlined text-3xl">add</span>
@@ -281,6 +282,7 @@ function MainOprationDashboard() {
         className="absolute right-full mr-4 bg-gray-900 text-white text-xs font-bold py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Create
         New Event</span>
     </button>
+    </Link>
   </div>
   )
 }

@@ -1,5 +1,7 @@
 import React, {useState, useEffect} from "react"
 import { signupInitiate, verifyOTP, resendOTP } from "../../api/userApi"
+import { useAuth } from "../../context/AuthContext"
+import { useNavigate } from 'react-router-dom';
 
 function UserSignup() {
   const [email, setEmail] = useState("")
@@ -13,6 +15,8 @@ function UserSignup() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [otpTimer, setOtpTimer] = useState(0)
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   // OTP timer countdown
   useEffect(() => {
@@ -83,10 +87,12 @@ function UserSignup() {
       const response = await verifyOTP(email, otp)
 
       if (response.success) {
+        // update auth context if user object provided
+        if (response.user) login(response.user);
         setSuccess('Email verified successfully! Redirecting...')
         setTimeout(() => {
-          window.location.href = '/dashboard' // Redirect to dashboard
-        }, 2000)
+          navigate('/dashboard');
+        }, 1000)
       }
     } catch (err) {
       setError(err.message || 'OTP verification failed')

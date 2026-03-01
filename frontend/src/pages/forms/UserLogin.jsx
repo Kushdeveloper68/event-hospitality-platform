@@ -1,5 +1,7 @@
 import React, {useState} from "react"
 import { loginUser } from "../../api/userApi"
+import { useAuth } from "../../context/AuthContext"
+import { useNavigate } from 'react-router-dom';
 
 function UserLogin() {
   const [email, setEmail] = useState("")
@@ -9,6 +11,9 @@ function UserLogin() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -27,10 +32,12 @@ function UserLogin() {
       const response = await loginUser(email, password)
 
       if (response.success) {
+        // update context immediately
+        if (response.user) login(response.user);
         setSuccess('Login successful! Redirecting...')
         setTimeout(() => {
-          window.location.href = '/dashboard' // Redirect to dashboard
-        }, 2000)
+          navigate('/dashboard');
+        }, 1000)
       }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.')

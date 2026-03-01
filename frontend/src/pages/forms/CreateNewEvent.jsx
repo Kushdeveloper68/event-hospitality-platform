@@ -4,49 +4,15 @@ function CreateNewEvent() {
   return (
     <div className="relative flex min-h-screen flex-col">
     {/* <!-- Top Navigation Bar --> */}
-    <header className="sticky top-0 z-50 w-full border-b border-[#dbdee6] bg-white px-4 md:px-10 lg:px-20 py-3">
-      <div className="mx-auto flex max-w-[1200px] items-center justify-between">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
-              <span className="material-symbols-outlined">event_seat</span>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight">EventOS</h2>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a className="text-sm font-semibold text-[#616e89] hover:text-primary" href="#">Dashboard</a>
-            <a className="text-sm font-semibold text-primary" href="#">Events</a>
-            <a className="text-sm font-semibold text-[#616e89] hover:text-primary" href="#">Venues</a>
-            <a className="text-sm font-semibold text-[#616e89] hover:text-primary" href="#">Staff</a>
-            <a className="text-sm font-semibold text-[#616e89] hover:text-primary" href="#">Reports</a>
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative hidden sm:block">
-            <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#616e89] text-xl">search</span>
-            <input
-              className="h-10 w-64 rounded-lg border-none bg-background-light pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20"
-              placeholder="Search events..." type="text" />
-          </div>
-          <button className="flex h-10 w-10 items-center justify-center rounded-full bg-background-light">
-            <span className="material-symbols-outlined text-[#616e89]">notifications</span>
-          </button>
-          <div className="h-10 w-10 rounded-full bg-cover bg-center border border-[#dbdee6]"
-            data-alt="User profile avatar of an operations manager"
-            style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEuIYtNPKHw1yuoAHY6AAWrTZ2GLovWEfyesvbjEjsclhOp1lHvoN9RCgSP0TAddTSbM3GCxIE9JScUA9XHCW-njPXjnl3PZQellv6AR5W8JZZq9OhHM2KfCxGoIMXdX1BBqNJ7dWpCgjo6Yv4cZY0Uv7jQnViLwcC1AqSYcvyDkvZ9LyMaBUBDHV4Yn4Shs4ZNBRNMMLuG5lmxlPdS8AwwskddKdrgpsD1q0l8URsZwpvNQik9FPkCsy6b7zKgqc7A1swRSGL8UtC')"}}>
-          </div>
-        </div>
-      </div>
-    </header>
+    
     <main className="flex-1 px-4 py-8 md:px-10 lg:px-20">
       <div className="mx-auto max-w-[800px]">
         {/* <!-- Breadcrumbs --> */}
-        <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-[#616e89]">
+        {/* <nav className="mb-6 flex items-center gap-2 text-sm font-medium text-[#616e89]">
           <a className="hover:text-primary" href="#">Events</a>
           <span className="material-symbols-outlined text-xs">chevron_right</span>
           <span className="text-[#111318]">Create New Event</span>
-        </nav>
+        </nav> */}
         {/* <!-- Header --> */}
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight text-[#111318] md:text-4xl">Create New Event</h1>

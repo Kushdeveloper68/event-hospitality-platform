@@ -37,8 +37,9 @@ export const verifyOTP = async (email, otp) => {
         const response = await api.post('/verify-otp', { email, otp });
         
         // Store token in localStorage if provided
-        if (response.data.token) {
+        if (response.data.token && response.data.user) {
             localStorage.setItem('authToken', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
         }
         
         return response.data;
@@ -74,8 +75,9 @@ export const loginUser = async (email, password) => {
         const response = await api.post('/login', { email, password });
         
         // Store token in localStorage if provided
-        if (response.data.token) {
+        if (response.data.token && response.data.user) {
             localStorage.setItem('authToken', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
         }
         
         return response.data;
