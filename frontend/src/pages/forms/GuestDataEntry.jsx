@@ -1,50 +1,98 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { createGuest, getGuestById, updateGuest } from '../../api/guestApi'
 
-function GuestDataEntry() {
+function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, onCancel }) {
+  const { eventId: paramEventId } = useParams()
+  const eventId = propEventId || paramEventId
+  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
+  const [form, setForm] = useState({
+    fullName: '',
+    email: '',
+    phoneNumber: '',
+    age: '',
+    groupName: '',
+    vipStatus: false,
+    checkedIn: false,
+    arrivalDatetime: '',
+    departureDatetime: '',
+    transportMode: '',
+    specialRequests: '',
+  })
+
+  useEffect(() => {
+    // if guestId prop provided, load the guest
+    const id = propGuestId || propGuestId
+    if (id) {
+      setLoading(true)
+      getGuestById(id)
+        .then((res) => {
+          if (res && res.success === false) {
+            setError(res.message || 'Failed to load guest')
+            return
+          }
+          const g = res.guest || res
+          setForm({
+            fullName: g.fullName || '',
+            email: g.email || '',
+            phoneNumber: g.phoneNumber || '',
+            age: g.age || '',
+            groupName: g.groupName || '',
+            vipStatus: !!g.vipStatus,
+            checkedIn: !!g.checkedIn,
+            arrivalDatetime: g.arrivalDatetime ? new Date(g.arrivalDatetime).toISOString().slice(0, 16) : '',
+            departureDatetime: g.departureDatetime ? new Date(g.departureDatetime).toISOString().slice(0, 16) : '',
+            transportMode: g.transportMode || '',
+            specialRequests: g.specialRequests || '',
+          })
+        })
+        .catch((err) => setError(err.message || 'Failed to load guest'))
+        .finally(() => setLoading(false))
+    }
+  }, [propGuestId])
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    try {
+      const payload = { ...form, event: eventId }
+      let res
+      if (propGuestId) {
+        res = await updateGuest(propGuestId, payload)
+      } else {
+        res = await createGuest(payload)
+      }
+      if (onDone) {
+        onDone(res)
+      } else {
+        navigate(`/events/${eventId}/guests`)
+      }
+    } catch (err) {
+      console.error(err)
+      setError(err.message || 'Failed to save guest')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancel = () => {
+    if (onCancel) return onCancel()
+    navigate(`/events/${eventId}/guests`)
+  }
+
   return (
     <div className="relative flex min-h-screen flex-col">
     {/* <!-- Top Navigation Bar --> */}
-    <header
-      className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-8 py-3 sticky top-0 z-50">
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-3">
-          <div className="size-8 bg-primary rounded flex items-center justify-center text-white">
-            <span className="material-symbols-outlined">event_seat</span>
-          </div>
-          <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">OpsCenter</h2>
-        </div>
-        <nav className="hidden md:flex items-center gap-6">
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"
-            href="#">Dashboard</a>
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"
-            href="#">Events</a>
-          <a className="text-primary text-sm font-semibold border-b-2 border-primary py-4 -mb-4" href="#">Guests</a>
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"
-            href="#">Logistics</a>
-          <a className="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors"
-            href="#">Settings</a>
-        </nav>
-      </div>
-      <div className="flex items-center gap-6">
-        <div className="relative hidden sm:block">
-          <span
-            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-          <input
-            className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-sm w-64 focus:ring-2 focus:ring-primary/20 transition-all"
-            placeholder="Search guests..." type="text" />
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col items-end">
-            <span className="text-xs font-semibold">Alex Rivera</span>
-            <span className="text-[10px] text-slate-500">Event Lead</span>
-          </div>
-          <div className="size-10 rounded-full bg-slate-200 border border-slate-300 overflow-hidden">
-            <img alt="User Profile" data-alt="Profile picture of a male event manager"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvD3t4QECPxKRirVaLdaTyz1KiFUp3X1cocS1VkLFMlDiQcPe2K3iwoIpCVPdgk6fOjSXUu-Byu1djNDa0e4A74yq1olOWLnTNcKUtfj-HIDkDtPI4Mm4xquz-QvdnYysB4-4-B3YCcDsipfut7VmP9U6npmVV-ArrftijlbbwXBUOjKjNEAxYayoHypYchRceFeNqif-LaXWJJwpUg_FEj8pjKdBwzJ8poWiJBfrOmONBNYk6yCqOP6sVPe8QFCpgzzmXaeKJXSkg" />
-          </div>
-        </div>
-      </div>
-    </header>
+
     {/* <!-- Main Content Area --> */}
     <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-8">
       {/* <!-- Breadcrumbs & Header --> */}
@@ -85,6 +133,9 @@ function GuestDataEntry() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name</label>
               <input
+                name="fullName"
+                value={form.fullName}
+                onChange={handleChange}
                 className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4"
                 placeholder="e.g. Johnathan Doe" type="text" />
             </div>
@@ -92,12 +143,18 @@ function GuestDataEntry() {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number</label>
                 <input
+                  name="phoneNumber"
+                  value={form.phoneNumber}
+                  onChange={handleChange}
                   className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4"
                   placeholder="+1 (555) 000-0000" type="tel" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Age</label>
                 <input
+                  name="age"
+                  value={form.age}
+                  onChange={handleChange}
                   className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4"
                   placeholder="25" type="number" />
               </div>
@@ -105,6 +162,9 @@ function GuestDataEntry() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Group / Company Name</label>
               <input
+                name="groupName"
+                value={form.groupName}
+                onChange={handleChange}
                 className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4"
                 placeholder="e.g. Acme Corporation" type="text" />
             </div>
@@ -121,7 +181,7 @@ function GuestDataEntry() {
                 </div>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input className="sr-only peer" type="checkbox" value="" />
+                <input className="sr-only peer" type="checkbox" name="vipStatus" checked={form.vipStatus} onChange={handleChange} />
                 <div
                   className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary">
                 </div>
@@ -141,12 +201,18 @@ function GuestDataEntry() {
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Arrival Datetime</label>
                 <input
+                  name="arrivalDatetime"
+                  value={form.arrivalDatetime}
+                  onChange={handleChange}
                   className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 text-sm"
                   type="datetime-local" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Departure Datetime</label>
                 <input
+                  name="departureDatetime"
+                  value={form.departureDatetime}
+                  onChange={handleChange}
                   className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 text-sm"
                   type="datetime-local" />
               </div>
@@ -155,8 +221,11 @@ function GuestDataEntry() {
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Transport Mode</label>
               <div className="relative">
                 <select
+                  name="transportMode"
+                  value={form.transportMode}
+                  onChange={handleChange}
                   className="w-full h-12 appearance-none rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 pr-10">
-                  <option>Select transport mode...</option>
+                  <option value="">Select transport mode...</option>
                   <option>Private Car Service</option>
                   <option>Commercial Flight</option>
                   <option>Train / Rail</option>
@@ -170,6 +239,9 @@ function GuestDataEntry() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Special Requests / Notes</label>
               <textarea
+                name="specialRequests"
+                value={form.specialRequests}
+                onChange={handleChange}
                 className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 py-3 text-sm"
                 placeholder="e.g. Dietary restrictions, accessibility needs, or preferred floor levels..."
                 rows="4"></textarea>
@@ -178,16 +250,17 @@ function GuestDataEntry() {
         </section>
       </div>
       {/* <!-- Sticky Footer for Actions --> */}
-      <div
-        className="mt-12 flex justify-end gap-4 p-6 bg-slate-100 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800">
-        <button
-          className="px-6 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-colors">Cancel</button>
-        <button
-          className="px-8 py-3 text-sm font-bold text-white bg-primary rounded-lg shadow-md shadow-primary/20 hover:bg-blue-700 hover:shadow-lg transition-all flex items-center gap-3">
-          <span className="material-symbols-outlined">check_circle</span>
-          Confirm &amp; Save Guest
-        </button>
-      </div>
+      <form onSubmit={handleSubmit}>
+        <div className="mt-12 flex justify-end gap-4 p-6 bg-slate-100 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800">
+          <button type="button" onClick={handleCancel}
+            className="px-6 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 transition-colors">Cancel</button>
+          <button type="submit" disabled={saving}
+            className="px-8 py-3 text-sm font-bold text-white bg-primary rounded-lg shadow-md shadow-primary/20 hover:bg-blue-700 hover:shadow-lg transition-all flex items-center gap-3">
+            <span className="material-symbols-outlined">check_circle</span>
+            {saving ? 'Saving...' : 'Confirm & Save Guest'}
+          </button>
+        </div>
+      </form>
     </main>
     {/* <!-- Footer Meta --> */}
     <footer className="mt-auto px-8 py-6 border-t border-slate-200 dark:border-slate-800 text-center">

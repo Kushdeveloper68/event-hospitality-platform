@@ -49,8 +49,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+          {/* route accepts optional tab segment for workspace, e.g. /events/123/rooms */}
+          {/* allow additional segments after the tab (e.g. /add or /edit/:id) */}
           <Route
-            path="/events/:eventId"
+            path="/events/:eventId/:tab/*"
             element={
               <ProtectedRoute>
                 <DashboardLayout>

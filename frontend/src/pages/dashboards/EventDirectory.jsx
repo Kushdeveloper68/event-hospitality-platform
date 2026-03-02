@@ -247,7 +247,7 @@ function EventDirectory() {
                       <span className="text-xs font-medium text-gray-400">
                         {event.isPrivate ? 'Private Event' : 'Public Event'}
                       </span>
-                      <Link to={`/events/${event._id}`} className="text-primary font-bold text-sm hover:underline">
+                      <Link to={`/events/${event._id}/overview`} className="text-primary font-bold text-sm hover:underline">
                         Manage
                       </Link>
                     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getEventById } from '../../api/eventApi'
+import { EventContext } from '../../context/EventContext'
 // Pages shown in tabs
 import GuestMasterList from '../inventory/GuestMasterList'
 import RoomInventoryManagement from '../inventory/RoomInventoryManagement'
@@ -12,11 +13,21 @@ import EventSummaryDashboards from './EventSummaryDashboards'
 import EventAdminstrativeSetting from '../settings/EventAdminstrativeSetting'
 
 function EventWorkspaceShell() {
-  const { eventId } = useParams()
+  const { eventId, tab, "*": rest } = useParams() // rest holds any extra path after the tab (e.g. "add" or "edit/123")
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('overview')
+  const [activeTab, setActiveTab] = useState(tab || 'overview')
+
+  // keep tab in sync with url param
+  useEffect(() => {
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab)
+    }
+    if (!tab && activeTab !== 'overview') {
+      setActiveTab('overview')
+    }
+  }, [tab])
 
   useEffect(() => {
     if (eventId) {
@@ -110,7 +121,8 @@ function EventWorkspaceShell() {
   }
 
   return (
-    <div className="relative flex flex-col min-h-screen">
+    <EventContext.Provider value={{ event, setEvent }}>
+      <div className="relative flex flex-col min-h-screen">
     {/* <!-- Top Sticky Header Container --> */}
     <header
       className=" top-0 z-50 w-full bg-white dark:bg-[#1a1f2e] border-b border-[#dbdee6] dark:border-[#2d364a] shadow-sm">
@@ -222,15 +234,17 @@ function EventWorkspaceShell() {
             { key: 'settings', icon: 'settings', label: 'Settings' },
           ].map((tab) => {
             const active = activeTab === tab.key
+            // build path: omit overview segment to keep /events/:id form
+            const path =  `/events/${eventId}/${tab.key}`
             return (
-              <button
+              <Link
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                to={path}
                 className={`flex items-center gap-2 py-4 border-b-2 ${active ? 'border-primary text-primary font-bold' : 'border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold'} text-sm whitespace-nowrap transition-all`}
               >
                 <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
                 {tab.label}
-              </button>
+              </Link>
             )
           })}
         </nav>
@@ -469,7 +483,20 @@ function EventWorkspaceShell() {
 
         {activeTab === 'guests' && (
           <div className="space-y-6">
-            <GuestMasterList />
+            {/* show a small back link if we are in a sub-route like add/edit */}
+            {rest && (
+              <div className="px-6">
+                <Link
+                  to={`/events/${eventId}/guests`}
+                  className="text-primary text-sm font-semibold inline-flex items-center gap-1"
+                >
+                  <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                  Guest List
+                </Link>
+              </div>
+            )}
+            {/* pass rest so the guest list can render add/edit form when needed */}
+            <GuestMasterList extraPath={rest || ''} eventId={eventId} />
           </div>
         )}
 
@@ -528,6 +555,7 @@ function EventWorkspaceShell() {
       </div>
     </footer>
   </div>
+    </EventContext.Provider>
   )
 }
 
