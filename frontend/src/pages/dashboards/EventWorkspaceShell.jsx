@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getEventById } from '../../api/eventApi'
+// Pages shown in tabs
+import GuestMasterList from '../inventory/GuestMasterList'
+import RoomInventoryManagement from '../inventory/RoomInventoryManagement'
+import CheckInOprationDesk from '../inventory/CheckInOprationDesk'
+import TransportCoordinationLogs from '../inventory/TransportCoordinationLogs'
+import ServiceRequestLogs from '../inventory/ServiceRequestLogs'
+import OprationalEventSchedule from './OprationalEventSchedule'
+import EventSummaryDashboards from './EventSummaryDashboards'
+import EventAdminstrativeSetting from '../settings/EventAdminstrativeSetting'
 
 function EventWorkspaceShell() {
   const { eventId } = useParams()
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [activeTab, setActiveTab] = useState('overview')
 
   useEffect(() => {
     if (eventId) {
@@ -200,58 +210,38 @@ function EventWorkspaceShell() {
       {/* <!-- Horizontal Navigation Tabs --> */}
       <div className="max-w-[1440px] mx-auto px-6">
         <nav className="flex gap-8 overflow-x-auto hide-scrollbar scroll-smooth">
-          <a className="flex items-center gap-2 py-4 border-b-2 border-primary text-primary font-bold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">dashboard</span>
-            Overview
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">group</span>
-            Guests
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">meeting_room</span>
-            Rooms
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">how_to_reg</span>
-            Check-in
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">local_shipping</span>
-            Transport
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">room_service</span>
-            Service
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">schedule</span>
-            Schedule
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">analytics</span>
-            Reports
-          </a>
-          <a className="flex items-center gap-2 py-4 border-b-2 border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold text-sm whitespace-nowrap transition-all"
-            href="#">
-            <span className="material-symbols-outlined text-[20px]">settings</span>
-            Settings
-          </a>
+          {[
+            { key: 'overview', icon: 'dashboard', label: 'Overview' },
+            { key: 'guests', icon: 'group', label: 'Guests' },
+            { key: 'rooms', icon: 'meeting_room', label: 'Rooms' },
+            { key: 'checkin', icon: 'how_to_reg', label: 'Check-in' },
+            { key: 'transport', icon: 'local_shipping', label: 'Transport' },
+            { key: 'service', icon: 'room_service', label: 'Service' },
+            { key: 'schedule', icon: 'schedule', label: 'Schedule' },
+            { key: 'reports', icon: 'analytics', label: 'Reports' },
+            { key: 'settings', icon: 'settings', label: 'Settings' },
+          ].map((tab) => {
+            const active = activeTab === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex items-center gap-2 py-4 border-b-2 ${active ? 'border-primary text-primary font-bold' : 'border-transparent text-[#616e89] hover:text-[#111318] dark:hover:text-white font-semibold'} text-sm whitespace-nowrap transition-all`}
+              >
+                <span className="material-symbols-outlined text-[20px]">{tab.icon}</span>
+                {tab.label}
+              </button>
+            )
+          })}
         </nav>
       </div>
     </header>
     {/* <!-- Main Content Area --> */}
     <main className="flex-1 w-full max-w-[1440px] mx-auto px-6 py-8">
-      {/* <!-- Placeholder Content View --> */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* Tabbed Content Area */}
+      <div>
+        {activeTab === 'overview' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {/* <!-- Welcome Card --> */}
         <div
           className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
@@ -474,6 +464,56 @@ function EventWorkspaceShell() {
             </div>
           </div>
         </div>
+          </div>
+        )}
+
+        {activeTab === 'guests' && (
+          <div className="space-y-6">
+            <GuestMasterList />
+          </div>
+        )}
+
+        {activeTab === 'rooms' && (
+          <div className="space-y-6">
+            <RoomInventoryManagement />
+          </div>
+        )}
+
+        {activeTab === 'checkin' && (
+          <div className="space-y-6">
+            <CheckInOprationDesk />
+          </div>
+        )}
+
+        {activeTab === 'transport' && (
+          <div className="space-y-6">
+            <TransportCoordinationLogs />
+          </div>
+        )}
+
+        {activeTab === 'service' && (
+          <div className="space-y-6">
+            <ServiceRequestLogs />
+          </div>
+        )}
+
+        {activeTab === 'schedule' && (
+          <div className="space-y-6">
+            <OprationalEventSchedule />
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="space-y-6">
+            <EventSummaryDashboards />
+          </div>
+        )}
+
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <EventAdminstrativeSetting />
+          </div>
+        )}
       </div>
     </main>
     {/* <!-- Footer --> */}

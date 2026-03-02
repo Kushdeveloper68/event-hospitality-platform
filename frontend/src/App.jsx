@@ -1,16 +1,23 @@
-import './App.css'
-import {BrowserRouter , Routes, Route} from "react-router-dom"
-import DashboardLayout from './layouts/DashboardLayout'
+import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import DashboardLayout from "./layouts/DashboardLayout";
 // auth context + guard
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './context/ProtectedRoute';
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./context/ProtectedRoute";
 
 // dashboard pages
-import {PlatformLandingPage, EventDirectory, EventWorkspaceShell, MainOprationDashboard, EventAnalyticsReports, OrganizationAnalyticsDashboards} from "./pages"
+import {
+  PlatformLandingPage,
+  EventDirectory,
+  EventWorkspaceShell,
+  MainOprationDashboard,
+  EventAnalyticsReports,
+  OrganizationAnalyticsDashboards,
+} from "./pages";
 // form pages
-import {UserSignup, UserLogin, CreateNewEvent} from "./pages"
+import { UserSignup, UserLogin, CreateNewEvent } from "./pages";
 // settings / others
-import {OragnizationSetting, PageNotFound} from "./pages"
+import { OragnizationSetting, PageNotFound } from "./pages";
 
 function App() {
   return (
@@ -20,13 +27,15 @@ function App() {
           <Route path="/" element={<PlatformLandingPage />} />
           <Route path="/signup" element={<UserSignup />} />
           <Route path="/login" element={<UserLogin />} />
-          
+
           {/* Dashboard routes wrapped with layout and protected */}
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardLayout><MainOprationDashboard /></DashboardLayout>
+                <DashboardLayout>
+                  <MainOprationDashboard />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -34,7 +43,9 @@ function App() {
             path="/events"
             element={
               <ProtectedRoute>
-                <DashboardLayout><EventDirectory /></DashboardLayout>
+                <DashboardLayout>
+                  <EventDirectory />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -42,7 +53,9 @@ function App() {
             path="/events/:eventId"
             element={
               <ProtectedRoute>
-                <DashboardLayout><EventWorkspaceShell /></DashboardLayout>
+                <DashboardLayout>
+                  <EventWorkspaceShell />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -50,7 +63,9 @@ function App() {
             path="/reports"
             element={
               <ProtectedRoute>
-                <DashboardLayout><EventAnalyticsReports /></DashboardLayout>
+                <DashboardLayout>
+                  <EventAnalyticsReports />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -58,7 +73,9 @@ function App() {
             path="/analytics"
             element={
               <ProtectedRoute>
-                <DashboardLayout><OrganizationAnalyticsDashboards /></DashboardLayout>
+                <DashboardLayout>
+                  <OrganizationAnalyticsDashboards />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -66,7 +83,9 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute>
-                <DashboardLayout><OragnizationSetting /></DashboardLayout>
+                <DashboardLayout>
+                  <OragnizationSetting />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -74,7 +93,9 @@ function App() {
             path="/create-event"
             element={
               <ProtectedRoute>
-                <DashboardLayout><CreateNewEvent /></DashboardLayout>
+                <DashboardLayout>
+                  <CreateNewEvent />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />
@@ -83,7 +104,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -4,43 +4,7 @@ function OprationalEventSchedule() {
   return (
      <div className="relative flex h-screen flex-col overflow-hidden">
     {/* <!-- Top Navigation Bar --> */}
-    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 shrink-0">
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-3">
-          <div className="flex size-8 items-center justify-center rounded bg-primary text-white">
-            <span className="material-symbols-outlined !text-xl">event_seat</span>
-          </div>
-          <h2 className="text-lg font-bold leading-tight tracking-tight text-slate-900">EventOps SaaS</h2>
-        </div>
-        <div className="relative w-64">
-          <span
-            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 !text-xl">search</span>
-          <input
-            className="h-9 w-full rounded-lg border-none bg-slate-100 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20"
-            placeholder="Search activities..." type="text" />
-        </div>
-      </div>
-      <nav className="flex items-center gap-8">
-        <div className="hidden items-center gap-6 lg:flex">
-          <a className="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Dashboard</a>
-          <a className="text-sm font-semibold text-primary" href="#">Schedule</a>
-          <a className="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Resources</a>
-          <a className="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Attendees</a>
-          <a className="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="#">Analytics</a>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            className="flex h-9 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white transition-opacity hover:opacity-90">
-            <span className="material-symbols-outlined !text-lg">add</span>
-            <span>Add Activity</span>
-          </button>
-          <div className="size-9 rounded-full bg-slate-200 bg-cover bg-center border border-slate-100"
-            data-alt="User profile avatar circle"
-            style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDWla9OLAD3JkqZUNW4mLlJzCbgVIGhfVdYgBZRa_zUXAaX5Od8a4xHfUIcjXIbSd_EKgPJE7FXZ_8tXBiakXv2Uhm4tV0uADoiYeuFMLhGA48viANvdwznPRJuU217QRNw85XiQA_3rWETiaVYzX-QOqqfsRq6t2b69bxFJAkQncKN8NTrBcA6yrrlw5C1yZ1JIoGF0Y9BtC3DVfXSe4Z-L5pQeEU0ypoDrwk1tM9bx8BYNE4jV-cXBQDxZIzuW1N39qGbJCHijJaa')"}}>
-          </div>
-        </div>
-      </nav>
-    </header>
+   
     {/* <!-- Sub-header: Controls & Date Selection --> */}
     <div className="flex flex-col border-b border-slate-200 bg-white shrink-0">
       <div className="flex items-center justify-between px-6 py-2">
