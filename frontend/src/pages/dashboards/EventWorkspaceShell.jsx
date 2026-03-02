@@ -1,12 +1,109 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
+import { getEventById } from '../../api/eventApi'
 
 function EventWorkspaceShell() {
+  const { eventId } = useParams()
+  const [event, setEvent] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (eventId) {
+      loadEvent()
+    }
+  }, [eventId])
+
+  const loadEvent = async () => {
+    try {
+      setLoading(true)
+      const res = await getEventById(eventId)
+      if (res.success) {
+        setEvent(res.event)
+        setError(null)
+      } else {
+        setError(res.message || 'Failed to load event')
+      }
+    } catch (err) {
+      console.error('Error loading event:', err)
+      setError('Error loading event')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (date) => {
+    if (!date) return 'N/A'
+    return new Date(date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  }
+
+  const getEventStatus = (startDate, endDate) => {
+    const now = new Date()
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+
+    if (now >= start && now <= end) return 'live'
+    if (now < start) return 'upcoming'
+    if (now > end) return 'completed'
+    return 'upcoming'
+  }
+
+  const getStatusBadge = (startDate, endDate) => {
+    const status = getEventStatus(startDate, endDate)
+    const badges = {
+      live: (
+        <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit">
+          <span className="size-2 bg-green-500 rounded-full animate-pulse"></span>
+          Live
+        </span>
+      ),
+      upcoming: (
+        <span className="bg-primary/10 text-primary dark:bg-primary/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+          Upcoming
+        </span>
+      ),
+      completed: (
+        <span className="bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+          Completed
+        </span>
+      ),
+    }
+    return badges[status] || badges.upcoming
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-gray-500 dark:text-gray-400">Loading event...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Link to="/events" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+            Back to directory
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    
-  <div className="relative flex flex-col min-h-screen">
+    <div className="relative flex flex-col min-h-screen">
     {/* <!-- Top Sticky Header Container --> */}
     <header
-      className="sticky top-0 z-50 w-full bg-white dark:bg-[#1a1f2e] border-b border-[#dbdee6] dark:border-[#2d364a] shadow-sm">
+      className=" top-0 z-50 w-full bg-white dark:bg-[#1a1f2e] border-b border-[#dbdee6] dark:border-[#2d364a] shadow-sm">
       {/* <!-- Global Navbar --> */}
       <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-4">
         {/* <!-- Left: Platform Logo & Search --> */}
@@ -62,26 +159,26 @@ function EventWorkspaceShell() {
             <div className="flex items-center gap-2 text-xs font-medium text-[#616e89] uppercase tracking-wider">
               <a className="hover:text-primary transition-colors" href="#">Workspaces</a>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span className="text-[#111318] dark:text-white">Events</span>
+              <Link to="/events" className="hover:text-primary transition-colors">Events</Link>
+              <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+              <span className="text-[#111318] dark:text-white line-clamp-1">{event?.name}</span>
             </div>
             {/* <!-- Event Details --> */}
             <div className="flex items-center gap-4 flex-wrap">
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#111318] dark:text-white">Annual Tech Summit 2024
-              </h1>
-              <div
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-success/10 text-success text-xs font-bold uppercase tracking-wide border border-success/20">
-                <span className="size-2 rounded-full bg-success animate-pulse"></span>
-                Live
-              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-[#111318] dark:text-white line-clamp-2">{event?.name}</h1>
+              {getStatusBadge(event?.startDate, event?.endDate)}
             </div>
-            <div className="flex items-center gap-5 text-[#616e89] text-sm mt-1">
-              <div className="flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-lg">location_on</span>
-                Grand Hyatt Convention Center
-              </div>
+            <div className="flex flex-wrap items-center gap-5 text-[#616e89] text-sm mt-1">
+              {event?.venue && (
+                <div className="flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-lg">location_on</span>
+                  {event.venue}
+                </div>
+              )}
               <div className="flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-lg">calendar_today</span>
-                Oct 12 - 15, 2024
+                {formatDate(event?.startDate)}
+                {event?.endDate && ` - ${formatDate(event.endDate)}`}
               </div>
             </div>
           </div>

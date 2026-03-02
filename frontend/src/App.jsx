@@ -6,7 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './context/ProtectedRoute';
 
 // dashboard pages
-import {PlatformLandingPage, EventDirectory, MainOprationDashboard, EventAnalyticsReports, OrganizationAnalyticsDashboards} from "./pages"
+import {PlatformLandingPage, EventDirectory, EventWorkspaceShell, MainOprationDashboard, EventAnalyticsReports, OrganizationAnalyticsDashboards} from "./pages"
 // form pages
 import {UserSignup, UserLogin, CreateNewEvent} from "./pages"
 // settings / others
@@ -35,6 +35,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout><EventDirectory /></DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/events/:eventId"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout><EventWorkspaceShell /></DashboardLayout>
               </ProtectedRoute>
             }
           />
