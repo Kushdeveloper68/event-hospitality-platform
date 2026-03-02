@@ -4,53 +4,7 @@ function EventSummaryDashboards() {
   return (
     <div className="layout-container flex h-full grow flex-col">
     {/* <!-- Top Navigation Bar --> */}
-    <header
-      className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 lg:px-10">
-      <div className="flex items-center gap-8">
-        <div className="flex items-center gap-3 text-primary">
-          <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-            <span className="material-symbols-outlined">event_seat</span>
-          </div>
-          <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">EventOps Pro</h2>
-        </div>
-        <div className="hidden md:flex items-center gap-2">
-          <label className="flex flex-col min-w-40 h-10 max-w-64">
-            <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
-              <div
-                className="text-slate-500 flex border-none bg-slate-100 dark:bg-slate-800 items-center justify-center pl-3 rounded-l-lg">
-                <span className="material-symbols-outlined text-sm">search</span>
-              </div>
-              <input
-                className="form-input flex w-full min-w-0 flex-1 border-none bg-slate-100 dark:bg-slate-800 focus:ring-0 h-full placeholder:text-slate-500 px-3 rounded-r-lg text-sm font-normal"
-                placeholder="Search events, guests..." value="" />
-            </div>
-          </label>
-        </div>
-      </div>
-      <div className="flex flex-1 justify-end gap-6 items-center">
-        <nav className="hidden lg:flex items-center gap-6">
-          <a className="text-primary text-sm font-semibold border-b-2 border-primary py-1" href="#">Dashboard</a>
-          <a className="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary" href="#">Events</a>
-          <a className="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary" href="#">Guests</a>
-          <a className="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary" href="#">Inventory</a>
-        </nav>
-        <div className="flex gap-2">
-          <button
-            className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button
-            className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200">
-            <span className="material-symbols-outlined">settings</span>
-          </button>
-        </div>
-        <div
-          className="bg-slate-200 dark:bg-slate-700 rounded-full size-10 flex items-center justify-center overflow-hidden border border-slate-300">
-          <img alt="User Profile" className="w-full h-full object-cover" data-alt="Professional headshot for user profile"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzRmtxZ7BgxSPoKT_UIZFA59Wo9zlapdjO3gGQrUxCMSYbBynyYHMrL8L52bXl0pqsakZW9eXs_RzeVIgHq4R7GqZ7_quZC_uZSTL55PGhgxljWuFWhEg0dIN2Xx3W92IJVlr_IRLKJ2p6XQQfpN2b1U6E_nHhhPaViLIyeRzf12CRlyMXRtHSsx0Betdkr4hEtlxIi2Du_QR3cayAYQtu2syY-Y_Eu3yeQarWjXSV4-dkLFucWSZg1_NfoguVWQ7heQ2xuOsYWEuC" />
-        </div>
-      </div>
-    </header>
+  
     {/* <!-- Main Content Area --> */}
     <main className="flex-1 overflow-y-auto px-6 lg:px-20 py-8 max-w-[1440px] mx-auto w-full">
       {/* <!-- Page Header --> */}
