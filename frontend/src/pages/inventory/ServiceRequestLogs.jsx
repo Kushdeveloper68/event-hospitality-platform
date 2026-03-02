@@ -6,78 +6,10 @@ function ServiceRequestLogs() {
     className="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
     <div className="layout-container flex h-full grow flex-col">
       {/* <!-- Header Section --> */}
-      <header
-        className="flex items-center justify-between whitespace-nowrap border-b border-solid border-[#e5e7eb] dark:border-[#2d3748] bg-white dark:bg-background-dark px-6 py-3 lg:px-10">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3 text-primary">
-            <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-              <span className="material-symbols-outlined">hotel_className</span>
-            </div>
-            <h2 className="text-[#111318] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">HospitalityOS
-            </h2>
-          </div>
-          <div className="hidden md:flex items-center gap-6">
-            <a className="text-[#616e89] dark:text-gray-400 text-sm font-medium hover:text-primary transition-colors"
-              href="#">Dashboard</a>
-            <a className="text-primary text-sm font-semibold border-b-2 border-primary py-4 -mb-4" href="#">Operations</a>
-            <a className="text-[#616e89] dark:text-gray-400 text-sm font-medium hover:text-primary transition-colors"
-              href="#">Events</a>
-            <a className="text-[#616e89] dark:text-gray-400 text-sm font-medium hover:text-primary transition-colors"
-              href="#">Inventory</a>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-[#616e89] hover:bg-gray-100 rounded-full transition-colors">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div className="h-8 w-[1px] bg-gray-200 mx-2"></div>
-          <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-[#111318] dark:text-white">Alex Rivera</p>
-              <p className="text-xs text-[#616e89]">Ops Manager</p>
-            </div>
-            <div
-              className="bg-primary/10 border border-primary/20 aspect-square bg-cover rounded-full size-10 flex items-center justify-center text-primary font-bold"
-              data-alt="User profile avatar placeholder">
-              AR
-            </div>
-          </div>
-        </div>
-      </header>
+     
       <div className="flex flex-1 overflow-hidden">
         {/* <!-- Sidebar --> */}
-        <aside
-          className="hidden lg:flex w-64 flex-col border-r border-[#e5e7eb] dark:border-[#2d3748] bg-white dark:bg-background-dark p-4 gap-2">
-          <div className="px-3 py-2">
-            <h3 className="text-xs font-bold text-[#616e89] uppercase tracking-wider">Venue Management</h3>
-          </div>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-gray-50 transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="text-sm font-medium">Overview</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary transition-colors" href="#">
-            <span className="material-symbols-outlined">assignment</span>
-            <span className="text-sm font-bold">Service Requests</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-gray-50 transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">calendar_today</span>
-            <span className="text-sm font-medium">Schedule</span>
-          </a>
-          <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-gray-50 transition-colors"
-            href="#">
-            <span className="material-symbols-outlined">groups</span>
-            <span className="text-sm font-medium">Staff Roster</span>
-          </a>
-          <div className="mt-auto border-t border-gray-100 pt-4">
-            <a className="flex items-center gap-3 px-3 py-2 rounded-lg text-[#616e89] hover:bg-gray-50 transition-colors"
-              href="#">
-              <span className="material-symbols-outlined">settings</span>
-              <span className="text-sm font-medium">Settings</span>
-            </a>
-          </div>
-        </aside>
+        
         {/* <!-- Main Content Area --> */}
         <main className="flex flex-1 flex-col overflow-y-auto">
           {/* <!-- Page Title & Primary Actions --> */}

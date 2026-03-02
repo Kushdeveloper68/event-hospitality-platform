@@ -5,43 +5,7 @@ function GuestMasterList() {
     <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
     <div className="layout-container flex h-full grow flex-col">
       {/* <!-- Top Navigation Bar --> */}
-      <header
-        className="flex items-center justify-between whitespace-nowrap border-b border-solid border-border-light bg-white px-8 py-3 sticky top-0 z-50">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3 text-slate-900">
-            <div className="bg-primary rounded p-1 text-white flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl">event_seat</span>
-            </div>
-            <h2 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">Event Hospitality</h2>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a className="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Workspaces</a>
-            <a className="text-primary text-sm font-bold border-b-2 border-primary py-4 -mb-4" href="#">Events</a>
-            <a className="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Guests</a>
-            <a className="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Reports</a>
-            <a className="text-slate-600 hover:text-primary text-sm font-medium transition-colors" href="#">Settings</a>
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            <button
-              className="flex items-center gap-2 rounded-lg h-9 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all">
-              <span className="material-symbols-outlined text-sm">person_add</span>
-              <span>Add Guest</span>
-            </button>
-            <button
-              className="flex items-center gap-2 rounded-lg h-9 px-4 bg-neutral-light text-slate-900 text-sm font-bold hover:bg-slate-200 transition-all">
-              <span className="material-symbols-outlined text-sm">upload_file</span>
-              <span>Bulk Import</span>
-            </button>
-          </div>
-          <div className="h-8 w-px bg-border-light mx-2"></div>
-          <div className="bg-slate-200 rounded-full size-9 bg-cover bg-center border border-border-light"
-            data-alt="User profile avatar of operator"
-            style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuCErkSmjBlzQ-KgWHrMLS2viZxkxnQ0UKwnVCVEjG6557yIKYprVBUcafEAiPi70L0YkZAGVSV4VCY4YE9OAys3j-KsZ9wZ36emBEwiLeiPTmftXaFoRa1mA3tr3cn6uQSgJkPfXa6LGX8WWZc5nSvhBKvsEi6GU1XJTwq91M9gnMQY8eRaP06ptVXoXS8Lj-F8S6YSgmwR4gcQ5eb9jNUj_LPPtuUXDx1Xy8fckWpi3KfDC0O98q2XfjSXWIQ9hx8cmQopur8ef0_l')"}}>
-          </div>
-        </div>
-      </header>
+      
       <main className="flex flex-1 justify-center py-6">
         <div className="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4">
           {/* <!-- Breadcrumbs --> */}

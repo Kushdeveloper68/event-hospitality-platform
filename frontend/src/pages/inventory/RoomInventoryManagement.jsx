@@ -4,44 +4,7 @@ function RoomInventoryManagement() {
   return (
     <div className="relative flex min-h-screen flex-col">
     {/* <!-- Top Navigation Bar --> */}
-    <header
-      className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md dark:border-slate-800 dark:bg-background-dark/80 px-6 py-3">
-      <div className="mx-auto flex max-w-7xl items-center justify-between">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white">
-              <span className="material-symbols-outlined text-2xl">domain</span>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight">Event Hospitality</h1>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a className="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400" href="#">Dashboard</a>
-            <a className="text-sm font-semibold text-primary" href="#">Events</a>
-            <a className="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400" href="#">Guests</a>
-            <a className="text-sm font-medium text-slate-600 hover:text-primary dark:text-slate-400" href="#">Staff</a>
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative hidden sm:block">
-            <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-            <input
-              className="h-10 w-64 rounded-lg border-slate-200 bg-slate-50 pl-10 text-sm focus:border-primary focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
-              placeholder="Search rooms..." type="text" />
-          </div>
-          <button
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400">
-            <span className="material-symbols-outlined">notifications</span>
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500"></span>
-          </button>
-          <div className="h-10 w-10 overflow-hidden rounded-full border-2 border-slate-200 dark:border-slate-700">
-            <img alt="User Profile" className="h-full w-full object-cover"
-              data-alt="Corporate professional user profile picture"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRfB6ogEXkSMSC6vGEivW-ho-gN9nK1UCxdde5WANJGnMNw9qzSaoiZAL5VWqwRDqZX70fNVFDjHXVw_6RwYudr1puqPDO3ro4kf-FC9VSBIAWxeVo2GNpp7ZgOdASwPcwLc618zWauTSLKadscNGvOyUrBIn3c7qbOnH8wkkQ3C1WYnlnWUBGms6gMFkU-vbeJNmNLwYwZgcwyLo8ywsmSe4YwTzwph9qKNEj5IMO6oOKOfDUOsKiKuGGA_-WpFEEPdUfiAGeLSc3" />
-          </div>
-        </div>
-      </div>
-    </header>
+    
     <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
       {/* <!-- Breadcrumbs --> */}
       <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">

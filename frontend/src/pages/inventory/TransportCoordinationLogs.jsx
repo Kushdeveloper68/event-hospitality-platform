@@ -5,56 +5,7 @@ function TransportCoordinationLogs() {
      <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
     <div className="layout-container flex h-full grow flex-col">
       {/* <!-- Top Navigation --> */}
-      <header
-        className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-10 py-3">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-4 text-primary">
-            <div className="size-8 flex items-center justify-center bg-primary text-white rounded-lg">
-              <span className="material-symbols-outlined">local_shipping</span>
-            </div>
-            <h2 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">Event Logistics Pro</h2>
-          </div>
-          <nav className="flex items-center gap-9">
-            <a className="text-slate-500 hover:text-primary text-sm font-medium transition-colors" href="#">Dashboard</a>
-            <a className="text-slate-500 hover:text-primary text-sm font-medium transition-colors" href="#">Guests</a>
-            <a className="text-primary text-sm font-bold border-b-2 border-primary py-1" href="#">Transport</a>
-            <a className="text-slate-500 hover:text-primary text-sm font-medium transition-colors" href="#">Venues</a>
-            <a className="text-slate-500 hover:text-primary text-sm font-medium transition-colors" href="#">Reports</a>
-          </nav>
-        </div>
-        <div className="flex flex-1 justify-end gap-6 items-center">
-          <label className="flex flex-col min-w-40 h-10 max-w-64">
-            <div
-              className="flex w-full flex-1 items-stretch rounded-lg h-full border border-slate-200 bg-slate-50 focus-within:border-primary transition-all">
-              <div className="text-slate-400 flex items-center justify-center pl-4">
-                <span className="material-symbols-outlined text-xl">search</span>
-              </div>
-              <input
-                className="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 placeholder:text-slate-400 px-4 pl-2 text-sm font-normal"
-                placeholder="Search guests, drivers..." value="" />
-            </div>
-          </label>
-          <div className="flex gap-2">
-            <button
-              className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button
-              className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-          </div>
-          <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
-            <div className="text-right">
-              <p className="text-xs font-bold text-slate-900">Operations Team</p>
-              <p className="text-[10px] text-slate-500">Admin Account</p>
-            </div>
-            <div className="bg-primary/10 rounded-full size-10 flex items-center justify-center border border-primary/20">
-              <span className="material-symbols-outlined text-primary">account_circle</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      
       {/* <!-- Main Content Section --> */}
       <main className="flex flex-1 flex-col items-center py-8">
         <div className="layout-content-container flex flex-col w-full max-w-[1200px] px-6">

@@ -4,90 +4,11 @@ function TeamMemberManagement() {
   return (
      <div className="flex h-screen overflow-hidden">
     {/* <!-- Sidebar Navigation --> */}
-    <aside
-      className="w-64 flex-shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col">
-      <div className="p-6 flex items-center gap-3">
-        <div className="bg-primary rounded-lg p-1.5 flex items-center justify-center text-white">
-          <span className="material-symbols-outlined">event_seat</span>
-        </div>
-        <div>
-          <h1 className="text-[#111318] dark:text-white text-base font-bold leading-tight">EventOps Pro</h1>
-          <p className="text-[#616e89] text-xs font-normal">Enterprise SaaS</p>
-        </div>
-      </div>
-      <nav className="flex-1 px-4 space-y-1">
-        <a className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined text-[22px]">dashboard</span>
-          <span className="text-sm font-medium">Dashboard</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined text-[22px]">calendar_today</span>
-          <span className="text-sm font-medium">Events</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
-          <span className="material-symbols-outlined text-[22px] fill-1">group</span>
-          <span className="text-sm font-bold">Team Members</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined text-[22px]">location_on</span>
-          <span className="text-sm font-medium">Venues</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined text-[22px]">inventory_2</span>
-          <span className="text-sm font-medium">Inventory</span>
-        </a>
-        <a className="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined text-[22px]">bar_chart</span>
-          <span className="text-sm font-medium">Reports</span>
-        </a>
-      </nav>
-      <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-        <button
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
-          <span className="material-symbols-outlined text-sm">person_add</span>
-          Invite Member
-        </button>
-        <a className="mt-4 flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
-          href="#">
-          <span className="material-symbols-outlined text-[22px]">settings</span>
-          <span className="text-sm font-medium">Settings</span>
-        </a>
-      </div>
-    </aside>
+  
     {/* <!-- Main Content Area --> */}
     <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
       {/* <!-- Top Header --> */}
-      <header
-        className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span className="material-symbols-outlined text-lg">home</span>
-          <span className="mx-1">/</span>
-          <span className="font-medium text-slate-900 dark:text-slate-100">Team Management</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <button
-            className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
-            <span className="material-symbols-outlined">notifications</span>
-            <span
-              className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-          </button>
-          <div className="h-8 w-px bg-slate-200 dark:border-slate-800 mx-1"></div>
-          <div className="flex items-center gap-3 cursor-pointer group">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Alex Thompson</p>
-              <p className="text-xs text-slate-500">Operations Director</p>
-            </div>
-            <img alt="Profile" className="w-10 h-10 rounded-full border border-slate-200"
-              data-alt="User profile avatar of Alex Thompson"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCh_XPhNoLe7T5aMrS2-J5e1FXHqr1Dvr1a5ntshUgDlNm5Un-lWNd1Ay2i1n-xp_AB-jGVHkL3t7DYj2ggya63qSbeH43Vuy-JNcIqNV0aHv5hxEfKyT5CKKp3xcK4qXcieRb6hmig1VHlEroDE2VXSiK6Lz4Hg7NRWKpCi8494UNuNnE5AGMPRUApGb-G5auXxs3_vRomvUKhBqD_O_ckuUn3323bvg6CtIk_1Qc48U2Zh_sdvocUY9CZIRI2Ze4KuJf-tSKBOPoe" />
-          </div>
-        </div>
-      </header>
+   
       {/* <!-- Content --> */}
       <div className="flex-1 overflow-y-auto p-8">
         {/* <!-- Page Title --> */}

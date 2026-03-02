@@ -4,46 +4,7 @@ function EventAdminstrativeSetting() {
   return (
     <>
     {/* <!-- Top Navigation Bar --> */}
-  <header className="sticky top-0 z-50 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex justify-between h-16 items-center">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary p-1.5 rounded-lg text-white">
-              <span className="material-symbols-outlined block text-2xl">event_seat</span>
-            </div>
-            <h1 className="text-xl font-bold tracking-tight">EventOps Pro</h1>
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <a className="text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
-              href="#">Dashboard</a>
-            <a className="text-sm font-semibold text-primary" href="#">Events</a>
-            <a className="text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
-              href="#">Venues</a>
-            <a className="text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
-              href="#">Staff</a>
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative hidden sm:block">
-            <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
-            <input
-              className="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50"
-              placeholder="Search events..." type="text" />
-          </div>
-          <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div
-            className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 overflow-hidden">
-            <img className="h-full w-full object-cover" data-alt="User avatar of the administrator"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDIE-V8YABoIllQKQ_XUKpW5i528G-D2qX2uGujUwkajbXFhYsmr7iH33Dj5FuKDiVdvGizFlYS51v0WIX1S6rHkvtlCCdEWQ4NMUooTa5Pqd9nmUtQFNjxJH3_BMJ9YrQFesFR_vtOgyomLQH5I35A6cAAKJgA1Shqrqrhu2oSeu13LG_Sd76V3CK5jVjrPA4hTNfBGXo0M4r8QWDn0dYcdL5yzLi1IuJRoegD2WhEJja9gJ6Y0kTw2nQbg8ngYljt5dgryCjPdr0S" />
-          </div>
-        </div>
-      </div>
-    </div>
-  </header>
+
   <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     {/* <!-- Page Title and Header Actions --> */}
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
