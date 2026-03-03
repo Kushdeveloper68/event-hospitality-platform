@@ -1,16 +1,218 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
+import { getRooms, createRoom, updateRoom, deleteRoom, assignGuestToRoom } from '../../api/roomApi'
+import { getGuests } from '../../api/guestApi'
+import RoomconfigurationForm from '../forms/RoomconfigurationForm'
 
 function RoomInventoryManagement() {
+  const { eventId: paramEventId } = useParams()
+  const eventId = paramEventId
+  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+
+  const action = searchParams.get('action') // 'addRoom' or 'editRoom'
+  const editingId = searchParams.get('id')
+
+  const [rooms, setRooms] = useState([])
+  const [filteredRooms, setFilteredRooms] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterStatus, setFilterStatus] = useState('all') // all, available, occupied
+
+  // assignment modal state
+  const [assignRoomId, setAssignRoomId] = useState(null)
+  const [availableGuests, setAvailableGuests] = useState([])
+  const [assigning, setAssigning] = useState(false)
+  const [assignError, setAssignError] = useState(null)
+
+  // delete confirmation modal state
+  const [deleteRoomId, setDeleteRoomId] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const showToast = (msg, type='info', duration=4000) => {
+    setToast({ show:true, message: msg, type })
+    setTimeout(()=> setToast({ show:false, message:'', type:'info' }), duration)
+  }
+
+  const fetchRooms = async () => {
+    if (!eventId) return
+    setLoading(true); setError(null);
+    try {
+      const res = await getRooms({ eventId });
+      if (res.success) setRooms(res.rooms);
+      else {
+        setError(res.message || 'Failed to load rooms');
+        showToast(res.message || 'Failed to load rooms','error')
+      }
+    } catch(err){
+      console.error('fetchRooms', err);
+      setError('Error loading rooms');
+      showToast('Error loading rooms','error')
+    } finally { setLoading(false); }
+  }
+
+  // Filter rooms based on search and status
+  useEffect(() => {
+    let filtered = rooms
+
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(r => 
+        r.number.toString().includes(searchQuery) || 
+        r.type?.includes(searchQuery) ||
+        r.notes?.includes(searchQuery)
+      )
+    }
+
+    // Status filter
+    if (filterStatus === 'available') {
+      filtered = filtered.filter(r => (r.occupancy || 0) < r.capacity)
+    } else if (filterStatus === 'occupied') {
+      filtered = filtered.filter(r => (r.occupancy || 0) > 0)
+    }
+
+    setFilteredRooms(filtered)
+  }, [searchQuery, filterStatus, rooms])
+
+  useEffect(()=>{ fetchRooms() }, [eventId])
+
+  const getRoomStatus = (room) => {
+    const occupancy = room.occupancy || 0
+    const capacity = room.capacity || 1
+    
+    if (occupancy === 0) return 'available'
+    if (occupancy < capacity) return 'partial'
+    return 'full'
+  }
+
+  const getStatusBadge = (room) => {
+    const status = getRoomStatus(room)
+    const statusConfig = {
+      available: {
+        bgColor: 'bg-emerald-50',
+        textColor: 'text-emerald-700',
+        dotColor: 'bg-emerald-500',
+        label: 'Available',
+        darkBg: 'dark:bg-emerald-900/30',
+        darkText: 'dark:text-emerald-400'
+      },
+      partial: {
+        bgColor: 'bg-primary/10',
+        textColor: 'text-primary',
+        dotColor: 'bg-primary',
+        label: 'Partial',
+        darkBg: 'dark:bg-primary/20',
+        darkText: 'dark:text-primary'
+      },
+      full: {
+        bgColor: 'bg-primary/10',
+        textColor: 'text-primary',
+        dotColor: 'bg-primary',
+        label: 'Full',
+        darkBg: 'dark:bg-primary/20',
+        darkText: 'dark:text-primary'
+      }
+    }
+    
+    const config = statusConfig[status]
+    return config
+  }
+
+  const openAssignModal = async (roomId) => {
+    setAssignRoomId(roomId);
+    try {
+      const res = await getGuests({ eventId, limit: 1000 });
+      if (res.success) {
+        setAvailableGuests(res.guests.filter(g=> !g.room));
+      }
+    } catch(e){ 
+      console.warn('load guests for assign', e);
+      showToast('Failed to load available guests', 'error')
+    }
+  }
+
+  const closeAssignModal = () => {
+    setAssignRoomId(null); 
+    setAvailableGuests([]); 
+    setAssignError(null);
+  }
+
+  const handleAssignment = async (guestId) => {
+    if (!assignRoomId) return
+    setAssigning(true); 
+    setAssignError(null);
+    try {
+      const res = await assignGuestToRoom(assignRoomId, guestId);
+      if (res.success) {
+        showToast('Guest assigned successfully', 'success')
+        closeAssignModal()
+        fetchRooms()
+      } else { 
+        setAssignError(res.message||'Failed to assign') 
+      }
+    } catch(err){ 
+      console.error(err)
+      setAssignError(err.message||'Failed to assign') 
+    }
+    finally{ setAssigning(false); }
+  }
+
+  const handleEditRoom = (roomId) => {
+    setSearchParams({ action: 'editRoom', id: roomId })
+  }
+
+  const handleDeleteRoom = async () => {
+    if (!deleteRoomId) return
+    
+    setDeleteLoading(true)
+    try {
+      const res = await deleteRoom(deleteRoomId)
+      if (res.success) {
+        showToast('Room deleted successfully', 'success')
+        setDeleteRoomId(null)
+        fetchRooms()
+      } else {
+        showToast(res.message || 'Failed to delete room', 'error')
+      }
+    } catch (err) {
+      console.error('Error deleting room:', err)
+      showToast('Error deleting room', 'error')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const onFormDone = () => { 
+    setSearchParams({}); 
+    fetchRooms(); 
+  }
+  
+  const onFormCancel = () => { 
+    setSearchParams({}); 
+  }
+
+  if (action === 'addRoom' || action === 'editRoom') {
+    return (
+      <RoomconfigurationForm
+        eventId={eventId}
+        roomId={editingId}
+        onDone={onFormDone}
+        onCancel={onFormCancel}
+      />
+    )
+  }
+
   return (
     <div className="relative flex min-h-screen flex-col">
-    {/* <!-- Top Navigation Bar --> */}
     
     <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
       {/* <!-- Breadcrumbs --> */}
       <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
         <a className="hover:text-primary" href="#">Events</a>
         <span className="material-symbols-outlined text-base">chevron_right</span>
-        <a className="hover:text-primary text-slate-900 dark:text-white" href="#">Annual Corporate Summit</a>
+        <a className="hover:text-primary text-slate-900 dark:text-white" href="#">Event</a>
         <span className="material-symbols-outlined text-base">chevron_right</span>
         <span className="text-primary">Room Inventory</span>
       </nav>
@@ -18,23 +220,33 @@ function RoomInventoryManagement() {
       <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Room Inventory Management</h2>
-          <p className="mt-1 text-slate-600 dark:text-slate-400">Monitor and manage guest assignments for physical space
-            inventory.</p>
+          <p className="mt-1 text-slate-600 dark:text-slate-400">Monitor and manage guest assignments for physical space inventory.</p>
         </div>
         <div className="flex gap-3">
           <button
+            onClick={() => {/* export logic placeholder */}}
             className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <span className="material-symbols-outlined text-lg">file_download</span>
             Export PDF
           </button>
           <button
+            onClick={() => setSearchParams({ action: 'addRoom' })}
             className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-blue-700">
             <span className="material-symbols-outlined text-lg">add</span>
             Add Room
           </button>
         </div>
       </div>
-      {/* <!-- Stats Grid --> */}
+
+      {/* Error Alert */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <span className="material-symbols-outlined text-red-500">error</span>
+          <p className="text-sm text-red-700">{error}</p>
+        </div>
+      )}
+
+      {/* Stats Grid --> */}
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="flex items-center justify-between">
@@ -42,8 +254,7 @@ function RoomInventoryManagement() {
             <span className="material-symbols-outlined text-slate-400">bed</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold tracking-tight">120</h3>
-            <span className="text-xs font-semibold text-emerald-600">+2 from last week</span>
+            <h3 className="text-2xl font-bold tracking-tight">{rooms.length}</h3>
           </div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
@@ -52,7 +263,7 @@ function RoomInventoryManagement() {
             <span className="material-symbols-outlined text-slate-400">groups</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold tracking-tight">240</h3>
+            <h3 className="text-2xl font-bold tracking-tight">{rooms.reduce((a,r)=>a+(r.capacity||0),0)}</h3>
             <span className="text-xs font-semibold text-slate-400">Guests max</span>
           </div>
         </div>
@@ -62,310 +273,286 @@ function RoomInventoryManagement() {
             <span className="material-symbols-outlined text-slate-400">check_circle</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold tracking-tight">186</h3>
-            <span className="text-xs font-semibold text-primary">77.5% Full</span>
+            <h3 className="text-2xl font-bold tracking-tight">{rooms.reduce((a,r)=>a+(r.occupancy||0),0)}</h3>
+            <span className="text-xs font-semibold text-primary">
+              {rooms.length && rooms.reduce((a,r)=>a+(r.capacity||0),0) ? 
+                Math.round((rooms.reduce((a,r)=>a+(r.occupancy||0),0)/rooms.reduce((a,r)=>a+(r.capacity||0),0))*100) : 0}% Full
+            </span>
           </div>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-slate-500">Maintenance</p>
-            <span className="material-symbols-outlined text-slate-400">build</span>
+            <p className="text-sm font-medium text-slate-500">Available</p>
+            <span className="material-symbols-outlined text-slate-400">door_open</span>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <h3 className="text-2xl font-bold tracking-tight">8</h3>
-            <span className="text-xs font-semibold text-amber-600">3 priority items</span>
+            <h3 className="text-2xl font-bold tracking-tight">
+              {rooms.filter(r => (r.occupancy || 0) < r.capacity).length}
+            </h3>
+            <span className="text-xs font-semibold text-emerald-600">rooms available</span>
           </div>
         </div>
       </div>
-      {/* <!-- Filter Bar --> */}
+
+      {/* Filter Bar --> */}
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        <button className="flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-white">
-          All Rooms
+        <input
+          type="text"
+          placeholder="Search by room number, type..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
+        />
+        <button 
+          onClick={() => setFilterStatus('all')}
+          className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+            filterStatus === 'all' 
+              ? 'bg-primary text-white' 
+              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+          }`}>
+          All Rooms ({rooms.length})
         </button>
-        <button
-          className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <button 
+          onClick={() => setFilterStatus('available')}
+          className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+            filterStatus === 'available' 
+              ? 'bg-emerald-500 text-white' 
+              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+          }`}>
           <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-          Available (42)
+          Available ({rooms.filter(r => (r.occupancy || 0) < r.capacity).length})
         </button>
-        <button
-          className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+        <button 
+          onClick={() => setFilterStatus('occupied')}
+          className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+            filterStatus === 'occupied' 
+              ? 'bg-primary text-white' 
+              : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
+          }`}>
           <span className="h-2 w-2 rounded-full bg-primary"></span>
-          Occupied (70)
+          Occupied ({rooms.filter(r => (r.occupancy || 0) > 0).length})
         </button>
-        <button
-          className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-          <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          Maintenance (8)
-        </button>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-sm text-slate-500">View:</span>
-          <div className="flex rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-            <button
-              className="flex h-9 w-9 items-center justify-center border-r border-slate-200 bg-slate-50 text-primary dark:border-slate-700 dark:bg-slate-700">
-              <span className="material-symbols-outlined text-xl">grid_view</span>
-            </button>
-            <button className="flex h-9 w-9 items-center justify-center text-slate-400 hover:text-slate-600">
-              <span className="material-symbols-outlined text-xl">view_list</span>
-            </button>
-          </div>
-        </div>
       </div>
-      {/* <!-- Room Grid --> */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {/* <!-- Room Card (Available) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold">Room 101</h4>
-              <p className="text-xs text-slate-500">North Wing • Deluxe</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-              Available
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Capacity</span>
-              <span className="font-semibold">2 Guests</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Occupancy</span>
-                <span className="font-bold">0 / 2</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-0 bg-primary"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90">
-              Assign Guest
-            </button>
+
+      {/* Loading State */}
+      {loading && (
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <span className="material-symbols-outlined text-4xl text-slate-400 animate-spin">hourglass_top</span>
+            <p className="mt-2 text-slate-600">Loading rooms...</p>
           </div>
         </div>
-        {/* <!-- Room Card (Partially Occupied) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold">Room 102</h4>
-              <p className="text-xs text-slate-500">North Wing • Standard</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary dark:bg-primary/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-              Occupied
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Capacity</span>
-              <span className="font-semibold">2 Guests</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Occupancy</span>
-                <span className="font-bold">1 / 2</span>
+      )}
+
+      {/* Room Grid --> */}
+      {!loading && filteredRooms.length > 0 && (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredRooms.map((room) => {
+            const badge = getStatusBadge(room)
+            const occupancy = room.occupancy || 0
+            const capacity = room.capacity || 1
+            const occupancyPercent = (occupancy / capacity) * 100
+
+            return (
+              <div key={room._id} className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
+                <div className="mb-4 flex items-start justify-between">
+                  <div>
+                    <h4 className="text-lg font-bold">{room.number}</h4>
+                    <p className="text-xs text-slate-500">{room.type || 'Standard'}</p>
+                  </div>
+                  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${badge.bgColor} ${badge.textColor} ${badge.darkBg} ${badge.darkText}`}>
+                    <span className={`h-1.5 w-1.5 rounded-full ${badge.dotColor}`}></span>
+                    {badge.label}
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Capacity</span>
+                    <span className="font-semibold">{capacity} Guests</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Occupancy</span>
+                      <span className="font-bold">{occupancy} / {capacity}</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div className={`h-full bg-primary transition-all`} style={{width: `${Math.min(occupancyPercent, 100)}%`}}></div>
+                    </div>
+                  </div>
+                </div>
+                {room.notes && (
+                  <div className="mt-3 text-xs text-slate-500 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    {room.notes}
+                  </div>
+                )}
+                <div className="mt-6 flex gap-2">
+                  {occupancy < capacity && (
+                    <button
+                      onClick={() => openAssignModal(room._id)}
+                      className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90">
+                      Assign Guest
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleEditRoom(room._id)}
+                    className="flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                    <span className="material-symbols-outlined text-lg">edit</span>
+                  </button>
+                  <button
+                    onClick={() => setDeleteRoomId(room._id)}
+                    className="flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-red-600 transition-colors hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                    <span className="material-symbols-outlined text-lg">delete</span>
+                  </button>
+                </div>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-1/2 bg-primary"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6 flex gap-2">
-            <button
-              className="flex-1 rounded-lg bg-slate-100 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-              View Details
-            </button>
-            <button className="rounded-lg bg-primary px-3 text-white transition-opacity hover:opacity-90">
-              <span className="material-symbols-outlined text-lg align-middle">person_add</span>
-            </button>
-          </div>
+            )
+          })}
         </div>
-        {/* <!-- Room Card (Maintenance) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold text-slate-400">Room 103</h4>
-              <p className="text-xs text-slate-500 text-slate-400">North Wing • Suite</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-              <span className="material-symbols-outlined text-[12px]">build</span>
-              Maintenance
-            </span>
-          </div>
-          <div className="space-y-3 opacity-60">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Issue</span>
-              <span className="font-semibold">AC Repair</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Est. Return</span>
-                <span className="font-bold text-amber-600">Today, 4PM</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-full bg-amber-400"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-              Check Status
-            </button>
-          </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && filteredRooms.length === 0 && rooms.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12">
+          <span className="material-symbols-outlined text-5xl text-slate-300">meeting_room</span>
+          <p className="mt-4 text-lg font-semibold text-slate-700">No rooms yet</p>
+          <p className="mt-2 text-slate-500">Create your first room to get started</p>
         </div>
-        {/* <!-- Room Card (Occupied Full) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold">Room 104</h4>
-              <p className="text-xs text-slate-500">South Wing • Standard</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary dark:bg-primary/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-              Full
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Capacity</span>
-              <span className="font-semibold">4 Guests</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Occupancy</span>
-                <span className="font-bold">4 / 4</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-full bg-primary"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg bg-slate-100 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-              Manage Guests
-            </button>
-          </div>
+      )}
+
+      {/* Empty Search State */}
+      {!loading && filteredRooms.length === 0 && rooms.length > 0 && (
+        <div className="flex flex-col items-center justify-center py-12">
+          <span className="material-symbols-outlined text-5xl text-slate-300">search_off</span>
+          <p className="mt-4 text-lg font-semibold text-slate-700">No rooms found</p>
+          <p className="mt-2 text-slate-500">Try adjusting your search or filters</p>
         </div>
-        
-        {/* <!-- Room Card (Occupied) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold">Room 106</h4>
-              <p className="text-xs text-slate-500">South Wing • Executive</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-primary dark:bg-primary/20">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary"></span>
-              Occupied
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Capacity</span>
-              <span className="font-semibold">2 Guests</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Occupancy</span>
-                <span className="font-bold">2 / 2</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-full bg-primary"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg bg-slate-100 py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-              View Details
-            </button>
-          </div>
-        </div>
-      
-        {/* <!-- Room Card (Maintenance) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold text-slate-400">Room 108</h4>
-              <p className="text-xs text-slate-500 text-slate-400">East Tower • Standard</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-              <span className="material-symbols-outlined text-[12px]">build</span>
-              Maintenance
-            </span>
-          </div>
-          <div className="space-y-3 opacity-60">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Issue</span>
-              <span className="font-semibold">Plumbing</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Est. Return</span>
-                <span className="font-bold text-amber-600">Tomorrow</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-3/4 bg-amber-400"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
-              Check Status
-            </button>
-          </div>
-        </div>
-      </div>
-      {/* <!-- Pagination --> */}
-      <div className="mt-12 flex items-center justify-between border-t border-slate-200 pt-6 dark:border-slate-800">
-        <p className="text-sm text-slate-500">Showing <span className="font-semibold text-slate-900 dark:text-white">1-8</span>
-          of <span className="font-semibold text-slate-900 dark:text-white">120</span> rooms</p>
-        <div className="flex items-center gap-2">
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
-            <span className="material-symbols-outlined">chevron_left</span>
-          </button>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">1</button>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">2</button>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">3</button>
-          <span className="px-2 text-slate-400">...</span>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800">15</button>
-          <button
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
-            <span className="material-symbols-outlined">chevron_right</span>
-          </button>
-        </div>
-      </div>
+      )}
     </main>
-    {/* <!-- Footer Meta --> */}
+
+    {/* Toast Notification */}
+    {toast.show && (
+      <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
+        toast.type === 'success' ? 'bg-emerald-500 text-white' : 
+        toast.type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-slate-900 text-white'
+      }`}>
+        <span className="material-symbols-outlined">
+          {toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : 'info'}
+        </span>
+        <p>{toast.message}</p>
+      </div>
+    )}
+
+    {/* Assignment Modal */}
+    {assignRoomId && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
+          <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h3 className="text-xl font-bold">Assign Guest to Room</h3>
+            <button
+              onClick={closeAssignModal}
+              className="text-slate-500 hover:text-slate-700">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          
+          {assignError && (
+            <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              {assignError}
+            </div>
+          )}
+
+          <div className="flex-1 overflow-y-auto p-6">
+            {availableGuests.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-slate-500">No unassigned guests available</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {availableGuests.map(guest => (
+                  <button
+                    key={guest._id}
+                    onClick={() => handleAssignment(guest._id)}
+                    disabled={assigning}
+                    className="w-full p-4 text-left border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-primary transition-all disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold">{guest.fullName}</p>
+                        <p className="text-sm text-slate-500">{guest.email}</p>
+                      </div>
+                      {assigning ? (
+                        <span className="material-symbols-outlined animate-spin text-slate-400">hourglass_top</span>
+                      ) : (
+                        <span className="material-symbols-outlined text-slate-400">person_add</span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="p-6 border-t border-slate-200 dark:border-slate-800 flex gap-3">
+            <button
+              onClick={closeAssignModal}
+              disabled={assigning}
+              className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Delete Confirmation Modal */}
+    {deleteRoomId && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full">
+          <div className="p-6">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <span className="material-symbols-outlined text-red-600">warning</span>
+              </div>
+              <h3 className="text-xl font-bold">Delete Room?</h3>
+            </div>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              Are you sure you want to delete this room? This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex gap-3 border-t border-slate-200 dark:border-slate-800 p-6">
+            <button
+              onClick={() => setDeleteRoomId(null)}
+              disabled={deleteLoading}
+              className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteRoom}
+              disabled={deleteLoading}
+              className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2">
+              {deleteLoading ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin">hourglass_top</span>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined">delete</span>
+                  Delete
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Footer Meta --> */}
     <footer className="mt-auto border-t border-slate-200 bg-white px-6 py-4 dark:border-slate-800 dark:bg-background-dark">
       <div className="mx-auto flex max-w-7xl items-center justify-between text-xs font-medium text-slate-500">
         <div className="flex items-center gap-4">
           <span>© 2024 EventOps Pro v2.4</span>
-          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> System
-            Online</span>
+          <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> System Online</span>
         </div>
         <div className="flex gap-6">
           <a className="hover:text-primary" href="#">Help Center</a>
