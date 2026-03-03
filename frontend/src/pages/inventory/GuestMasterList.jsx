@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { getGuests, deleteGuest } from '../../api/guestApi'
 import GuestDataEntry from '../forms/GuestDataEntry'
@@ -19,6 +19,10 @@ function GuestMasterList({ extraPath = '', eventId: propEventId }) {
   const [page, setPage] = useState(1)
   const limit = 10
   const [searchQuery, setSearchQuery] = useState('')
+  // local input state for immediate typing (debounced into `searchQuery`)
+  const [inputValue, setInputValue] = useState('')
+  const searchDebounceRef = useRef(null)
+  const searchInputRef = useRef(null)
   const [vipFilter, setVipFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(false)
@@ -48,19 +52,25 @@ function GuestMasterList({ extraPath = '', eventId: propEventId }) {
     if (!action) {
       fetchGuests()
     }
-  }, [eventId, page, searchQuery, vipFilter, statusFilter, action])
+  }, [eventId, page, vipFilter, statusFilter, action])
+
+  // keep inputValue in sync if searchQuery changes externally
+  useEffect(() => {
+    setInputValue(searchQuery)
+  }, [searchQuery])
 
   useEffect(() => {
     // refresh summary counts whenever the event changes or guests change
     if (eventId) fetchSummaryCounts()
   }, [eventId])
 
-  const fetchGuests = async () => {
+  // fetchGuests optionally suppresses the global loading flag (quiet) when we just want to update
+const fetchGuests = async ({ quiet = false } = {}) => {
     try {
       // Validate eventId
       if (!validateEventId()) return
 
-      setLoading(true)
+      if (!quiet) setLoading(true)
       setError(null)
       
       const params = { eventId, page, limit }
@@ -104,7 +114,11 @@ function GuestMasterList({ extraPath = '', eventId: propEventId }) {
       setError(errorMsg)
       showToast(errorMsg, 'error')
     } finally {
-      setLoading(false)
+      if (!quiet) setLoading(false)
+      // keep search input focused after results load
+     if (searchInputRef.current) {
+        searchInputRef.current.focus()
+      }
     }
   }
 
@@ -115,9 +129,25 @@ function GuestMasterList({ extraPath = '', eventId: propEventId }) {
   }
 
   const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value)
-    setPage(1)
+    const value = e.target.value
+    setInputValue(value)
+
+    // debounce updating the actual searchQuery used for fetching
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    searchDebounceRef.current = setTimeout(() => {
+      setPage(1)
+      setSearchQuery(value)
+      // perform search quietly without showing full page loader
+      fetchGuests({ quiet: true })
+    }, 200)
   }
+
+  // clear debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current)
+    }
+  }, [])
 
   const handleDelete = async (id, guestName = '') => {
     // Confirmation dialog
@@ -314,10 +344,10 @@ function GuestMasterList({ extraPath = '', eventId: propEventId }) {
                 <div className="relative w-full md:w-64">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
                   <input
-                    value={searchQuery}
+                    ref={searchInputRef}
+                    value={inputValue}
                     onChange={handleSearchChange}
-                    disabled={loading}
-                    className="w-full bg-neutral-light border-none rounded-lg h-9 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-neutral-light border-none rounded-lg h-9 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20"
                     placeholder="Search guests or rooms..."
                     type="text"
                   />

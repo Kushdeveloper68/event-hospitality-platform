@@ -24,9 +24,15 @@ const createEvent = async (eventData, userId) => {
  * Get all events
  * @returns {Promise} - Array of events
  */
-const getAllEvents = async () => {
+/**
+ * Get all events, optionally filtered by owner
+ * @param {string} [userId] - if provided, return only events created by this user
+ */
+const getAllEvents = async (userId) => {
   try {
-    const events = await EventModel.find().populate("createdBy", "name email");
+    const query = {};
+    if (userId) query.createdBy = userId;
+    const events = await EventModel.find(query).populate("createdBy", "name email");
     return events;
   } catch (error) {
     throw new Error("Failed to fetch events: " + error.message);

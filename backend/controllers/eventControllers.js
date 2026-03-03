@@ -54,7 +54,8 @@ const handleCreateEvent = async (req, res) => {
  */
 const handleGetAllEvents = async (req, res) => {
   try {
-    const events = await getAllEvents();
+    const userId = req.user?.id;
+    const events = await getAllEvents(userId);
     return res.status(200).json({
       success: true,
       events,
@@ -76,6 +77,12 @@ const handleGetEventById = async (req, res) => {
   try {
     const { eventId } = req.params;
     const event = await getEventById(eventId);
+    // ensure requesting user owns this event
+    const userId = req.user?.id;
+    const ownerId = event.createdBy?._id || event.createdBy;
+    if (userId && String(ownerId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
+    }
     return res.status(200).json({
       success: true,
       event,
@@ -97,6 +104,14 @@ const handleUpdateEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
     const updateData = req.body;
+
+    // ensure ownership
+    const existing = await getEventById(eventId);
+    const userId = req.user?.id;
+    const ownerId = existing.createdBy?._id || existing.createdBy;
+    if (userId && String(ownerId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
+    }
 
     const updatedEvent = await updateEvent(eventId, updateData);
     return res.status(200).json({
@@ -120,6 +135,14 @@ const handleUpdateEvent = async (req, res) => {
 const handleDeleteEvent = async (req, res) => {
   try {
     const { eventId } = req.params;
+    // ensure ownership
+    const existing = await getEventById(eventId);
+    const userId = req.user?.id;
+    const ownerId = existing.createdBy?._id || existing.createdBy;
+    if (userId && String(ownerId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
+    }
+
     await deleteEvent(eventId);
     return res.status(200).json({
       success: true,

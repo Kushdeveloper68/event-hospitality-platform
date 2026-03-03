@@ -29,7 +29,14 @@ const createGuest = async (guestData) => {
 const getGuests = async ({ eventId, search, vip, status, page = 1, limit = 10 }) => {
   try {
     const query = {};
-    if (eventId) query.event = eventId;
+    if (eventId) {
+      // allow passing a single eventId or an array of eventIds
+      if (Array.isArray(eventId) && eventId.length > 0) {
+        query.event = { $in: eventId };
+      } else {
+        query.event = eventId;
+      }
+    }
     if (typeof vip !== "undefined") query.vipStatus = vip;
     if (search) {
       const regex = new RegExp(search, "i");
