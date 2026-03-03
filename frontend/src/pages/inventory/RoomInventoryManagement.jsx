@@ -259,42 +259,7 @@ function RoomInventoryManagement() {
             </button>
           </div>
         </div>
-        {/* <!-- Room Card (Available) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold">Room 105</h4>
-              <p className="text-xs text-slate-500">South Wing • King</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-              Available
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Capacity</span>
-              <span className="font-semibold">2 Guests</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Occupancy</span>
-                <span className="font-bold">0 / 2</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-0 bg-primary"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90">
-              Assign Guest
-            </button>
-          </div>
-        </div>
+        
         {/* <!-- Room Card (Occupied) --> */}
         <div
           className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
@@ -331,42 +296,7 @@ function RoomInventoryManagement() {
             </button>
           </div>
         </div>
-        {/* <!-- Room Card (Available) --> */}
-        <div
-          className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="mb-4 flex items-start justify-between">
-            <div>
-              <h4 className="text-lg font-bold">Room 107</h4>
-              <p className="text-xs text-slate-500">East Tower • Junior Suite</p>
-            </div>
-            <span
-              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-              Available
-            </span>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">Capacity</span>
-              <span className="font-semibold">3 Guests</span>
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Occupancy</span>
-                <span className="font-bold">0 / 3</span>
-              </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                <div className="h-full w-0 bg-primary"></div>
-              </div>
-            </div>
-          </div>
-          <div className="mt-6">
-            <button
-              className="w-full rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90">
-              Assign Guest
-            </button>
-          </div>
-        </div>
+      
         {/* <!-- Room Card (Maintenance) --> */}
         <div
           className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40">
