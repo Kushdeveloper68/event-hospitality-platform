@@ -522,7 +522,7 @@ function EventWorkspaceShell() {
 
         {activeTab === 'service' && (
           <div className="space-y-6">
-            <ServiceRequestLogs />
+            <ServiceRequestLogs eventId={eventId} />
           </div>
         )}
 
