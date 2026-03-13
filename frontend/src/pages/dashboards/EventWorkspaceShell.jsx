@@ -11,6 +11,7 @@ import ServiceRequestLogs from '../inventory/ServiceRequestLogs'
 import OprationalEventSchedule from './OprationalEventSchedule'
 import EventSummaryDashboards from './EventSummaryDashboards'
 import EventAdminstrativeSetting from '../settings/EventAdminstrativeSetting'
+import TeamMemberManagement from '../inventory/TeamMemberManagement'
 
 function EventWorkspaceShell() {
   const { eventId, tab, "*": rest } = useParams() // rest holds any extra path after the tab (e.g. "add" or "edit/123")
@@ -231,6 +232,7 @@ function EventWorkspaceShell() {
             { key: 'service', icon: 'room_service', label: 'Service' },
             { key: 'schedule', icon: 'schedule', label: 'Schedule' },
             { key: 'reports', icon: 'analytics', label: 'Reports' },
+            { key: 'team', icon: 'groups', label: 'Team' },
             { key: 'settings', icon: 'settings', label: 'Settings' },
           ].map((tab) => {
             const active = activeTab === tab.key
@@ -533,6 +535,12 @@ function EventWorkspaceShell() {
         {activeTab === 'reports' && (
           <div className="space-y-6">
             <EventSummaryDashboards />
+          </div>
+        )}
+
+        {activeTab === 'team' && (
+          <div className="space-y-6">
+            <TeamMemberManagement />
           </div>
         )}
 

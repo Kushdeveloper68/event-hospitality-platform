@@ -1,6 +1,19 @@
 import React from 'react'
+import { useSearchParams } from 'react-router-dom'
+import TeamMemberEntryForm from '../forms/TeamMemberEntryForm'
 
 function TeamMemberManagement() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const action = searchParams.get('action');
+
+  if (action === 'addTeam') {
+    return (
+      <TeamMemberEntryForm 
+        onDone={() => setSearchParams({})} 
+        onCancel={() => setSearchParams({})} 
+      />
+    );
+  }
   return (
      <div className="flex h-screen overflow-hidden">
     {/* <!-- Sidebar Navigation --> */}
@@ -22,6 +35,12 @@ function TeamMemberManagement() {
               className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
               <span className="material-symbols-outlined text-lg">file_download</span>
               Export
+            </button>
+            <button
+              onClick={() => setSearchParams({ action: 'addTeam' })}
+              className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all text-sm">
+              <span className="material-symbols-outlined text-lg">add</span>
+              Add Team Member
             </button>
           </div>
         </div>
