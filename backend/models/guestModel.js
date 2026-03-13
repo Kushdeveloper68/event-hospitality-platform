@@ -11,6 +11,8 @@ const GuestSchema = new Schema(
     groupName: { type: String },
     vipStatus: { type: Boolean, default: false },
     checkedIn: { type: Boolean, default: false },
+    checkedInAt: { type: Date, default: null },
+    checkedOutAt: { type: Date, default: null },
     room: { type: Schema.Types.ObjectId, ref: "Room" },
     arrivalDatetime: { type: Date },
     departureDatetime: { type: Date },

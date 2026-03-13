@@ -508,7 +508,7 @@ function EventWorkspaceShell() {
 
         {activeTab === 'checkin' && (
           <div className="space-y-6">
-            <CheckInOprationDesk />
+            <CheckInOprationDesk eventId={eventId} />
           </div>
         )}
 

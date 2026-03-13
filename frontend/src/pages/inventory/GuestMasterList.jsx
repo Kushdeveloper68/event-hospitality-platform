@@ -475,7 +475,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning ring-1 ring-inset ring-warning/20">{g.arrivalDatetime ? 'Arriving' : 'Pending'}</span>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-600 text-center font-medium">{g.room || 'N/A'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 text-center font-medium">{g.room?.number || 'N/A'}</td>
                           <td className="px-6 py-4 text-sm text-slate-600">{g.arrivalDatetime ? new Date(g.arrivalDatetime).toLocaleString() : '-'}</td>
                           <td className="px-6 py-4 text-sm text-slate-600">{g.departureDatetime ? new Date(g.departureDatetime).toLocaleString() : '-'}</td>
                           <td className="px-6 py-4 text-right space-x-2">
