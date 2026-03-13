@@ -13,6 +13,7 @@ const guestRoutes = require('./routes/guestRoutes')
 const roomRoutes = require('./routes/roomRoutes')
 const checkInRoutes = require('./routes/checkInRoutes')
 const transportRoutes = require('./routes/transportCoordiRoutes')
+const teamMemberRoutes = require('./routes/teamMemberRoutes')
 // connect to MongoDB
 connectToMongoDB(process.env.MONGO_URI)
 
@@ -34,6 +35,7 @@ app.use('/api/guests', guestRoutes)
 app.use('/api/rooms', roomRoutes)
 app.use('/api/checkin', checkInRoutes)
 app.use('/api/transport', transportRoutes)
+app.use('/api/team', teamMemberRoutes)
 
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)

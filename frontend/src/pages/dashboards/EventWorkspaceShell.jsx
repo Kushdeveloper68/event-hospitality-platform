@@ -540,7 +540,7 @@ function EventWorkspaceShell() {
 
         {activeTab === 'team' && (
           <div className="space-y-6">
-            <TeamMemberManagement />
+            <TeamMemberManagement eventId={eventId} />
           </div>
         )}
 

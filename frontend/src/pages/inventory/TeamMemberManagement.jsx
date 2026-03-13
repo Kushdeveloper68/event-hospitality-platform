@@ -1,291 +1,392 @@
-import React from 'react'
-import { useSearchParams } from 'react-router-dom'
-import TeamMemberEntryForm from '../forms/TeamMemberEntryForm'
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import TeamMemberEntryForm from '../forms/TeamMemberEntryForm';
+import { getTeamMembers, deleteTeamMember, getTeamSummary, updateTeamMemberStatus } from '../../api/teamMemberApi';
 
-function TeamMemberManagement() {
+function TeamMemberManagement({ eventId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const action = searchParams.get('action');
+  const editId = searchParams.get('id');
 
-  if (action === 'addTeam') {
+  const [members, setMembers] = useState([]);
+  const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('All Roles');
+  const [statusFilter, setStatusFilter] = useState('All');
+  
+  // Toast and Modals
+  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [deleteId, setDeleteId] = useState(null);
+  const [actionMenuId, setActionMenuId] = useState(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false }), 3000);
+  };
+
+  const loadData = async () => {
+    if (!eventId) return;
+    setLoading(true);
+    try {
+      const filters = {
+        role: roleFilter,
+        status: statusFilter,
+        search: searchTerm
+      };
+      
+      const membersRes = await getTeamMembers(eventId, filters);
+      if (membersRes.success) setMembers(membersRes.teamMembers);
+      else setError(membersRes.message);
+
+      const summaryRes = await getTeamSummary(eventId);
+      if (summaryRes.success) setSummary(summaryRes.summary);
+      
+    } catch (err) {
+      console.error(err);
+      setError('Error loading team data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Only refresh when filters are applied immediately (without submit)
+    const timeout = setTimeout(() => {
+      loadData();
+    }, 300); // debounce search
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line
+  }, [eventId, roleFilter, statusFilter, searchTerm]);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      const res = await deleteTeamMember(deleteId);
+      if (res.success) {
+        showToast('Member removed from team', 'success');
+        loadData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    } catch (err) {
+      showToast('Error deleting member', 'error');
+    } finally {
+      setDeleteId(null);
+    }
+  };
+
+  const handleStatusToggle = async (id, currentStatus) => {
+    setActionMenuId(null);
+    const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+    try {
+      const res = await updateTeamMemberStatus(id, newStatus);
+      if (res.success) {
+        showToast(`Status updated to ${newStatus}`, 'success');
+        loadData();
+      } else {
+        showToast(res.message, 'error');
+      }
+    } catch (err) {
+      showToast('Error updating status', 'error');
+    }
+  };
+
+  const getRoleBadgeColor = (role) => {
+    switch (role) {
+      case 'Admin': return 'bg-blue-50 dark:bg-blue-900/30 text-primary';
+      case 'Event Lead': return 'bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400';
+      case 'Logistics': return 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400';
+      case 'Floor Staff': return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+      default: return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+    }
+  };
+
+  const getTimeAgo = (dateStr) => {
+    if (!dateStr) return 'Never';
+    const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years ago";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months ago";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return Math.floor(seconds) + "s ago";
+  };
+
+  if (action === 'addTeam' || action === 'editTeam') {
     return (
       <TeamMemberEntryForm 
-        onDone={() => setSearchParams({})} 
+        eventId={eventId}
+        memberId={editId}
+        onDone={() => {
+          setSearchParams({});
+          loadData();
+        }} 
         onCancel={() => setSearchParams({})} 
       />
     );
   }
+
   return (
-     <div className="flex h-screen overflow-hidden">
-    {/* <!-- Sidebar Navigation --> */}
-  
-    {/* <!-- Main Content Area --> */}
-    <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-      {/* <!-- Top Header --> */}
-   
-      {/* <!-- Content --> */}
-      <div className="flex-1 overflow-y-auto p-8">
-        {/* <!-- Page Title --> */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Team Members</h2>
-            <p className="text-slate-500 mt-1">Manage and assign roles for your hospitality operations team.</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-              <span className="material-symbols-outlined text-lg">file_download</span>
-              Export
-            </button>
-            <button
-              onClick={() => setSearchParams({ action: 'addTeam' })}
-              className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all text-sm">
-              <span className="material-symbols-outlined text-lg">add</span>
-              Add Team Member
-            </button>
+    <div className="relative flex h-full overflow-hidden flex-col">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in ${
+          toast.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+        }`}>
+          <span className="material-symbols-outlined">
+            {toast.type === 'success' ? 'check_circle' : 'error'}
+          </span>
+          <p className="font-semibold">{toast.message}</p>
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      {deleteId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                  <span className="material-symbols-outlined text-red-600">warning</span>
+                </div>
+                <h3 className="text-xl font-bold dark:text-white">Remove Member</h3>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Are you sure you want to remove this staff member from the event? Security revokes will happen instantly.
+              </p>
+            </div>
+            <div className="flex gap-3 border-t border-slate-200 dark:border-slate-800 p-6">
+              <button onClick={() => setDeleteId(null)} className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                Cancel
+              </button>
+              <button onClick={handleDelete} className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 flex justify-center gap-2">
+                Remove
+              </button>
+            </div>
           </div>
         </div>
-        {/* <!-- Filters & Search Bar --> */}
-        <div
-          className="bg-white dark:bg-slate-900 p-4 rounded-t-xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1 group">
-            <span
-              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
-            <input
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 transition-shadow"
-              placeholder="Search members by name or email..." type="text" />
-          </div>
-          <div className="flex gap-3">
-            <select
-              className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-600 dark:text-slate-300 py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20">
-              <option>All Roles</option>
-              <option>Admin</option>
-              <option>Event Lead</option>
-              <option>Floor Staff</option>
-              <option>Logistics</option>
-            </select>
-            <select
-              className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-600 dark:text-slate-300 py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20">
-              <option>Status: All</option>
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-          </div>
-        </div>
-        {/* <!-- Table Container --> */}
-        <div
-          className="bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 rounded-b-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr
-                  className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
-                  <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Member</th>
-                  <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Email</th>
-                  <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Role</th>
-                  <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Status</th>
-                  <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Last Active</th>
-                  <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {/* <!-- Row 1 --> */}
-                <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img alt="Sarah" className="w-9 h-9 rounded-full bg-slate-100" data-alt="Avatar of Sarah Jenkins"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDX_7Mt_FnAX6iGE7FxDEFRx0GRapKLHPx-ZQGraWLAoG609_tg2QzPjH7wYfP-4kU24YhzUuoojfKLlg5HE0KkaoNQH3VbBY-RxRhSm2CYDz3NrUVLySmLAUE2jrNyELKFxn3J1L4GIGa6ATM9O3BMhassyv6X4K06HtTaFan9gYDRAtgtFOQ_Yo8bDIc8_YeuEzt5bbXrkm3OR7XPw4I972F3vbJXshlOIC3FO4o4FhYSRIZbwkJ2Nwlpn4tcyHVXdUSDH29WR5-F" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">Sarah Jenkins</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                    sarah.j@eventops.pro</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/30 text-primary text-[11px] font-bold uppercase tracking-tight">Admin</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Active
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">2 mins ago</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-                {/* <!-- Row 2 --> */}
-                <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img alt="Marcus" className="w-9 h-9 rounded-full bg-slate-100" data-alt="Avatar of Marcus Reed"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDC6fX0fwkXUkx7ZqEP2S43XVIV2sIl8GDZc7N-5VWyrP5HcyKJYAju7U986zVcIFruHpCl2jr_dOaGRz-CuNI10jNhpqQYMmBu6Hq8QtSK0d4MQFZnFdK97b4acE2FusN7McQt4oSWEI5snSZp9yll-pwMSHm-0ICj7pgs4zYUG8_jBHCJoCQNN_KrOORX5SYMuYz0ykSwDh0nZusPENjvRH9fFbVilm_r6-vW7PsueZVFr7etj2bzjRNc3gPQtblLY_WWYjtJkI9k" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">Marcus Reed</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">m.reed@eventops.pro
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold uppercase tracking-tight">Floor
-                      Staff</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Active
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">1 hour ago</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-                {/* <!-- Row 3 --> */}
-                <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img alt="Elena" className="w-9 h-9 rounded-full bg-slate-100" data-alt="Avatar of Elena Vance"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-1HFYNvt7A0WCHq7CIgeKrcIyV9HNz8d6MicFoNe5WbYm5HRlRzKITtTX8cybrkMXrpYSTvhj14b3xSz8u457ao8QorLiri4r3cX8TfIyYsfJE8DT0XFPcblnPfj4r4YtLszQrZfEOSWQXLXtcT4NgkvJM2NJ5UqguwB40ZKh2CUaXSYLJxHnPP9r86hBM_uSsQdRGeSHTw4-H0hF0d7aqmuIVr4Z1D_lYgKFYHw4pm6cj4pZuX5XHh5urL2X0J5p5qLBoQPqwxlg" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">Elena Vance</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                    elena.v@eventops.pro</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="px-2 py-1 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-[11px] font-bold uppercase tracking-tight">Event
-                      Lead</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                      Inactive
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">Yesterday</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-                {/* <!-- Row 4 --> */}
-                <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img alt="David" className="w-9 h-9 rounded-full bg-slate-100" data-alt="Avatar of David Chen"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeHQ4P9FnQpbKj7CGJMokwj9cRtnubNQB62Ns37ji91TFUOAehmNipUgsuNEj-AMFM0HlDJ9gSyvp-zrSns4eX1l5Ew2_uwkDemq-bJvh4KMdExoAONYo2WmOMFE_TeYBR_R63Vxkgl-cmcZ7p4SGjNzPvoERl9PUCB5unb0zyH68_EEgbJ2d0ADJjkX3fOqZKrJ288EN9XeIQmjRtEHzWhbDjDbXJ3KsC2Glimvxl2cg9XX2yEqFC0TK2ZnGtljsT3LizuMY6COuw" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">David Chen</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">d.chen@eventops.pro
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="px-2 py-1 rounded bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-[11px] font-bold uppercase tracking-tight">Logistics</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Active
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">4 hours ago</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-                {/* <!-- Row 5 --> */}
-                <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <img alt="Olivia" className="w-9 h-9 rounded-full bg-slate-100" data-alt="Avatar of Olivia Martin"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBDcFcnC8FXcOarCMeV35SWsCMb-Y7Tqt3GifpwtDxmlDR8Lc72uye3PxzNw6mEE4IEVBSqdORQ031HVT3xePm8SpRTZmexvB5mYHjhzt4Ikk9C_7anfjhF9Dm0QgI_KRX--w6wpp2ETXqJOcAo8APUvW5QeFzeT9STLiM5jNqTB6B-YroOuJduP3VNtOjF66bZ2ml01I-eX_VVNySAHfeu0Zjnos7PHW3Z-ijzIhdUipg-Ms-UbZLqie9IiGf4AZRiITFXYmuW-Tq5" />
-                      <span className="text-sm font-semibold text-slate-900 dark:text-white">Olivia Martin</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                    olivia.m@eventops.pro</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold uppercase tracking-tight">Floor
-                      Staff</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                      Active
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">10 mins ago</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button
-                      className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400">
-                      <span className="material-symbols-outlined">more_vert</span>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          {/* <!-- Pagination --> */}
-          <div
-            className="px-6 py-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800">
-            <span className="text-xs font-medium text-slate-500">Showing 1-12 of 48 members</span>
-            <div className="flex gap-2">
+      )}
+
+      {/* Main Container */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <div className="p-8 pb-32">
+          
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Team Members</h2>
+              <p className="text-slate-500 mt-1">Manage and assign roles for your hospitality operations team.</p>
+            </div>
+            <div className="flex gap-3">
+              <button onClick={loadData} className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>sync</span>
+                Refresh
+              </button>
               <button
-                className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed">Previous</button>
-              <button
-                className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">Next</button>
+                onClick={() => setSearchParams({ action: 'addTeam' })}
+                className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all text-sm">
+                <span className="material-symbols-outlined text-lg">add</span>
+                Add Member
+              </button>
             </div>
           </div>
+
+          {error && (
+            <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2 border border-red-200">
+              <span className="material-symbols-outlined">error</span>
+              <p className="font-semibold">{error}</p>
+            </div>
+          )}
+
+          {/* Filters Area */}
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-t-xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1 group">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 transition-all dark:text-white outline-none"
+                placeholder="Search members by name or email..." type="text" />
+            </div>
+            <div className="flex gap-3">
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-600 dark:text-slate-300 py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20 outline-none">
+                <option>All Roles</option>
+                <option>Event Director</option>
+                <option>Event Lead</option>
+                <option>Floor Staff</option>
+                <option>Logistics</option>
+                <option>Technical Support</option>
+                <option>Guest Relations</option>
+                <option>Admin</option>
+              </select>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-600 dark:text-slate-300 py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20 outline-none">
+                <option value="All">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Table Container */}
+          <div className="bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto min-h-[300px]">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
+                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Member</th>
+                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Email</th>
+                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Role</th>
+                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Status</th>
+                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">Last Active</th>
+                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  
+                  {loading && members.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                        <span className="material-symbols-outlined text-4xl animate-spin text-primary">hourglass_top</span>
+                        <p className="mt-2 text-sm font-medium">Loading roster...</p>
+                      </td>
+                    </tr>
+                  )}
+
+                  {!loading && members.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                        <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700 bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-3">badge</span>
+                        <p className="font-semibold text-slate-900 dark:text-white">No team members found</p>
+                        <p className="text-sm mt-1 mb-4">You haven't added anyone matching these filters.</p>
+                        <button onClick={() => {setSearchTerm(''); setRoleFilter('All Roles'); setStatusFilter('All');}} className="text-primary font-bold text-sm hover:underline">Clear Filters</button>
+                      </td>
+                    </tr>
+                  )}
+
+                  {members.map(member => (
+                    <tr key={member._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-sm shrink-0">
+                            {member.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-semibold text-slate-900 dark:text-white">{member.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                        {member.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 rounded text-[11px] font-bold uppercase tracking-tight ${getRoleBadgeColor(member.role)}`}>
+                          {member.role || 'Unassigned'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`flex items-center gap-1.5 text-xs font-semibold ${member.status === 'active' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500'}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${member.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                          {member.status === 'active' ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                        {getTimeAgo(member.lastActive)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right relative">
+                        <button
+                          onClick={() => setActionMenuId(actionMenuId === member._id ? null : member._id)}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-primary">
+                          <span className="material-symbols-outlined">more_vert</span>
+                        </button>
+
+                        {/* Dropdown menu */}
+                        {actionMenuId === member._id && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setActionMenuId(null)}></div>
+                            <div className="absolute right-8 top-10 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-20 py-2 animate-slide-in text-left">
+                              
+                              <button onClick={() => { setSearchParams({ action: 'editTeam', id: member._id }); setActionMenuId(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">edit</span> Edit Details
+                              </button>
+                              
+                              <button onClick={() => handleStatusToggle(member._id, member.status)} className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">{member.status === 'active' ? 'power_settings_new' : 'bolt'}</span>
+                                {member.status === 'active' ? 'Mark Inactive' : 'Mark Active'}
+                              </button>
+                              
+                              <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 w-full"></div>
+                              
+                              <button onClick={() => { setDeleteId(member._id); setActionMenuId(null); }} className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[16px]">delete</span> Remove Access
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* <!-- Pagination Header (Stat Info) --> */}
+            <div className="px-6 py-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs font-medium text-slate-500">Showing {members.length} members matching filters out of {summary.total} total</span>
+            </div>
+          </div>
+          
+          {/* <!-- Footer Summary --> */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Total Members</p>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">{summary.total}</h4>
+              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
+                <span className="material-symbols-outlined text-sm">groups</span>
+                <span>Assigned to event</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Active Now</p>
+              <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{summary.active}</h4>
+              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
+                <span className="material-symbols-outlined text-sm">bolt</span>
+                <span>{summary.total > 0 ? Math.round((summary.active/summary.total)*100) : 0}% of total team</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Off Duty / Inactive</p>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">{summary.inactive}</h4>
+              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
+                <span className="material-symbols-outlined text-sm">bedtime</span>
+                <span>No live access right now</span>
+              </div>
+            </div>
+          </div>
+
         </div>
-        {/* <!-- Footer Summary --> */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Total Members</p>
-            <h4 className="text-2xl font-black text-slate-900 dark:text-white">48</h4>
-            <div className="mt-2 flex items-center gap-1 text-emerald-600 text-xs font-bold">
-              <span className="material-symbols-outlined text-sm">trending_up</span>
-              <span>+4 this month</span>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Active Now</p>
-            <h4 className="text-2xl font-black text-slate-900 dark:text-white">32</h4>
-            <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-              <span className="material-symbols-outlined text-sm">bolt</span>
-              <span>66% of total team</span>
-            </div>
-          </div>
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Pending Invitations</p>
-            <h4 className="text-2xl font-black text-slate-900 dark:text-white">5</h4>
-            <div className="mt-2 flex items-center gap-1 text-primary text-xs font-bold">
-              <span className="material-symbols-outlined text-sm">mail</span>
-              <span className="underline cursor-pointer">View invites</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-  )
+      </main>
+      
+      <style>{`
+        @keyframes slide-in-top {
+          from { transform: translateY(-5px); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-in { animation: slide-in-top 0.15s ease-out forwards; }
+      `}</style>
+    </div>
+  );
 }
 
-export default TeamMemberManagement
+export default TeamMemberManagement;
