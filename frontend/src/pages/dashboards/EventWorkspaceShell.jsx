@@ -514,7 +514,7 @@ function EventWorkspaceShell() {
 
         {activeTab === 'transport' && (
           <div className="space-y-6">
-            <TransportCoordinationLogs />
+            <TransportCoordinationLogs eventId={eventId} />
           </div>
         )}
 
