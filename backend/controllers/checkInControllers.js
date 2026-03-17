@@ -7,6 +7,7 @@ const {
   getCheckInSummary,
 } = require("../services/checkInServices");
 const { getEventById } = require("../services/eventServices");
+const { createActivityLog } = require("../services/activityLogServices");
 
 /**
  * Helper: verify the requesting user owns the event
@@ -109,6 +110,16 @@ const handleCheckIn = async (req, res) => {
     }
 
     const updated = await checkInGuest(guestId);
+
+    // Async logging
+    createActivityLog({
+      event: guest.event,
+      type: "check-in",
+      message: `Guest checked in: ${guest.fullName}`,
+      relatedGuest: guestId,
+      priority: "normal"
+    });
+
     return res.status(200).json({ success: true, message: "Guest checked in successfully", guest: updated });
   } catch (error) {
     console.error("Error checking in guest:", error);
@@ -135,6 +146,16 @@ const handleCheckOut = async (req, res) => {
     }
 
     const updated = await checkOutGuest(guestId);
+
+    // Async logging
+    createActivityLog({
+      event: guest.event,
+      type: "check-out",
+      message: `Guest checked out: ${guest.fullName}`,
+      relatedGuest: guestId,
+      priority: "normal"
+    });
+
     return res.status(200).json({ success: true, message: "Guest checked out successfully", guest: updated });
   } catch (error) {
     console.error("Error checking out guest:", error);

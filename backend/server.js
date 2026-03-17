@@ -15,6 +15,8 @@ const checkInRoutes = require('./routes/checkInRoutes')
 const transportRoutes = require('./routes/transportCoordiRoutes')
 const teamMemberRoutes = require('./routes/teamMemberRoutes')
 const serviceReqRoutes = require('./routes/serviceReqRoutes')
+const overViewRoutes = require('./routes/overViewRoutes')
+
 // connect to MongoDB
 connectToMongoDB(process.env.MONGO_URI)
 
@@ -38,6 +40,7 @@ app.use('/api/checkin', checkInRoutes)
 app.use('/api/transport', transportRoutes)
 app.use('/api/team', teamMemberRoutes)
 app.use('/api/services', serviceReqRoutes)
+app.use('/api/overview', overViewRoutes)
 
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)

@@ -6,6 +6,7 @@ const {
   deleteGuest,
 } = require("../services/guestServices");
 const { getEventById, getAllEvents } = require("../services/eventServices");
+const { createActivityLog } = require("../services/activityLogServices");
 
 /**
  * POST /api/guests
@@ -25,6 +26,16 @@ const handleCreateGuest = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
     }
     const newGuest = await createGuest(guestData);
+
+    // Async logging
+    createActivityLog({
+      event: guestData.event,
+      type: "registration",
+      message: `New guest registered: ${newGuest.fullName}`,
+      relatedGuest: newGuest._id,
+      priority: "normal"
+    });
+
     return res.status(201).json({ success: true, guest: newGuest });
   } catch (error) {
     console.error("Error creating guest", error);

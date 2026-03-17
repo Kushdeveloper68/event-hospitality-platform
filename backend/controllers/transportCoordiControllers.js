@@ -8,6 +8,7 @@ const {
   getTransportSummary,
 } = require("../services/transportCoordiServices");
 const { getEventById } = require("../services/eventServices");
+const { createActivityLog } = require("../services/activityLogServices");
 
 /**
  * Helper: verify the requesting user owns the event
@@ -42,6 +43,15 @@ const handleCreateTransport = async (req, res) => {
 
     const transportData = { event, guest: guest || null, driverName, vehicleId, pickupLocation, dropoffLocation, scheduledTime, status: status || "scheduled", notes };
     const newTransport = await createTransport(transportData);
+
+    // Async logging
+    createActivityLog({
+      event,
+      type: "transport",
+      message: `Transport scheduled for ${pickupLocation} to ${dropoffLocation}`,
+      relatedGuest: guest || null,
+      priority: "normal"
+    });
 
     return res.status(201).json({ success: true, message: "Transport created successfully", transport: newTransport });
   } catch (error) {
@@ -154,6 +164,16 @@ const handleUpdateStatus = async (req, res) => {
     }
 
     const updated = await updateTransportStatus(transportId, status);
+
+    // Async logging
+    createActivityLog({
+      event: existing.event,
+      type: "transport",
+      message: `Transport status updated to ${status}`,
+      relatedGuest: existing.guest || null,
+      priority: "normal"
+    });
+
     return res.status(200).json({ success: true, message: "Status updated", transport: updated });
   } catch (error) {
     console.error("Error updating transport status:", error);

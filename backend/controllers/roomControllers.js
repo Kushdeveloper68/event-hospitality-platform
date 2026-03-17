@@ -7,6 +7,7 @@ const {
   assignGuestToRoom,
 } = require("../services/roomServices");
 const { getEventById } = require("../services/eventServices");
+const { createActivityLog } = require("../services/activityLogServices");
 
 // create
 const handleCreateRoom = async (req, res) => {
@@ -131,6 +132,16 @@ const handleAssignGuest = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this room/event' });
     }
     const guest = await assignGuestToRoom(roomId, guestId);
+
+    // Async logging
+    createActivityLog({
+      event: room.event,
+      type: "room-assignment",
+      message: `Guest ${guestId} assigned to room ${room.number}`,
+      relatedGuest: guestId,
+      priority: "normal"
+    });
+
     return res.status(200).json({ success: true, guest });
   } catch (error) {
     console.error("Error assigning guest", error);

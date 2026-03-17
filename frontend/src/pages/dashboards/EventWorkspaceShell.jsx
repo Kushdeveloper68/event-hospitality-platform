@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { getEventById } from '../../api/eventApi'
+import { getOverviewData } from '../../api/overviewApi'
 import { EventContext } from '../../context/EventContext'
 // Pages shown in tabs
 import GuestMasterList from '../inventory/GuestMasterList'
@@ -14,11 +16,15 @@ import EventAdminstrativeSetting from '../settings/EventAdminstrativeSetting'
 import TeamMemberManagement from '../inventory/TeamMemberManagement'
 
 function EventWorkspaceShell() {
-  const { eventId, tab, "*": rest } = useParams() // rest holds any extra path after the tab (e.g. "add" or "edit/123")
+  const { user } = useAuth()
+  const { eventId, tab, "*": rest } = useParams() 
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState(tab || 'overview')
+  const [overviewData, setOverviewData] = useState(null)
+  const [overviewLoading, setOverviewLoading] = useState(false)
+  const [overviewError, setOverviewError] = useState(null)
 
   // keep tab in sync with url param
   useEffect(() => {
@@ -35,6 +41,30 @@ function EventWorkspaceShell() {
       loadEvent()
     }
   }, [eventId])
+
+  useEffect(() => {
+    if (eventId && activeTab === 'overview') {
+      loadOverview()
+    }
+  }, [eventId, activeTab])
+
+  const loadOverview = async () => {
+    try {
+      setOverviewLoading(true)
+      setOverviewError(null)
+      const res = await getOverviewData(eventId)
+      if (res.success) {
+        setOverviewData(res)
+      } else {
+        setOverviewError(res.message || 'Failed to sync dashboard data')
+      }
+    } catch (err) {
+      console.error('Error loading overview data:', err)
+      setOverviewError('Dashboard synchronization failed. Please check your connection.')
+    } finally {
+      setOverviewLoading(false)
+    }
+  }
 
   const loadEvent = async () => {
     try {
@@ -164,8 +194,8 @@ function EventWorkspaceShell() {
           <div className="h-8 w-px bg-[#dbdee6] dark:bg-[#2d364a] mx-2"></div>
           <div className="flex items-center gap-3 pl-2 cursor-pointer group">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-semibold text-[#111318] dark:text-white leading-none">Sarah Jenkins</p>
-              <p className="text-xs text-[#616e89] mt-1 leading-none">Event Director</p>
+              <p className="text-sm font-semibold text-[#111318] dark:text-white leading-none">{user?.name || 'Guest'}</p>
+              <p className="text-xs text-[#616e89] mt-1 leading-none">Event Managed</p>
             </div>
             <div className="size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-[#2d364a] shadow-sm"
               data-alt="Portrait of a female event director"
@@ -257,25 +287,36 @@ function EventWorkspaceShell() {
       {/* Tabbed Content Area */}
       <div>
         {activeTab === 'overview' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="space-y-6">
+            {overviewError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined">error</span>
+                  <span>{overviewError}</span>
+                </div>
+                <button onClick={loadOverview} className="text-sm font-bold underline hover:no-underline">Retry Sync</button>
+              </div>
+            )}
+            
+            <div className={`grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-opacity duration-300 ${overviewLoading ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {/* <!-- Welcome Card --> */}
         <div
           className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
           <div className="flex-1 space-y-4 text-center md:text-left">
-            <h2 className="text-2xl font-bold text-[#111318] dark:text-white">Welcome back to Operations, Sarah</h2>
+            <h2 className="text-2xl font-bold text-[#111318] dark:text-white">Welcome back to Operations, {user?.name || 'Director'}</h2>
             <p className="text-[#616e89] max-w-2xl text-lg">
-              The event is currently in full swing. We have <span className="text-[#111318] dark:text-white font-bold">1,420
-                guests</span> checked in out of 1,800 expected.
-              Room turnover is proceeding at 94% efficiency.
+              The event is currently in full swing. We have <span className="text-[#111318] dark:text-white font-bold">{overviewData?.metrics?.guests?.checkedIn || 0}
+                guests</span> checked in out of {overviewData?.metrics?.guests?.total || 0} expected.
+              Room turnover is proceeding at {overviewData?.metrics?.rooms?.occupancyRate || 0}% efficiency.
             </p>
             <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
               <div className="bg-primary/5 dark:bg-primary/20 px-4 py-2 rounded-lg">
                 <span className="block text-xs text-[#616e89] font-semibold uppercase">Total Occupancy</span>
-                <span className="text-xl font-bold text-primary">82%</span>
+                <span className="text-xl font-bold text-primary">{overviewData?.metrics?.rooms?.occupancyRate || 0}%</span>
               </div>
               <div className="bg-success/5 dark:bg-success/20 px-4 py-2 rounded-lg">
                 <span className="block text-xs text-[#616e89] font-semibold uppercase">Active Staff</span>
-                <span className="text-xl font-bold text-success">48 On-Duty</span>
+                <span className="text-xl font-bold text-success">{overviewData?.metrics?.staff?.active || 0} On-Duty</span>
               </div>
             </div>
           </div>
@@ -293,17 +334,18 @@ function EventWorkspaceShell() {
         {/* <!-- Stats Widgets --> */}
         <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-bold text-[#616e89] uppercase tracking-wider">Check-in Velocity</span>
-            <span className="material-symbols-outlined text-primary">speed</span>
+            <span className="text-sm font-bold text-[#616e89] uppercase tracking-wider">Check-in Progress</span>
+            <span className="material-symbols-outlined text-primary">how_to_reg</span>
           </div>
-          <div className="text-3xl font-black text-[#111318] dark:text-white">142<span
-              className="text-sm font-normal text-[#616e89] ml-1">guests/hr</span></div>
+          <div className="text-3xl font-black text-[#111318] dark:text-white">{overviewData?.metrics?.guests?.checkedIn || 0}<span
+              className="text-sm font-normal text-[#616e89] ml-1">/ {overviewData?.metrics?.guests?.total || 0}</span></div>
           <div className="mt-4 w-full bg-neutral-soft dark:bg-[#2d364a] h-2 rounded-full overflow-hidden">
-            <div className="bg-primary h-full w-[78%] rounded-full"></div>
+            <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${(overviewData?.metrics?.guests?.checkedIn / overviewData?.metrics?.guests?.total) * 100 || 0}%` }}></div>
           </div>
           <p className="text-xs text-[#616e89] mt-3 flex items-center gap-1">
-            <span className="material-symbols-outlined text-success text-sm font-bold">trending_up</span>
-            12% increase from last hour
+            {overviewData?.metrics?.guests?.total > 0 ? 
+              `${Math.round((overviewData?.metrics?.guests?.checkedIn / overviewData?.metrics?.guests?.total) * 100)}% of guests checked in` : 
+              'No guests registered yet'}
           </p>
         </div>
         <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl p-5 shadow-sm">
@@ -311,7 +353,7 @@ function EventWorkspaceShell() {
             <span className="text-sm font-bold text-[#616e89] uppercase tracking-wider">Pending Service</span>
             <span className="material-symbols-outlined text-orange-500">pending_actions</span>
           </div>
-          <div className="text-3xl font-black text-[#111318] dark:text-white">24<span
+          <div className="text-3xl font-black text-[#111318] dark:text-white">{overviewData?.metrics?.services?.pending || 0}<span
               className="text-sm font-normal text-[#616e89] ml-1">requests</span></div>
           <div className="mt-4 flex -space-x-2">
             <div className="size-8 rounded-full border-2 border-white dark:border-[#1a1f2e] bg-cover bg-center"
@@ -338,25 +380,20 @@ function EventWorkspaceShell() {
             <span className="text-sm font-bold text-[#616e89] uppercase tracking-wider">Transport Load</span>
             <span className="material-symbols-outlined text-indigo-500">directions_bus</span>
           </div>
-          <div className="text-3xl font-black text-[#111318] dark:text-white">12<span
-              className="text-sm font-normal text-[#616e89] ml-1">shuttles active</span></div>
-          <div className="mt-4 w-full bg-neutral-soft dark:bg-[#2d364a] h-2 rounded-full overflow-hidden">
-            <div className="bg-indigo-500 h-full w-[45%] rounded-full"></div>
-          </div>
-          <p className="text-xs text-[#616e89] mt-3">Next pickup: <span
-              className="text-[#111318] dark:text-white font-bold">2:15 PM</span></p>
+          <div className="text-3xl font-black text-[#111318] dark:text-white">{overviewData?.metrics?.transport?.active || 0}</div>
+          <p className="text-xs text-[#616e89] mt-3">Active or scheduled shuttles</p>
         </div>
         <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-bold text-[#616e89] uppercase tracking-wider">Reports Ready</span>
+            <span className="text-sm font-bold text-[#616e89] uppercase tracking-wider">Audit Logs</span>
             <span className="material-symbols-outlined text-primary">description</span>
           </div>
-          <div className="text-3xl font-black text-[#111318] dark:text-white">08</div>
-          <button
-            className="mt-4 w-full py-2 bg-neutral-soft dark:bg-[#2d364a] hover:bg-neutral-soft/80 dark:hover:bg-[#3d475c] text-xs font-bold text-[#111318] dark:text-white rounded-lg transition-colors">
-            View Morning Summary
-          </button>
-          <p className="text-[10px] text-[#616e89] mt-2 text-center">Auto-generated at 11:30 AM</p>
+          <div className="text-3xl font-black text-[#111318] dark:text-white">{overviewData?.metrics?.logs?.total || 0}</div>
+          <Link
+            to={`/events/${eventId}/reports`}
+            className="mt-4 block w-full py-2 bg-neutral-soft dark:bg-[#2d364a] hover:bg-neutral-soft/80 dark:hover:bg-[#3d475c] text-xs font-bold text-[#111318] dark:text-white text-center rounded-lg transition-colors">
+            View Analytics
+          </Link>
         </div>
         {/* <!-- Main Activity Table Area --> */}
         <div
@@ -387,99 +424,63 @@ function EventWorkspaceShell() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f0f1f4] dark:divide-[#2d364a]">
-                <tr className="hover:bg-neutral-soft/30 dark:hover:bg-[#2d364a]/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                        AA</div>
-                      <div>
-                        <p className="text-sm font-bold text-[#111318] dark:text-white">Alex Anderson</p>
-                        <p className="text-[10px] text-[#616e89]">VIP Speaker</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success uppercase">Checked
-                      In</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[#616e89]">Suite 405 (North Wing)</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="size-5 rounded-full bg-cover bg-center" data-alt="Staff avatar"
-                        style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCtbo2X5IMGWVj1n2b7aFSKZ9RG-CKYxJACRG2qUvhDnQZP2y9xNIoqGGJuky7T6TXgHyU0TvcdLMoAQwK5Is_RvEM0nm6cOwYspGIlGqLWnFVifKYGC0-qzpxD9VcGhdYqBax8Tq7zRkqE21YX2JcsMmtsGfzdlSd9CVseE2kQlU5KW9XB5HkNsc_PWr4Vb9ZIEM_ChfV2A4nc8k-B9p2LWkx9wiBsJUV6tbxoRn3a91XoPk3kWraf8e2MaTiuVhRbRM4p-X_6_iLw")'}}>
-                      </div>
-                      <span className="text-xs text-[#111318] dark:text-white font-medium">Michael K.</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right text-xs text-[#616e89] font-medium">12:44 PM</td>
-                </tr>
-                <tr className="hover:bg-neutral-soft/30 dark:hover:bg-[#2d364a]/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                        LM</div>
-                      <div>
-                        <p className="text-sm font-bold text-[#111318] dark:text-white">Lisa Montgomery</p>
-                        <p className="text-[10px] text-[#616e89]">Press Delegate</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-primary/10 text-primary uppercase">Transport
-                      Arrived</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[#616e89]">Terminal A (Main Entrance)</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <div className="size-5 rounded-full bg-cover bg-center" data-alt="Staff avatar"
-                        style={{backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBroyt8jHCH5Dj-xFzqpbUwaY4yXYnYam-cqZIfP2qP2uGKKMlHGVNdS8lIKjhfB27JLUQGQepUWGBiXi0Rbg5UPdlaCIdsTDmwRIoVeusAFh55quN1mMcFI5svCkvs9d_7pSu2CXlQF1xtcEvXKFmuXcwCCnwVsqFNUeBRcB1kJdqTl12EIcgoqTPlt6qCSgUsJ4jBDqeHqsyEkmF_hJy642xgVaJRGOe2RCkjNwqj4CSTwTIvQPQgkk32ZBS8NHfGVPyOWECGJvOy")'}}>
-                      </div>
-                      <span className="text-xs text-[#111318] dark:text-white font-medium">Elena R.</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right text-xs text-[#616e89] font-medium">12:30 PM</td>
-                </tr>
-                <tr className="hover:bg-neutral-soft/30 dark:hover:bg-[#2d364a]/30 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                        JW</div>
-                      <div>
-                        <p className="text-sm font-bold text-[#111318] dark:text-white">James Wilson</p>
-                        <p className="text-[10px] text-[#616e89]">Exhibitor</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-500/10 text-orange-600 uppercase">Service
-                      Requested</span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-[#616e89]">Hall 2 - Booth #112</td>
-                  <td className="px-6 py-4">
-                    <span className="text-[10px] text-[#616e89] italic">Unassigned</span>
-                  </td>
-                  <td className="px-6 py-4 text-right text-xs text-[#616e89] font-medium">12:28 PM</td>
-                </tr>
+                {overviewData?.recentActivity?.length > 0 ? (
+                  overviewData.recentActivity.map((log) => (
+                    <tr key={log._id} className="hover:bg-neutral-soft/30 dark:hover:bg-[#2d364a]/30 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                            {log.relatedGuest?.fullName?.substring(0, 2).toUpperCase() || '??'}</div>
+                          <div>
+                            <p className="text-sm font-bold text-[#111318] dark:text-white">{log.relatedGuest?.fullName || 'System'}</p>
+                            <p className="text-[10px] text-[#616e89]">{log.relatedGuest?.groupName || 'Log Entry'}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            log.type === 'check-in' ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'
+                          }`}>{log.type || 'Activity'}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-[#616e89]">{log.message || 'Updated event status'}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[#111318] dark:text-white font-medium">{log.relatedStaff?.name || 'Automated'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right text-xs text-[#616e89] font-medium">
+                        {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-10 text-center text-[#616e89]">No recent activity found.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
           <div
             className="px-6 py-3 bg-background-light dark:bg-[#151a26] border-t border-[#dbdee6] dark:border-[#2d364a] flex items-center justify-between">
-            <p className="text-xs text-[#616e89]">Showing 1-10 of 420 guests</p>
+            <p className="text-xs text-[#616e89]">
+              {overviewData?.recentActivity?.length > 0 ? 
+                `Showing latest ${overviewData.recentActivity.length} activities` : 
+                'No activity to display'}
+            </p>
             <div className="flex gap-2">
-              <button
-                className="px-3 py-1 bg-white dark:bg-[#2d364a] border border-[#dbdee6] dark:border-[#3d475c] text-xs font-bold rounded hover:bg-neutral-soft transition-colors text-[#111318] dark:text-white">Previous</button>
-              <button
-                className="px-3 py-1 bg-white dark:bg-[#2d364a] border border-[#dbdee6] dark:border-[#3d475c] text-xs font-bold rounded hover:bg-neutral-soft transition-colors text-[#111318] dark:text-white">Next</button>
+              <Link
+                to={`/events/${eventId}/reports`}
+                className="px-3 py-1 bg-white dark:bg-[#2d364a] border border-[#dbdee6] dark:border-[#3d475c] text-xs font-bold rounded hover:bg-neutral-soft transition-colors text-[#111318] dark:text-white"
+              >
+                View Full Logs
+              </Link>
             </div>
           </div>
         </div>
+            </div>
           </div>
         )}
 

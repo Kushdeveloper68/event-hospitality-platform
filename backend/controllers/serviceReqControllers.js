@@ -1,5 +1,6 @@
 const serviceReqServices = require("../services/serviceReqServices");
 const EventModel = require("../models/eventModel");
+const { createActivityLog } = require("../services/activityLogServices");
 
 // Helper function to verify event ownership
 const verifyEventOwnership = async (eventId, userId) => {
@@ -39,6 +40,15 @@ const handleCreateServiceRequest = async (req, res) => {
       notes,
       permissionToEnter: permissionToEnter || false,
       status: status || "open"
+    });
+
+    // Async logging
+    createActivityLog({
+      event,
+      type: "service",
+      message: `Service requested: ${requestType}`,
+      relatedGuest: guest || null,
+      priority: urgency === "high" || urgency === "critical" ? "high" : "normal"
     });
 
     res.status(201).json({ success: true, message: "Service request created successfully", serviceRequest: newRequest });
