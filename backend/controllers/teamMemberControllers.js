@@ -42,7 +42,7 @@ const handleCreateTeamMember = async (req, res) => {
     res.status(201).json({ success: true, message: "Team member added successfully", teamMember: newMember });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ success: false, message: "A team member with this email already exists." });
+      return res.status(400).json({ success: false, message: "A team member with this email already exists for this event." });
     }
     console.error("Error creating team member:", error);
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
@@ -126,7 +126,7 @@ const handleUpdateTeamMember = async (req, res) => {
     res.status(200).json({ success: true, message: "Team member updated successfully", teamMember: updatedMember });
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(400).json({ success: false, message: "A team member with this email already exists." });
+      return res.status(400).json({ success: false, message: "A team member with this email already exists for this event." });
     }
     console.error("Error updating team member:", error);
     res.status(500).json({ success: false, message: "Server Error", error: error.message });
