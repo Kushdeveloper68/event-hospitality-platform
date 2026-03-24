@@ -6,11 +6,12 @@ const {
   updateSchedule,
   deleteSchedule
 } = require('../controllers/scheduleControllers');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // Base URL: /api/schedules
-router.post('/', createSchedule);
-router.get('/event/:eventId', getSchedulesByEventId);
-router.put('/:id', updateSchedule);
-router.delete('/:id', deleteSchedule);
+router.post('/', authMiddleware, createSchedule);
+router.get('/event/:eventId', authMiddleware, getSchedulesByEventId);
+router.put('/:id', authMiddleware, updateSchedule);
+router.delete('/:id', authMiddleware, deleteSchedule);
 
 module.exports = router;
