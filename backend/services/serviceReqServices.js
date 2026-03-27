@@ -20,7 +20,7 @@ const getServiceRequests = async (eventId, filters = {}) => {
 
   // Find all matching requests and populate linked entities
   let requests = await ServiceRequestModel.find(query)
-    .populate("guest", "name email")
+    .populate("guest", "fullName email")
     .populate("room", "number floor")
     .sort({ createdAt: -1 }); // Newest first
 
@@ -39,7 +39,7 @@ const getServiceRequests = async (eventId, filters = {}) => {
 // Get a single service request by ID
 const getServiceRequestById = async (requestId) => {
   return await ServiceRequestModel.findById(requestId)
-    .populate("guest", "name email")
+    .populate("guest", "fullName email")
     .populate("room", "number floor");
 };
 

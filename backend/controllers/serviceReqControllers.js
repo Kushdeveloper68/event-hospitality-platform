@@ -42,11 +42,13 @@ const handleCreateServiceRequest = async (req, res) => {
       status: status || "open"
     });
 
+    const guestObj = guest ? await require("../models/guestModel").findById(guest) : null;
+
     // Async logging
     createActivityLog({
       event,
       type: "service",
-      message: `Service requested: ${requestType}`,
+      message: `${guestObj ? `Guest ${guestObj.fullName}` : "Service"} requested: ${requestType}`,
       relatedGuest: guest || null,
       priority: urgency === "high" || urgency === "critical" ? "high" : "normal"
     });
@@ -161,6 +163,20 @@ const handleUpdateServiceStatus = async (req, res) => {
     }
 
     const updatedRequest = await serviceReqServices.updateServiceStatus(requestId, status);
+
+    // Async logging
+    try {
+      createActivityLog({
+        event: existingRequest.event,
+        type: "service",
+        message: `Service status for ${existingRequest.guest?.fullName || "Guest"} updated to ${status}`,
+        relatedGuest: existingRequest.guest?._id || null,
+        priority: "normal"
+      });
+    } catch (logErr) {
+      console.error("Non-critical: Failed to log service status update", logErr);
+    }
+
     res.status(200).json({ success: true, message: "Service request status updated", serviceRequest: updatedRequest });
   } catch (error) {
     console.error("Error updating service request status:", error);

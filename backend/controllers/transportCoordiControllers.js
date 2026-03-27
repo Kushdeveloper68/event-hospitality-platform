@@ -48,7 +48,7 @@ const handleCreateTransport = async (req, res) => {
     createActivityLog({
       event,
       type: "transport",
-      message: `Transport scheduled for ${pickupLocation} to ${dropoffLocation}`,
+      message: `Transport scheduled for ${newTransport.guest?.fullName || "Guest"}: ${pickupLocation} to ${dropoffLocation}`,
       relatedGuest: guest || null,
       priority: "normal"
     });
@@ -169,7 +169,7 @@ const handleUpdateStatus = async (req, res) => {
     createActivityLog({
       event: existing.event,
       type: "transport",
-      message: `Transport status updated to ${status}`,
+      message: `Transport for ${updated.guest?.fullName || "Guest"} updated to ${status}`,
       relatedGuest: existing.guest || null,
       priority: "normal"
     });

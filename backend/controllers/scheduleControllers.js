@@ -42,6 +42,15 @@ exports.createSchedule = async (req, res) => {
     });
 
     await newActivity.save();
+
+    // Async logging
+    require('../services/activityLogServices').createActivityLog({
+      event: eventId,
+      type: "schedule",
+      message: `New activity scheduled: ${title} at ${location || "TBD"}`,
+      priority: "normal"
+    });
+
     res.status(201).json({ success: true, activity: newActivity });
   } catch (error) {
     console.error('Error creating schedule activity:', error);
@@ -91,6 +100,15 @@ exports.updateSchedule = async (req, res) => {
     }
 
     const updatedActivity = await ScheduleActivity.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+
+    // Async logging
+    require('../services/activityLogServices').createActivityLog({
+      event: event._id,
+      type: "schedule",
+      message: `Schedule updated: ${updatedActivity.title}`,
+      priority: "normal"
+    });
+
     res.status(200).json({ success: true, activity: updatedActivity });
   } catch (error) {
     console.error('Error updating schedule activity:', error);
@@ -114,6 +132,15 @@ exports.deleteSchedule = async (req, res) => {
     }
 
     await ScheduleActivity.findByIdAndDelete(id);
+
+    // Async logging
+    require('../services/activityLogServices').createActivityLog({
+      event: event._id,
+      type: "schedule",
+      message: `Activity removed from schedule: ${existingActivity.title}`,
+      priority: "normal"
+    });
+
     res.status(200).json({ success: true, message: 'Activity deleted successfully' });
   } catch (error) {
     console.error('Error deleting schedule activity:', error);

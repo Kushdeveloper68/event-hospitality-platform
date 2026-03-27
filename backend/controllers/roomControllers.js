@@ -137,7 +137,7 @@ const handleAssignGuest = async (req, res) => {
     createActivityLog({
       event: room.event,
       type: "room-assignment",
-      message: `Guest ${guestId} assigned to room ${room.number}`,
+      message: `Guest ${guest.fullName} assigned to room ${room.number}`,
       relatedGuest: guestId,
       priority: "normal"
     });
