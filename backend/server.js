@@ -18,6 +18,7 @@ const serviceReqRoutes = require('./routes/serviceReqRoutes')
 const overViewRoutes = require('./routes/overViewRoutes')
 const scheduleRoutes = require('./routes/scheduleRoutes')
 const specificEventSummaryRoutes = require('./routes/specificEventSummaryRoutes')
+const specificEventSettingRoutes = require('./routes/specificEventSettingRoutes')
 // connect to MongoDB
 connectToMongoDB(process.env.MONGO_URI)
 
@@ -44,6 +45,7 @@ app.use('/api/services', serviceReqRoutes)
 app.use('/api/overview', overViewRoutes)
 app.use('/api/schedules', scheduleRoutes)
 app.use('/api/event-summary', specificEventSummaryRoutes)
+app.use('/api/event-settings', specificEventSettingRoutes)
 
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)
