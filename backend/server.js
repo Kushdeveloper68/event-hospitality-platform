@@ -46,7 +46,7 @@ app.use('/api/overview', overViewRoutes)
 app.use('/api/schedules', scheduleRoutes)
 app.use('/api/event-summary', specificEventSummaryRoutes)
 app.use('/api/event-settings', specificEventSettingRoutes)
-
+app.use('/api/main-dashboard', mainDashboardRoutes)
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)
 )
