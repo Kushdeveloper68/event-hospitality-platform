@@ -20,6 +20,7 @@ const scheduleRoutes = require('./routes/scheduleRoutes')
 const specificEventSummaryRoutes = require('./routes/specificEventSummaryRoutes')
 const specificEventSettingRoutes = require('./routes/specificEventSettingRoutes')
 const mainDashboardRoutes = require('./routes/mainOprationDashboardRoutes')
+const organizationAnalyticsDashboardsRoutes = require('./routes/OrganizationAnalyticsDashboardsRoutes')
 // connect to MongoDB
 connectToMongoDB(process.env.MONGO_URI)
 
@@ -48,6 +49,7 @@ app.use('/api/schedules', scheduleRoutes)
 app.use('/api/event-summary', specificEventSummaryRoutes)
 app.use('/api/event-settings', specificEventSettingRoutes)
 app.use('/api/main-dashboard', mainDashboardRoutes)
+app.use('/api/org-analytics', organizationAnalyticsDashboardsRoutes)
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)
 )
