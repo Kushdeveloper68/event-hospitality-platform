@@ -19,6 +19,7 @@ const overViewRoutes = require('./routes/overViewRoutes')
 const scheduleRoutes = require('./routes/scheduleRoutes')
 const specificEventSummaryRoutes = require('./routes/specificEventSummaryRoutes')
 const specificEventSettingRoutes = require('./routes/specificEventSettingRoutes')
+const mainDashboardRoutes = require('./routes/mainOprationDashboardRoutes')
 // connect to MongoDB
 connectToMongoDB(process.env.MONGO_URI)
 
