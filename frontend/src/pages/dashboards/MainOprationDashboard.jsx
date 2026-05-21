@@ -51,18 +51,42 @@ const STATUS_CONFIG = {
 };
 
 const ACTIVITY_CONFIG = {
-  "check-in": { icon: "how_to_reg", color: "text-emerald-600", bg: "bg-emerald-50" },
+  "check-in": {
+    icon: "how_to_reg",
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+  },
   "check-out": { icon: "logout", color: "text-slate-500", bg: "bg-slate-100" },
-  registration: { icon: "person_add", color: "text-primary", bg: "bg-primary/10" },
+  registration: {
+    icon: "person_add",
+    color: "text-primary",
+    bg: "bg-primary/10",
+  },
   service: { icon: "room_service", color: "text-amber-600", bg: "bg-amber-50" },
-  transport: { icon: "local_shipping", color: "text-indigo-600", bg: "bg-indigo-50" },
-  "room-assignment": { icon: "meeting_room", color: "text-purple-600", bg: "bg-purple-50" },
+  transport: {
+    icon: "local_shipping",
+    color: "text-indigo-600",
+    bg: "bg-indigo-50",
+  },
+  "room-assignment": {
+    icon: "meeting_room",
+    color: "text-purple-600",
+    bg: "bg-purple-50",
+  },
   schedule: { icon: "schedule", color: "text-teal-600", bg: "bg-teal-50" },
 };
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function MetricCard({ icon, label, value, sub, accent = "primary", trend, loading }) {
+function MetricCard({
+  icon,
+  label,
+  value,
+  sub,
+  accent = "primary",
+  trend,
+  loading,
+}) {
   const accentMap = {
     primary: "bg-primary/10 text-primary",
     green: "bg-emerald-100 text-emerald-600",
@@ -75,7 +99,9 @@ function MetricCard({ icon, label, value, sub, accent = "primary", trend, loadin
   return (
     <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
-        <div className={`size-10 rounded-lg flex items-center justify-center ${accentMap[accent]}`}>
+        <div
+          className={`size-10 rounded-lg flex items-center justify-center ${accentMap[accent]}`}
+        >
           <span className="material-symbols-outlined text-xl">{icon}</span>
         </div>
         {trend !== undefined && (
@@ -98,7 +124,9 @@ function MetricCard({ icon, label, value, sub, accent = "primary", trend, loadin
         {loading ? (
           <div className="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
         ) : (
-          <h3 className="text-2xl font-black text-gray-900 dark:text-white">{value ?? 0}</h3>
+          <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+            {value ?? 0}
+          </h3>
         )}
         {sub && !loading && (
           <p className="text-xs text-neutral-muted mt-1">{sub}</p>
@@ -109,12 +137,11 @@ function MetricCard({ icon, label, value, sub, accent = "primary", trend, loadin
 }
 
 function ActivityItem({ log }) {
-  const cfg =
-    ACTIVITY_CONFIG[log.type] || {
-      icon: "info",
-      color: "text-slate-500",
-      bg: "bg-slate-100",
-    };
+  const cfg = ACTIVITY_CONFIG[log.type] || {
+    icon: "info",
+    color: "text-slate-500",
+    bg: "bg-slate-100",
+  };
 
   return (
     <div className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
@@ -242,9 +269,7 @@ function MainOprationDashboard() {
       try {
         const res = await getDashboardMetrics();
         if (res.success) {
-          setData((prev) =>
-            prev ? { ...prev, metrics: res.metrics } : prev
-          );
+          setData((prev) => (prev ? { ...prev, metrics: res.metrics } : prev));
           setLastUpdated(new Date());
         }
       } catch (_) {
@@ -272,10 +297,10 @@ function MainOprationDashboard() {
 
   const paginatedActivity = recentActivity.slice(
     activityPage * ACTIVITY_PAGE_SIZE,
-    (activityPage + 1) * ACTIVITY_PAGE_SIZE
+    (activityPage + 1) * ACTIVITY_PAGE_SIZE,
   );
   const totalActivityPages = Math.ceil(
-    recentActivity.length / ACTIVITY_PAGE_SIZE
+    recentActivity.length / ACTIVITY_PAGE_SIZE,
   );
 
   // ── Loading state ────────────────────────────────────────────────────────
@@ -369,7 +394,11 @@ function MainOprationDashboard() {
             {/* Last updated */}
             {lastUpdated && (
               <span className="text-xs text-neutral-muted hidden md:block">
-                Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                Updated{" "}
+                {lastUpdated.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </span>
             )}
             {/* Refresh */}
@@ -648,9 +677,7 @@ function MainOprationDashboard() {
                   </span>
                   <div className="flex gap-2">
                     <button
-                      onClick={() =>
-                        setActivityPage((p) => Math.max(0, p - 1))
-                      }
+                      onClick={() => setActivityPage((p) => Math.max(0, p - 1))}
                       disabled={activityPage === 0}
                       className="px-2 py-1 rounded border border-neutral-border disabled:opacity-40 hover:bg-gray-50 transition-colors"
                     >
@@ -659,7 +686,7 @@ function MainOprationDashboard() {
                     <button
                       onClick={() =>
                         setActivityPage((p) =>
-                          Math.min(totalActivityPages - 1, p + 1)
+                          Math.min(totalActivityPages - 1, p + 1),
                         )
                       }
                       disabled={activityPage === totalActivityPages - 1}
@@ -678,25 +705,23 @@ function MainOprationDashboard() {
                 <h2 className="font-bold text-base">Events</h2>
                 <div className="flex items-center gap-2">
                   {/* Status filter tabs */}
-                  {["all", "in_progress", "upcoming", "completed"].map(
-                    (s) => (
-                      <button
-                        key={s}
-                        onClick={() => setEventStatusFilter(s)}
-                        className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-colors ${
-                          eventStatusFilter === s
-                            ? "bg-primary text-white"
-                            : "bg-gray-100 dark:bg-gray-800 text-neutral-muted hover:bg-gray-200 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {s === "all"
-                          ? "All"
-                          : s === "in_progress"
+                  {["all", "in_progress", "upcoming", "completed"].map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setEventStatusFilter(s)}
+                      className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-colors ${
+                        eventStatusFilter === s
+                          ? "bg-primary text-white"
+                          : "bg-gray-100 dark:bg-gray-800 text-neutral-muted hover:bg-gray-200 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {s === "all"
+                        ? "All"
+                        : s === "in_progress"
                           ? "Live"
                           : s.charAt(0).toUpperCase() + s.slice(1)}
-                      </button>
-                    )
-                  )}
+                    </button>
+                  ))}
                   <Link
                     to="/events"
                     className="text-primary text-xs font-bold hover:underline ml-2"
@@ -742,7 +767,7 @@ function MainOprationDashboard() {
                             >
                               {h}
                             </th>
-                          )
+                          ),
                         )}
                       </tr>
                     </thead>
@@ -794,8 +819,8 @@ function MainOprationDashboard() {
               {filteredEvents.length > 0 && (
                 <div className="px-6 py-3 border-t border-neutral-border dark:border-gray-800 flex items-center justify-between text-xs text-neutral-muted">
                   <span>
-                    Showing {filteredEvents.length} of{" "}
-                    {upcomingEvents.length} events
+                    Showing {filteredEvents.length} of {upcomingEvents.length}{" "}
+                    events
                   </span>
                   <Link
                     to="/events"
@@ -834,7 +859,7 @@ function MainOprationDashboard() {
                       metrics.totalGuests
                         ? Math.round(
                             (metrics.checkedInGuests / metrics.totalGuests) *
-                              100
+                              100,
                           )
                         : 0
                     }%`,
@@ -844,7 +869,7 @@ function MainOprationDashboard() {
               <p className="text-xs text-neutral-muted">
                 {metrics.totalGuests
                   ? `${Math.round(
-                      (metrics.checkedInGuests / metrics.totalGuests) * 100
+                      (metrics.checkedInGuests / metrics.totalGuests) * 100,
                     )}% check-in rate across all events`
                   : "No guests registered yet"}
               </p>
@@ -898,7 +923,7 @@ function MainOprationDashboard() {
                             metrics.totalEvents
                               ? Math.round(
                                   ((item.value || 0) / metrics.totalEvents) *
-                                    100
+                                    100,
                                 )
                               : 0
                           }%`,
