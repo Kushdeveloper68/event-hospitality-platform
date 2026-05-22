@@ -246,30 +246,30 @@ export default function OprationalEventSchedule() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500 flex flex-col items-center justify-center h-full">
+    return <div className="p-8 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center h-full bg-white dark:bg-slate-950">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
       Loading Schedule...
     </div>;
   }
 
   if (error) {
-    return <div className="p-8 text-center text-red-500">{error}</div>;
+    return <div className="p-8 text-center text-red-500 dark:text-red-400 bg-white dark:bg-slate-950">{error}</div>;
   }
 
   return (
-    <div className="relative flex h-[calc(100vh-200px)] min-h-[600px] flex-col overflow-hidden bg-white border border-slate-200 rounded-xl shadow-sm">
+    <div className="relative flex h-[calc(100vh-200px)] min-h-150 flex-col overflow-hidden bg-white border border-slate-200 rounded-xl shadow-sm dark:bg-slate-950 dark:border-slate-800">
       
       {/* <!-- Sub-header: Controls & Date Selection --> */}
-      <div className="flex flex-col border-b border-slate-200 bg-white shrink-0">
-        <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-slate-100 gap-4">
+      <div className="flex flex-col border-b border-slate-200 bg-white shrink-0 dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-slate-100 gap-4 dark:border-slate-800">
           <div className="flex items-center gap-4">
-            <span className="font-bold text-slate-900 text-sm">Event Schedule Timeline</span>
-            <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 pl-4">
+            <span className="font-bold text-slate-900 text-sm dark:text-white">Event Schedule Timeline</span>
+            <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 pl-4 dark:border-slate-700">
                <div className="relative">
-                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined !text-lg text-slate-400">search</span>
-                 <input type="text" placeholder="Search activities..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none w-48 transition-all" />
+                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-lg! text-slate-400 dark:text-slate-500">search</span>
+                 <input type="text" placeholder="Search activities..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none w-48 transition-all dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-900" />
                </div>
-               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="py-1.5 px-3 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer transition-all">
+               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="py-1.5 px-3 text-xs rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer transition-all dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-900">
                   <option value="All">All Statuses</option>
                   <option value="Confirmed">Confirmed</option>
                   <option value="Pending">Pending</option>
@@ -282,21 +282,21 @@ export default function OprationalEventSchedule() {
             <button 
               onClick={handleOpenCreate}
               className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
-              <span className="material-symbols-outlined !text-sm">add</span>
+              <span className="material-symbols-outlined text-sm!">add</span>
               Add Schedule Block
             </button>
           </div>
         </div>
         
         {/* Date Tabs */}
-        <div className="flex px-6 overflow-x-auto hide-scrollbar bg-slate-50/50">
+        <div className="flex px-6 overflow-x-auto hide-scrollbar bg-slate-50/50 dark:bg-slate-900/60">
           {eventDates.map(dateStr => {
             const d = new Date(dateStr);
             const isActive = selectedDate === dateStr;
             const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
             const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
             return (
-                <button key={dateStr} onClick={() => setSelectedDate(dateStr)} className={`border-b-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-colors ${isActive ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100/50'}`}>
+                <button key={dateStr} onClick={() => setSelectedDate(dateStr)} className={`border-b-2 px-5 py-3 text-sm font-semibold whitespace-nowrap transition-colors ${isActive ? 'border-primary text-primary bg-primary/5 dark:bg-primary/10' : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800/60'}`}>
                    {monthDay}, {dayName}
                 </button>
             );
@@ -306,21 +306,21 @@ export default function OprationalEventSchedule() {
       </div>
 
       {/* <!-- Main Schedule Interface --> */}
-      <main className="flex flex-1 overflow-hidden bg-white relative">
+      <main className="flex flex-1 overflow-hidden bg-white relative dark:bg-slate-950">
         {/* <!-- Sticky Sidebar: Workstreams --> */}
-        <div className="w-64 flex-shrink-0 border-r border-slate-200 z-10 bg-white">
-          <div className="flex h-12 items-center border-b border-slate-200 px-4 bg-slate-50 font-bold text-slate-600 text-xs tracking-wider uppercase">
+        <div className="w-64 shrink-0 border-r border-slate-200 z-10 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex h-12 items-center border-b border-slate-200 px-4 bg-slate-50 font-bold text-slate-600 text-xs tracking-wider uppercase dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
             Workstreams
           </div>
           <div className="flex flex-col divide-y divide-slate-100">
             {workstreams.map(ws => (
-              <div key={ws.name} className="group flex h-24 items-center gap-3 px-4 transition-colors hover:bg-slate-50">
+              <div key={ws.name} className="group flex h-24 items-center gap-3 px-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
                 <div className={`flex size-8 shrink-0 items-center justify-center rounded ${ws.badgeClass}`}>
-                  <span className="material-symbols-outlined !text-xl">{ws.icon}</span>
+                  <span className="material-symbols-outlined text-xl!">{ws.icon}</span>
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">{ws.name}</p>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Track Controls</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{ws.name}</p>
+                  <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">Track Controls</p>
                 </div>
               </div>
             ))}
@@ -328,12 +328,12 @@ export default function OprationalEventSchedule() {
         </div>
 
         {/* <!-- Timeline Scroll Area --> */}
-        <div className="relative flex-1 overflow-x-auto overflow-y-auto hide-scrollbar bg-slate-50/30">
+        <div className="relative flex-1 overflow-x-auto overflow-y-auto hide-scrollbar bg-slate-50/30 dark:bg-slate-950">
           {/* <!-- Timeline Header (Time Markers) --> */}
-          <div className="sticky top-0 z-20 flex h-12 border-b border-slate-200 bg-slate-50" style={{ width: `${timelineHours.length * PX_PER_HOUR}px` }}>
+          <div className="sticky top-0 z-20 flex h-12 border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900" style={{ width: `${timelineHours.length * PX_PER_HOUR}px` }}>
             {timelineHours.map(hour => (
-              <div key={hour} style={{ width: `${PX_PER_HOUR}px` }} className="flex h-full shrink-0 border-r border-slate-200 border-dashed">
-                 <span className="text-[10px] font-bold text-slate-400 mt-2 ml-1">{hour.toString().padStart(2, '0')}:00</span>
+              <div key={hour} style={{ width: `${PX_PER_HOUR}px` }} className="flex h-full shrink-0 border-r border-slate-200 border-dashed dark:border-slate-800">
+                 <span className="text-[10px] font-bold text-slate-400 mt-2 ml-1 dark:text-slate-500">{hour.toString().padStart(2, '0')}:00</span>
               </div>
             ))}
           </div>
@@ -341,9 +341,9 @@ export default function OprationalEventSchedule() {
           {/* <!-- Timeline Rows --> */}
           <div className="relative min-h-full pb-10" style={{ width: `${timelineHours.length * PX_PER_HOUR}px` }}>
             {/* Background grids */}
-            <div className="absolute inset-0 z-0 flex pointer-events-none opacity-20">
+            <div className="absolute inset-0 z-0 flex pointer-events-none opacity-20 dark:opacity-15">
               {timelineHours.map(hour => (
-                 <div key={hour} style={{ width: `${PX_PER_HOUR}px` }} className="h-full shrink-0 border-r border-slate-300 border-dashed"></div>
+                 <div key={hour} style={{ width: `${PX_PER_HOUR}px` }} className="h-full shrink-0 border-r border-slate-300 border-dashed dark:border-slate-700"></div>
               ))}
             </div>
 
@@ -351,7 +351,7 @@ export default function OprationalEventSchedule() {
             {workstreams.map((ws, i) => {
               const wsActivities = filteredSchedules.filter(s => s.workstream === ws.name);
               return (
-                <div key={ws.name} className="group relative h-24 border-b border-slate-200 border-dashed z-10 hover:bg-slate-100/40 transition-colors">
+                <div key={ws.name} className="group relative h-24 border-b border-slate-200 border-dashed z-10 hover:bg-slate-100/40 transition-colors dark:border-slate-800 dark:hover:bg-slate-900/30">
                   {wsActivities.map((act) => {
                     const colors = colorMap[ws.name] || colorMap['Main Sessions'];
                     return (
@@ -388,17 +388,17 @@ export default function OprationalEventSchedule() {
 
         {/* <!-- Activity Detail Sidebar (Slide-out) --> */}
         {selectedActivity && (
-          <div className="absolute right-0 top-0 bottom-0 w-[340px] border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-y-auto z-30 shadow-2xl animate-in slide-in-from-right-8">
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-slate-50 sticky top-0 z-10">
-              <h3 className="font-bold text-slate-900 text-sm">Activity Details</h3>
-              <button onClick={() => setSelectedActivity(null)} className="text-slate-400 hover:text-slate-900 bg-white rounded-full size-7 flex items-center justify-center shadow-sm border border-slate-200">
-                <span className="material-symbols-outlined !text-sm">close</span>
+          <div className="absolute right-0 top-0 bottom-0 w-85 border-l border-slate-200 bg-white flex flex-col shrink-0 overflow-y-auto z-30 shadow-2xl animate-in slide-in-from-right-8 dark:border-slate-800 dark:bg-slate-950">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 bg-slate-50 sticky top-0 z-10 dark:border-slate-800 dark:bg-slate-900">
+              <h3 className="font-bold text-slate-900 text-sm dark:text-white">Activity Details</h3>
+              <button onClick={() => setSelectedActivity(null)} className="text-slate-400 hover:text-slate-900 bg-white rounded-full size-7 flex items-center justify-center shadow-sm border border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white dark:border-slate-700">
+                <span className="material-symbols-outlined text-sm!">close</span>
               </button>
             </div>
             <div className="p-6">
               <div className="mb-6">
                 <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-primary">{selectedActivity.workstream}</div>
-                <h2 className="text-xl font-bold text-slate-900 leading-tight tracking-tight">{selectedActivity.title}</h2>
+                <h2 className="text-xl font-bold text-slate-900 leading-tight tracking-tight dark:text-white">{selectedActivity.title}</h2>
                 <div className="mt-3 inline-flex">
                    <span className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase ${selectedActivity.status === 'Confirmed' ? 'bg-emerald-100 text-emerald-700' : selectedActivity.status === 'Active' ? 'bg-blue-100 text-blue-700' : selectedActivity.status === 'Cancelled' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
                     {selectedActivity.status || 'Pending'}
@@ -407,61 +407,61 @@ export default function OprationalEventSchedule() {
               </div>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
-                     <span className="material-symbols-outlined !text-[20px]">event</span>
+                  <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0 dark:bg-slate-900 dark:text-slate-400">
+                     <span className="material-symbols-outlined text-[20px]!">event</span>
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
                      {new Date(selectedActivity.startTime).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
                     </p>
-                    <p className="text-xs text-slate-500 mt-1 font-medium bg-slate-50 inline-block px-2 py-0.5 rounded border border-slate-100">
+                    <p className="text-xs text-slate-500 mt-1 font-medium bg-slate-50 inline-block px-2 py-0.5 rounded border border-slate-100 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
                       {formatDisplayTime(selectedActivity.startTime)} to {formatDisplayTime(selectedActivity.endTime)}
                     </p>
                   </div>
                 </div>
                 {selectedActivity.location && (
                   <div className="flex items-start gap-4">
-                    <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
-                     <span className="material-symbols-outlined !text-[20px]">location_on</span>
+                    <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0 dark:bg-slate-900 dark:text-slate-400">
+                     <span className="material-symbols-outlined text-[20px]!">location_on</span>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{selectedActivity.location}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 font-medium">Designated Venue</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedActivity.location}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 font-medium dark:text-slate-400">Designated Venue</p>
                     </div>
                   </div>
                 )}
                 {selectedActivity.assignedTo && (
                   <div className="flex items-start gap-4">
-                    <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
-                     <span className="material-symbols-outlined !text-[20px]">person</span>
+                    <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0 dark:bg-slate-900 dark:text-slate-400">
+                     <span className="material-symbols-outlined text-[20px]!">person</span>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{selectedActivity.assignedTo}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 font-medium">Assigned Personnel / VIP</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedActivity.assignedTo}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 font-medium dark:text-slate-400">Assigned Personnel / VIP</p>
                     </div>
                   </div>
                 )}
                 {selectedActivity.description && (
-                  <div className="flex items-start gap-4 pt-4 border-t border-slate-100">
-                    <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0">
-                     <span className="material-symbols-outlined !text-[20px]">notes</span>
+                  <div className="flex items-start gap-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="mt-0.5 bg-slate-100 size-9 rounded-lg flex items-center justify-center text-slate-500 shrink-0 dark:bg-slate-900 dark:text-slate-400">
+                     <span className="material-symbols-outlined text-[20px]!">notes</span>
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-slate-900 mb-1">Activity Briefing</p>
-                      <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">{selectedActivity.description}</p>
+                      <p className="text-sm font-bold text-slate-900 mb-1 dark:text-white">Activity Briefing</p>
+                      <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800">{selectedActivity.description}</p>
                     </div>
                   </div>
                 )}
               </div>
-              <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col gap-3">
+              <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col gap-3 dark:border-slate-800">
                 <button 
                   onClick={() => handleOpenEdit(selectedActivity)}
-                  className="w-full rounded-lg border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm">
+                  className="w-full rounded-lg border border-slate-200 bg-white py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
                   Edit Details
                 </button>
                 <button 
                   onClick={() => handleDelete(selectedActivity._id)}
-                  className="w-full rounded-lg border border-red-200 bg-red-50 text-red-600 py-2.5 text-xs font-bold hover:bg-red-100 transition-colors shadow-sm">
+                  className="w-full rounded-lg border border-red-200 bg-red-50 text-red-600 py-2.5 text-xs font-bold hover:bg-red-100 transition-colors shadow-sm dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-300 dark:hover:bg-red-950/30">
                   Cancel &amp; Delete Activity
                 </button>
               </div>
@@ -472,30 +472,30 @@ export default function OprationalEventSchedule() {
 
       {/* <!-- Modal for Create / Edit --> */}
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200 lg:pl-64">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
-              <h3 className="font-bold text-lg text-slate-900 tracking-tight">{modalMode === 'create' ? 'Add Schedule Activity' : 'Edit Activity'}</h3>
-              <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-full size-8 flex items-center justify-center transition-colors">
-                <span className="material-symbols-outlined !text-lg">close</span>
+        <div className="fixed inset-0 z-100 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200 lg:pl-64 dark:bg-slate-950/60">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh] dark:bg-slate-950 dark:border dark:border-slate-800">
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white dark:border-slate-800 dark:bg-slate-950">
+              <h3 className="font-bold text-lg text-slate-900 tracking-tight dark:text-white">{modalMode === 'create' ? 'Add Schedule Activity' : 'Edit Activity'}</h3>
+              <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 rounded-full size-8 flex items-center justify-center transition-colors dark:bg-slate-900 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800">
+                <span className="material-symbols-outlined text-lg!">close</span>
               </button>
             </div>
             <div className="p-6 overflow-y-auto">
               <form id="schedule-form" onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Activity Title</label>
-                  <input required autoFocus type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50" placeholder="E.g., Opening Keynote Session" />
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Activity Title</label>
+                  <input required autoFocus type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="E.g., Opening Keynote Session" />
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Workstream</label>
-                    <select value={formData.workstream} onChange={e => setFormData({...formData, workstream: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50">
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Workstream</label>
+                    <select value={formData.workstream} onChange={e => setFormData({...formData, workstream: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                       {workstreams.map(w => <option key={w.name} value={w.name}>{w.name}</option>)}
                     </select>
                   </div>
                   <div>
-                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Status</label>
-                     <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50">
+                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Status</label>
+                     <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100">
                       <option value="Confirmed">Confirmed</option>
                       <option value="Pending">Pending</option>
                       <option value="Active">Active</option>
@@ -505,32 +505,32 @@ export default function OprationalEventSchedule() {
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Start Time</label>
-                    <input required type="datetime-local" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50" />
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Start Time</label>
+                    <input required type="datetime-local" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">End Time</label>
-                    <input required type="datetime-local" value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50" />
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">End Time</label>
+                    <input required type="datetime-local" value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Location / Venue</label>
-                    <input type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50" placeholder="E.g., Grand Ballroom A" />
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Location / Venue</label>
+                    <input type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="E.g., Grand Ballroom A" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Assigned Staff / Name</label>
-                    <input type="text" value={formData.assignedTo} onChange={e => setFormData({...formData, assignedTo: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50" placeholder="E.g., Sarah Jenkins" />
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Assigned Staff / Name</label>
+                    <input type="text" value={formData.assignedTo} onChange={e => setFormData({...formData, assignedTo: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="E.g., Sarah Jenkins" />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Activity Briefing / Notes</label>
-                  <textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none bg-slate-50/50" placeholder="Include any special instructions, AV requirements, or setup details..."></textarea>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Activity Briefing / Notes</label>
+                  <textarea rows="3" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="Include any special instructions, AV requirements, or setup details..."></textarea>
                 </div>
               </form>
             </div>
-            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 mt-auto">
-              <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors shadow-sm">Cancel</button>
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 mt-auto dark:border-slate-800 dark:bg-slate-900">
+              <button type="button" onClick={() => setShowModal(false)} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors shadow-sm dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">Cancel</button>
               <button type="submit" form="schedule-form" className="px-6 py-2.5 text-sm font-bold bg-primary text-white rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-95">
                 {modalMode === 'create' ? 'Save Activity' : 'Update Activity'}
               </button>

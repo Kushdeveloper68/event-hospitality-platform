@@ -32,20 +32,20 @@ const timeAgo = (ts) => {
 const STATUS_CONFIG = {
   in_progress: {
     label: "In Progress",
-    bg: "bg-blue-100 text-blue-700",
+    bg: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     dot: "bg-blue-500",
     pulse: true,
   },
   upcoming: {
     label: "Upcoming",
-    bg: "bg-primary/10 text-primary",
+    bg: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-sky-300",
     dot: "bg-primary",
     pulse: false,
   },
   completed: {
     label: "Completed",
-    bg: "bg-gray-100 text-gray-600",
-    dot: "bg-gray-400",
+    bg: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+    dot: "bg-gray-400 dark:bg-gray-500",
     pulse: false,
   },
 };
@@ -53,27 +53,27 @@ const STATUS_CONFIG = {
 const ACTIVITY_CONFIG = {
   "check-in": {
     icon: "how_to_reg",
-    color: "text-emerald-600",
-    bg: "bg-emerald-50",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-emerald-50 dark:bg-emerald-900/30",
   },
-  "check-out": { icon: "logout", color: "text-slate-500", bg: "bg-slate-100" },
+  "check-out": { icon: "logout", color: "text-slate-500 dark:text-slate-400", bg: "bg-slate-100 dark:bg-slate-800" },
   registration: {
     icon: "person_add",
     color: "text-primary",
-    bg: "bg-primary/10",
+    bg: "bg-primary/10 dark:bg-primary/20",
   },
-  service: { icon: "room_service", color: "text-amber-600", bg: "bg-amber-50" },
+  service: { icon: "room_service", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/30" },
   transport: {
     icon: "local_shipping",
-    color: "text-indigo-600",
-    bg: "bg-indigo-50",
+    color: "text-indigo-600 dark:text-indigo-400",
+    bg: "bg-indigo-50 dark:bg-indigo-900/30",
   },
   "room-assignment": {
     icon: "meeting_room",
-    color: "text-purple-600",
-    bg: "bg-purple-50",
+    color: "text-purple-600 dark:text-purple-400",
+    bg: "bg-purple-50 dark:bg-purple-900/30",
   },
-  schedule: { icon: "schedule", color: "text-teal-600", bg: "bg-teal-50" },
+  schedule: { icon: "schedule", color: "text-teal-600 dark:text-teal-400", bg: "bg-teal-50 dark:bg-teal-900/30" },
 };
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -88,12 +88,12 @@ function MetricCard({
   loading,
 }) {
   const accentMap = {
-    primary: "bg-primary/10 text-primary",
-    green: "bg-emerald-100 text-emerald-600",
-    amber: "bg-amber-100 text-amber-600",
-    red: "bg-red-100 text-red-600",
-    purple: "bg-purple-100 text-purple-600",
-    indigo: "bg-indigo-100 text-indigo-600",
+    primary: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-sky-300",
+    green: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
+    amber: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
+    red: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
+    purple: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+    indigo: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
   };
 
   return (
@@ -158,7 +158,7 @@ function ActivityItem({ log }) {
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           {log.event?.name && (
-            <span className="text-[10px] text-neutral-muted font-medium truncate max-w-[120px]">
+            <span className="text-[10px] text-neutral-muted font-medium truncate max-w-30">
               {log.event.name}
             </span>
           )}
@@ -370,7 +370,7 @@ function MainOprationDashboard() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen overflow-hidden dark:bg-gray-900">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-gray-950">
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* ── Top Navbar ── */}
@@ -443,7 +443,7 @@ function MainOprationDashboard() {
         <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
           {/* ── Error banner (non-blocking) ── */}
           {error && data && (
-            <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl flex items-center justify-between">
+            <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900/40 dark:text-amber-200 px-4 py-3 rounded-xl flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-amber-600">
                   warning
@@ -653,7 +653,7 @@ function MainOprationDashboard() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto max-h-[420px] custom-scrollbar p-3">
+              <div className="flex-1 overflow-y-auto max-h-105 custom-scrollbar p-3">
                 {recentActivity.length === 0 ? (
                   <EmptyState
                     icon="dynamic_feed"
@@ -804,7 +804,7 @@ function MainOprationDashboard() {
                           </td>
                           <td className="px-6 py-4 text-right">
                             <Link to={`/events/${ev._id}/overview`}>
-                              <button className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-all shadow-sm opacity-0 group-hover:opacity-100">
                                 Manage
                               </button>
                             </Link>

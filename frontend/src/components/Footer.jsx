@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200 pt-16 pb-8">
+    <footer className="bg-white border-t border-gray-200 pt-16 pb-8 dark:bg-slate-950 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
           <div className="col-span-2">
@@ -20,17 +20,17 @@ function Footer() {
                   ></path>
                 </svg>
               </div>
-              <span className="text-lg font-bold">Event Hospitality</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white">Event Hospitality</span>
             </div>
-            <p className="text-gray-500 max-w-xs text-sm leading-relaxed">
+            <p className="text-gray-500 dark:text-slate-400 max-w-xs text-sm leading-relaxed">
               The ultimate platform for enterprise hospitality management. Built
               for scale, designed for simplicity.
             </p>
           </div>
           <div>
-            <h6 className="font-bold text-gray-900 mb-4">Product</h6>
+            <h6 className="font-bold text-gray-900 dark:text-white mb-4">Product</h6>
 
-            <ul className="space-y-3 text-sm text-gray-600">
+            <ul className="space-y-3 text-sm text-gray-600 dark:text-slate-400">
               {[
                 {
                   redirect: "#",
@@ -61,8 +61,8 @@ function Footer() {
             </ul>
           </div>
           <div>
-            <h6 className="font-bold text-gray-900 mb-4">Company</h6>
-            <ul className="space-y-3 text-sm text-gray-600">
+            <h6 className="font-bold text-gray-900 dark:text-white mb-4">Company</h6>
+            <ul className="space-y-3 text-sm text-gray-600 dark:text-slate-400">
               {[
                 {
                   redirect: "#",
@@ -93,8 +93,8 @@ function Footer() {
             </ul>
           </div>
           <div>
-            <h6 className="font-bold text-gray-900 mb-4">Legal</h6>
-            <ul className="space-y-3 text-sm text-gray-600">
+            <h6 className="font-bold text-gray-900 dark:text-white mb-4">Legal</h6>
+            <ul className="space-y-3 text-sm text-gray-600 dark:text-slate-400">
               {[
                 {
                   redirect: "#",
@@ -121,13 +121,13 @@ function Footer() {
             </ul>
           </div>
         </div>
-        <div className="pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-gray-500">
+        <div className="pt-8 border-t border-gray-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-gray-500 dark:text-slate-500">
             © 2024 Event Hospitality Management Inc. All rights reserved.
           </p>
           <div className="flex gap-6">
             <a
-              className="text-gray-400 hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-primary transition-colors dark:text-slate-500 dark:hover:text-sky-400"
               href="#"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -135,7 +135,7 @@ function Footer() {
               </svg>
             </a>
             <a
-              className="text-gray-400 hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-primary transition-colors dark:text-slate-500 dark:hover:text-sky-400"
               href="#"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
