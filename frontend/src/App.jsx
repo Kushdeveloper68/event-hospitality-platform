@@ -18,10 +18,12 @@ import {
 import { UserSignup, UserLogin, CreateNewEvent } from "./pages";
 // settings / others
 import { OragnizationSetting, PageNotFound } from "./pages";
+import { ThemeProvider } from "./context/ThemeContext";
 
 function App() {
   return (
     <AuthProvider>
+      <ThemeProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<PlatformLandingPage />} />
@@ -105,6 +107,7 @@ function App() {
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </BrowserRouter>
+      </ThemeProvider>
     </AuthProvider>
   );
 }
