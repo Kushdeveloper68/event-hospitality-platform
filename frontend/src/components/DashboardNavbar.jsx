@@ -42,11 +42,6 @@ function DashboardNavbar() {
             <span className="text-sm">Events</span>
           </NavLink>
 
-          <NavLink to="/reports" className={navStyle}>
-            <span className="material-symbols-outlined text-[22px]">assessment</span>
-            <span className="text-sm">Reports</span>
-          </NavLink>
-
         </nav>
       </div>
 

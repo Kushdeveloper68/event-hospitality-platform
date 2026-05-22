@@ -62,7 +62,7 @@ function App() {
             }
           />
           <Route
-            path="/reports"
+            path="/reports/:eventId"
             element={
               <ProtectedRoute>
                 <DashboardLayout>
