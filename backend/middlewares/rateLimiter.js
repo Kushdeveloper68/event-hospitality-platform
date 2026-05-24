@@ -1,4 +1,5 @@
-const rateLimit = require("express-rate-limit");
+
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 
 const createAuthLimiter = ({
 	windowMs,
@@ -9,15 +10,25 @@ const createAuthLimiter = ({
 	rateLimit({
 		windowMs,
 		max,
+
 		standardHeaders: true,
 		legacyHeaders: false,
-		
-		keyGenerator: (req) => `${keyPrefix}:${req.ip}`,
+
+		skipSuccessfulRequests,
+
+		keyGenerator: (req) =>
+			`${keyPrefix}:${ipKeyGenerator(req.ip)}`,
+
 		handler: (req, res, next, options) => {
 			res.status(options.statusCode).json({
 				success: false,
 				message,
-				retryAfterSeconds: req.rateLimit.resetTime,
+				retryAfterSeconds: Math.max(
+					1,
+					Math.ceil(
+						(req.rateLimit.resetTime - Date.now()) / 1000
+					)
+				),
 			});
 		},
 	});
