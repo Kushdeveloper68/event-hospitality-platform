@@ -6,6 +6,7 @@ const createAuthLimiter = ({
 	max,
 	message,
 	keyPrefix,
+	skipSuccessfulRequests = false,
 }) =>
 	rateLimit({
 		windowMs,
