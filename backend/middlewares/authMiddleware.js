@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+if (!process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET missing");
+}
+const JWT_SECRET = process.env.JWT_SECRET;
+
 
 const authMiddleware = (req, res, next) => {
     try {

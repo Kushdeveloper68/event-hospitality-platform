@@ -1,11 +1,15 @@
 const nodemailer = require('nodemailer');
 
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+  throw new Error("EMAIL_USER or EMAIL_PASSWORD missing");
+}
+
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || 'your-email@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || 'your-app-password'
+        user: process.env.EMAIL_USER ,
+        pass: process.env.EMAIL_PASSWORD 
     }
 });
 

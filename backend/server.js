@@ -24,6 +24,10 @@ const organizationAnalyticsDashboardsRoutes = require('./routes/OrganizationAnal
 const eventAnalyticsReportsRoutes  = require('./routes/eventAnalyticsReportsRoutes')
 const orgSettingsRoutes = require('./routes/organizationSettingRoutes')
 // connect to MongoDB
+if (!process.env.MONGO_URI) {
+  throw new Error("MONGO_URI missing");
+}
+
 connectToMongoDB(process.env.MONGO_URI)
 
 // body parser
@@ -33,7 +37,7 @@ app.use(cookiesP())
 
 // cors setup
 app.use(cors({
-  origin: "http://localhost:5173", //  frontend URL
+  origin: process.env.CLIENT_URL, //  frontend URL
   credentials: true
 }));
 
