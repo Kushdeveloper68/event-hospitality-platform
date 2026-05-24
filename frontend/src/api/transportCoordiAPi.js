@@ -1,17 +1,13 @@
-import axios from 'axios';
+import api from "./axios";
 
-const API_BASE_URL = 'http://localhost:5000/api/transport';
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true,
-});
+const API_BASE_PATH = "/transport";
 
 /**
  * Create a new transport entry
  */
 export const createTransport = async (transportData) => {
     try {
-        const res = await api.post('/create', transportData);
+        const res = await api.post(`${API_BASE_PATH}/create`, transportData);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to create transport' };
@@ -25,7 +21,7 @@ export const getTransports = async (eventId, status) => {
     try {
         const params = { eventId };
         if (status && status !== 'all') params.status = status;
-        const res = await api.get('/', { params });
+        const res = await api.get(`${API_BASE_PATH}`, { params });
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch transports' };
@@ -37,7 +33,7 @@ export const getTransports = async (eventId, status) => {
  */
 export const getTransportById = async (transportId) => {
     try {
-        const res = await api.get(`/${transportId}`);
+        const res = await api.get(`${API_BASE_PATH}/${transportId}`);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch transport' };
@@ -49,7 +45,7 @@ export const getTransportById = async (transportId) => {
  */
 export const updateTransport = async (transportId, updateData) => {
     try {
-        const res = await api.put(`/${transportId}`, updateData);
+        const res = await api.put(`${API_BASE_PATH}/${transportId}`, updateData);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to update transport' };
@@ -61,7 +57,7 @@ export const updateTransport = async (transportId, updateData) => {
  */
 export const deleteTransport = async (transportId) => {
     try {
-        const res = await api.delete(`/${transportId}`);
+        const res = await api.delete(`${API_BASE_PATH}/${transportId}`);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to delete transport' };
@@ -73,7 +69,7 @@ export const deleteTransport = async (transportId) => {
  */
 export const updateTransportStatus = async (transportId, status) => {
     try {
-        const res = await api.put(`/${transportId}/status`, { status });
+        const res = await api.put(`${API_BASE_PATH}/${transportId}/status`, { status });
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to update transport status' };
@@ -85,11 +81,11 @@ export const updateTransportStatus = async (transportId, status) => {
  */
 export const getTransportSummary = async (eventId) => {
     try {
-        const res = await api.get('/summary', { params: { eventId } });
+        const res = await api.get(`${API_BASE_PATH}/summary`, { params: { eventId } });
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch transport summary' };
     }
 };
 
-export default api;
+

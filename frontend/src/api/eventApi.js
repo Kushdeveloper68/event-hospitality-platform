@@ -1,12 +1,6 @@
-import axios from 'axios';
+import api from "./axios";
 
-const API_BASE_URL = 'http://localhost:5000/api/events';
-
-// Create axios instance with credentials
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true
-});
+const API_BASE_PATH = "/events";
 
 /**
  * Create a new event
@@ -15,7 +9,7 @@ const api = axios.create({
  */
 export const createEvent = async (eventData) => {
     try {
-        const response = await api.post('/create', eventData);
+        const response = await api.post(`${API_BASE_PATH}/create`, eventData);
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to create event' };
@@ -28,7 +22,7 @@ export const createEvent = async (eventData) => {
  */
 export const getAllEvents = async () => {
     try {
-        const response = await api.get('/');
+        const response = await api.get(`${API_BASE_PATH}`);
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch events' };
@@ -42,7 +36,7 @@ export const getAllEvents = async () => {
  */
 export const getEventById = async (eventId) => {
     try {
-        const response = await api.get(`/${eventId}`);
+        const response = await api.get(`${API_BASE_PATH}/${eventId}`);
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch event' };
@@ -57,7 +51,7 @@ export const getEventById = async (eventId) => {
  */
 export const updateEvent = async (eventId, updateData) => {
     try {
-        const response = await api.put(`/${eventId}`, updateData);
+        const response = await api.put(`${API_BASE_PATH}/${eventId}`, updateData);
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to update event' };
@@ -71,11 +65,10 @@ export const updateEvent = async (eventId, updateData) => {
  */
 export const deleteEvent = async (eventId) => {
     try {
-        const response = await api.delete(`/${eventId}`);
+        const response = await api.delete(`${API_BASE_PATH}/${eventId}`);
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to delete event' };
     }
 };
 
-export default api;

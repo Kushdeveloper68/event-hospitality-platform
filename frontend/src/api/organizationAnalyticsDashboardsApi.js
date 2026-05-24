@@ -1,11 +1,6 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE_URL = "http://localhost:5000/api/org-analytics";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const API_BASE_PATH = "/org-analytics";
 
 /**
  * Fetch all analytics in one call (initial page load)
@@ -13,7 +8,7 @@ const api = axios.create({
  */
 export const getFullAnalytics = async (filters = {}) => {
   try {
-    const response = await api.get("/full", { params: filters });
+    const response = await api.get(`${API_BASE_PATH}/full`, { params: filters });
     return response.data;
   } catch (error) {
     return (
@@ -31,7 +26,7 @@ export const getFullAnalytics = async (filters = {}) => {
  */
 export const getKPISummary = async (filters = {}) => {
   try {
-    const response = await api.get("/kpis", { params: filters });
+    const response = await api.get(`${API_BASE_PATH}/kpis`, { params: filters });
     return response.data;
   } catch (error) {
     return (
@@ -46,7 +41,7 @@ export const getKPISummary = async (filters = {}) => {
  */
 export const getCheckInTrend = async (months = 12) => {
   try {
-    const response = await api.get("/checkin-trend", { params: { months } });
+    const response = await api.get(`${API_BASE_PATH}/checkin-trend`, { params: { months } });
     return response.data;
   } catch (error) {
     return (
@@ -64,7 +59,7 @@ export const getCheckInTrend = async (months = 12) => {
  */
 export const getRegistrationTrend = async (months = 12) => {
   try {
-    const response = await api.get("/registration-trend", {
+    const response = await api.get(`${API_BASE_PATH}/registration-trend`, {
       params: { months },
     });
     return response.data;
@@ -83,7 +78,7 @@ export const getRegistrationTrend = async (months = 12) => {
  */
 export const getServiceBreakdown = async () => {
   try {
-    const response = await api.get("/services");
+    const response = await api.get(`${API_BASE_PATH}/services`);
     return response.data;
   } catch (error) {
     return (
@@ -100,7 +95,7 @@ export const getServiceBreakdown = async () => {
  */
 export const getRoomOccupancy = async () => {
   try {
-    const response = await api.get("/rooms");
+    const response = await api.get(`${API_BASE_PATH}/rooms`);
     return response.data;
   } catch (error) {
     return (
@@ -117,7 +112,7 @@ export const getRoomOccupancy = async () => {
  */
 export const getTransportAnalytics = async () => {
   try {
-    const response = await api.get("/transport");
+    const response = await api.get(`${API_BASE_PATH}/transport`);
     return response.data;
   } catch (error) {
     return (
@@ -134,7 +129,7 @@ export const getTransportAnalytics = async () => {
  */
 export const getTeamAnalytics = async () => {
   try {
-    const response = await api.get("/team");
+    const response = await api.get(`${API_BASE_PATH}/team`);
     return response.data;
   } catch (error) {
     return (
@@ -151,7 +146,7 @@ export const getTeamAnalytics = async () => {
  */
 export const getActivityAnalytics = async () => {
   try {
-    const response = await api.get("/activity");
+    const response = await api.get(`${API_BASE_PATH}/activity`);
     return response.data;
   } catch (error) {
     return (
@@ -169,7 +164,7 @@ export const getActivityAnalytics = async () => {
  */
 export const getTopEvents = async (limit = 10) => {
   try {
-    const response = await api.get("/top-events", { params: { limit } });
+    const response = await api.get(`${API_BASE_PATH}/top-events`, { params: { limit } });
     return response.data;
   } catch (error) {
     return (
@@ -186,7 +181,7 @@ export const getTopEvents = async (limit = 10) => {
  */
 export const getVIPAnalytics = async () => {
   try {
-    const response = await api.get("/vip");
+    const response = await api.get(`${API_BASE_PATH}/vip`);
     return response.data;
   } catch (error) {
     return (

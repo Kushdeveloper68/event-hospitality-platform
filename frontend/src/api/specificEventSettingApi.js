@@ -1,11 +1,6 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE_URL = "http://localhost:5000/api/event-settings";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const API_BASE_PATH = "/event-settings";
 
 /**
  * Get full event settings (core info + preferences)
@@ -13,7 +8,7 @@ const api = axios.create({
  */
 export const getEventSettings = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}`);
     return response.data;
   } catch (error) {
     return error.response?.data || { success: false, message: "Failed to fetch event settings" };
@@ -27,7 +22,7 @@ export const getEventSettings = async (eventId) => {
  */
 export const updateEventCoreInfo = async (eventId, coreData) => {
   try {
-    const response = await api.put(`/${eventId}/core`, coreData);
+    const response = await api.put(`${API_BASE_PATH}/${eventId}/core`, coreData);
     return response.data;
   } catch (error) {
     return error.response?.data || { success: false, message: "Failed to update event information" };
@@ -41,7 +36,7 @@ export const updateEventCoreInfo = async (eventId, coreData) => {
  */
 export const updateEventPreferences = async (eventId, settingsData) => {
   try {
-    const response = await api.put(`/${eventId}/preferences`, settingsData);
+    const response = await api.put(`${API_BASE_PATH}/${eventId}/preferences`, settingsData);
     return response.data;
   } catch (error) {
     return error.response?.data || { success: false, message: "Failed to update settings" };
@@ -55,7 +50,7 @@ export const updateEventPreferences = async (eventId, settingsData) => {
  */
 export const generateEventSlug = async (eventId, name) => {
   try {
-    const response = await api.post(`/${eventId}/generate-slug`, { name });
+    const response = await api.post(`${API_BASE_PATH}/${eventId}/generate-slug`, { name });
     return response.data;
   } catch (error) {
     return error.response?.data || { success: false, message: "Failed to generate slug" };
@@ -69,7 +64,7 @@ export const generateEventSlug = async (eventId, name) => {
  */
 export const setEventArchive = async (eventId, archive) => {
   try {
-    const response = await api.put(`/${eventId}/archive`, { archive });
+    const response = await api.put(`${API_BASE_PATH}/${eventId}/archive`, { archive });
     return response.data;
   } catch (error) {
     return error.response?.data || { success: false, message: "Failed to update archive status" };
@@ -83,7 +78,7 @@ export const setEventArchive = async (eventId, archive) => {
  */
 export const deleteEventPermanently = async (eventId, confirmName) => {
   try {
-    const response = await api.delete(`/${eventId}/delete`, {
+    const response = await api.delete(`${API_BASE_PATH}/${eventId}/delete`, {
       data: { confirmName },
     });
     return response.data;

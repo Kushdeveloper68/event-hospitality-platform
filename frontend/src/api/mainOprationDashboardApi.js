@@ -1,11 +1,6 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE_URL = "http://localhost:5000/api/main-dashboard";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const API_BASE_PATH = "/main-dashboard";
 
 /**
  * Fetch the full dashboard data in one request
@@ -13,7 +8,7 @@ const api = axios.create({
  */
 export const getFullDashboard = async () => {
   try {
-    const response = await api.get("/");
+    const response = await api.get(`${API_BASE_PATH}`);
     return response.data;
   } catch (error) {
     return (
@@ -30,7 +25,7 @@ export const getFullDashboard = async () => {
  */
 export const getDashboardMetrics = async () => {
   try {
-    const response = await api.get("/metrics");
+    const response = await api.get(`${API_BASE_PATH}/metrics`);
     return response.data;
   } catch (error) {
     return (
@@ -48,7 +43,7 @@ export const getDashboardMetrics = async () => {
  */
 export const getRecentActivity = async (limit = 8) => {
   try {
-    const response = await api.get("/recent-activity", { params: { limit } });
+    const response = await api.get(`${API_BASE_PATH}/recent-activity`, { params: { limit } });
     return response.data;
   } catch (error) {
     return (
@@ -66,7 +61,7 @@ export const getRecentActivity = async (limit = 8) => {
  */
 export const getUpcomingEvents = async (limit = 6) => {
   try {
-    const response = await api.get("/upcoming-events", { params: { limit } });
+    const response = await api.get(`${API_BASE_PATH}/upcoming-events`, { params: { limit } });
     return response.data;
   } catch (error) {
     return (
@@ -83,7 +78,7 @@ export const getUpcomingEvents = async (limit = 6) => {
  */
 export const getActiveEventStats = async () => {
   try {
-    const response = await api.get("/active-events");
+    const response = await api.get(`${API_BASE_PATH}/active-events`);
     return response.data;
   } catch (error) {
     return (
@@ -95,4 +90,3 @@ export const getActiveEventStats = async () => {
   }
 };
 
-export default api;

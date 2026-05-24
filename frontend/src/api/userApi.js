@@ -1,12 +1,6 @@
-import axios from 'axios';
+import api from "./axios";
 
-const API_BASE_URL = 'http://localhost:5000/api/users';
-
-// Create axios instance with credentials
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true
-});
+const API_BASE_PATH = "/users";
 
 // ============ SIGNUP ENDPOINTS ============
 
@@ -19,7 +13,7 @@ const api = axios.create({
 
 export const signupInitiate = async (userData) => {
     try {
-        const response = await api.post('/signup', userData);
+        const response = await api.post(`${API_BASE_PATH}/signup`, userData);
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Signup failed' };
@@ -34,7 +28,7 @@ export const signupInitiate = async (userData) => {
  */
 export const verifyOTP = async (email, otp) => {
     try {
-        const response = await api.post('/verify-otp', { email, otp });
+        const response = await api.post(`${API_BASE_PATH}/verify-otp`, { email, otp });
         
         // Store token in localStorage if provided
         if (response.data.token && response.data.user) {
@@ -55,7 +49,7 @@ export const verifyOTP = async (email, otp) => {
  */
 export const resendOTP = async (email) => {
     try {
-        const response = await api.post('/resend-otp', { email });
+        const response = await api.post(`${API_BASE_PATH}/resend-otp`, { email });
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to resend OTP' };
@@ -72,7 +66,7 @@ export const resendOTP = async (email) => {
  */
 export const loginUser = async (email, password) => {
     try {
-        const response = await api.post('/login', { email, password });
+        const response = await api.post(`${API_BASE_PATH}/login`, { email, password });
         
         // Store token in localStorage if provided
         if (response.data.token && response.data.user) {
@@ -111,4 +105,4 @@ export const isAuthenticated = () => {
     return !!getAuthToken();
 };
 
-export default api;
+

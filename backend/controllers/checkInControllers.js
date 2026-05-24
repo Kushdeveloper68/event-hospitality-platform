@@ -8,7 +8,8 @@ const {
 } = require("../services/checkInServices");
 const { getEventById } = require("../services/eventServices");
 const { createActivityLog } = require("../services/activityLogServices");
-
+  const GuestModel = require("../models/guestModel");
+  
 /**
  * Helper: verify the requesting user owns the event
  */
@@ -99,7 +100,7 @@ const handleCheckIn = async (req, res) => {
     const userId = req.user?.id;
 
     // get the guest to find its event, then verify ownership
-    const GuestModel = require("../models/guestModel");
+  
     const guest = await GuestModel.findById(guestId);
     if (!guest) {
       return res.status(404).json({ success: false, message: "Guest not found" });
@@ -135,7 +136,7 @@ const handleCheckOut = async (req, res) => {
     const { guestId } = req.params;
     const userId = req.user?.id;
 
-    const GuestModel = require("../models/guestModel");
+   
     const guest = await GuestModel.findById(guestId);
     if (!guest) {
       return res.status(404).json({ success: false, message: "Guest not found" });

@@ -1,11 +1,6 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE_URL = "http://localhost:5000/api/event-analytics";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const API_BASE_PATH = "/event-analytics";
 
 /**
  * Full analytics report for one event — all sections in one request.
@@ -14,7 +9,7 @@ const api = axios.create({
  */
 export const getFullReport = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/full`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/full`);
     return response.data;
   } catch (error) {
     return (
@@ -32,7 +27,7 @@ export const getFullReport = async (eventId) => {
  */
 export const getGuestAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/guests`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/guests`);
     return response.data;
   } catch (error) {
     return (
@@ -50,7 +45,7 @@ export const getGuestAnalytics = async (eventId) => {
  */
 export const getRoomAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/rooms`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/rooms`);
     return response.data;
   } catch (error) {
     return (
@@ -68,7 +63,7 @@ export const getRoomAnalytics = async (eventId) => {
  */
 export const getServiceAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/services`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/services`);
     return response.data;
   } catch (error) {
     return (
@@ -86,7 +81,7 @@ export const getServiceAnalytics = async (eventId) => {
  */
 export const getTransportAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/transport`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/transport`);
     return response.data;
   } catch (error) {
     return (
@@ -104,7 +99,7 @@ export const getTransportAnalytics = async (eventId) => {
  */
 export const getTeamAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/team`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/team`);
     return response.data;
   } catch (error) {
     return (
@@ -122,7 +117,7 @@ export const getTeamAnalytics = async (eventId) => {
  */
 export const getScheduleAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/schedule`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/schedule`);
     return response.data;
   } catch (error) {
     return (
@@ -140,7 +135,7 @@ export const getScheduleAnalytics = async (eventId) => {
  */
 export const getActivityAnalytics = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/activity`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/activity`);
     return response.data;
   } catch (error) {
     return (
@@ -159,7 +154,7 @@ export const getActivityAnalytics = async (eventId) => {
  */
 export const exportGuestsCsv = async (eventId, eventName = "event") => {
   try {
-    const response = await api.get(`/${eventId}/export/guests`, {
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/export/guests`, {
       responseType: "blob",
     });
     const url = URL.createObjectURL(new Blob([response.data]));
@@ -181,7 +176,7 @@ export const exportGuestsCsv = async (eventId, eventName = "event") => {
  */
 export const exportServicesCsv = async (eventId, eventName = "event") => {
   try {
-    const response = await api.get(`/${eventId}/export/services`, {
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/export/services`, {
       responseType: "blob",
     });
     const url = URL.createObjectURL(new Blob([response.data]));
@@ -203,7 +198,7 @@ export const exportServicesCsv = async (eventId, eventName = "event") => {
  */
 export const exportTransportCsv = async (eventId, eventName = "event") => {
   try {
-    const response = await api.get(`/${eventId}/export/transport`, {
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/export/transport`, {
       responseType: "blob",
     });
     const url = URL.createObjectURL(new Blob([response.data]));

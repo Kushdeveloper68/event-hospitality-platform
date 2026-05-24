@@ -1,18 +1,13 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE_URL = "http://localhost:5000/api/org-settings";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const API_BASE_PATH = "/org-settings";
 
 /**
  * Fetch full settings (profile + org info combined)
  */
 export const getSettings = async () => {
   try {
-    const response = await api.get("/");
+    const response = await api.get(`${API_BASE_PATH}`);
     return response.data;
   } catch (error) {
     return (
@@ -30,7 +25,7 @@ export const getSettings = async () => {
  */
 export const updateProfile = async (data) => {
   try {
-    const response = await api.put("/profile", data);
+    const response = await api.put(`${API_BASE_PATH}/profile`, data);
     return response.data;
   } catch (error) {
     return (
@@ -48,7 +43,7 @@ export const updateProfile = async (data) => {
  */
 export const updateOrgInfo = async (data) => {
   try {
-    const response = await api.put("/organization", data);
+    const response = await api.put(`${API_BASE_PATH}/organization`, data);
     return response.data;
   } catch (error) {
     return (
@@ -66,7 +61,7 @@ export const updateOrgInfo = async (data) => {
  */
 export const changePassword = async (data) => {
   try {
-    const response = await api.put("/password", data);
+    const response = await api.put(`${API_BASE_PATH}/password`, data);
     return response.data;
   } catch (error) {
     return (
@@ -84,7 +79,7 @@ export const changePassword = async (data) => {
  */
 export const updateNotifications = async (notificationsEnabled) => {
   try {
-    const response = await api.put("/notifications", { notificationsEnabled });
+    const response = await api.put(`${API_BASE_PATH}/notifications`, { notificationsEnabled });
     return response.data;
   } catch (error) {
     return (
@@ -102,7 +97,7 @@ export const updateNotifications = async (notificationsEnabled) => {
  */
 export const updateTheme = async (theme) => {
   try {
-    const response = await api.put("/theme", { theme });
+    const response = await api.put(`${API_BASE_PATH}/theme`, { theme });
     return response.data;
   } catch (error) {
     return (

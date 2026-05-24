@@ -1,11 +1,6 @@
-import axios from "axios";
+import api from "./axios";
 
-const API_BASE_URL = "http://localhost:5000/api/event-summary";
-
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
-});
+const API_BASE_PATH = "/event-summary";
 
 /**
  * Fetch the full event summary dashboard data
@@ -14,7 +9,7 @@ const api = axios.create({
  */
 export const getEventSummary = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}`);
     return response.data;
   } catch (error) {
     return (
@@ -33,7 +28,7 @@ export const getEventSummary = async (eventId) => {
  */
 export const getEventKPIs = async (eventId) => {
   try {
-    const response = await api.get(`/${eventId}/kpis`);
+    const response = await api.get(`${API_BASE_PATH}/${eventId}/kpis`);
     return response.data;
   } catch (error) {
     return (

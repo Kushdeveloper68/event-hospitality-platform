@@ -1,9 +1,6 @@
-import axios from 'axios';
+import api from "./axios";
 
-// Ensure cookies (JWT token) are sent with every request
-axios.defaults.withCredentials = true;
-
-const API_BASE_URL = 'http://localhost:5000/api/services';
+const API_BASE_PATH = "/services";
 
 /**
  * Fetch all service requests for a specific event
@@ -11,7 +8,7 @@ const API_BASE_URL = 'http://localhost:5000/api/services';
 export const getServiceRequests = async (eventId, filters = {}) => {
   try {
     const params = { eventId, ...filters };
-    const response = await axios.get(`${API_BASE_URL}`, { params });
+    const response = await api.get(`${API_BASE_PATH}`, { params });
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -26,7 +23,7 @@ export const getServiceRequests = async (eventId, filters = {}) => {
  */
 export const getServiceSummary = async (eventId) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/summary`, {
+    const response = await api.get(`${API_BASE_PATH}/summary`, {
       params: { eventId }
     });
     return response.data;
@@ -43,7 +40,7 @@ export const getServiceSummary = async (eventId) => {
  */
 export const getServiceRequestById = async (requestId) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/${requestId}`);
+    const response = await api.get(`${API_BASE_PATH}/${requestId}`);
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -58,7 +55,7 @@ export const getServiceRequestById = async (requestId) => {
  */
 export const createServiceRequest = async (requestData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/create`, requestData);
+    const response = await api.post(`${API_BASE_PATH}/create`, requestData);
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -73,7 +70,7 @@ export const createServiceRequest = async (requestData) => {
  */
 export const updateServiceRequest = async (requestId, requestData) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/${requestId}`, requestData);
+    const response = await api.put(`${API_BASE_PATH}/${requestId}`, requestData);
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -88,7 +85,7 @@ export const updateServiceRequest = async (requestId, requestData) => {
  */
 export const updateServiceStatus = async (requestId, status) => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/${requestId}/status`, { status });
+    const response = await api.put(`${API_BASE_PATH}/${requestId}/status`, { status });
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {
@@ -103,7 +100,7 @@ export const updateServiceStatus = async (requestId, status) => {
  */
 export const deleteServiceRequest = async (requestId) => {
   try {
-    const response = await axios.delete(`${API_BASE_URL}/${requestId}`);
+    const response = await api.delete(`${API_BASE_PATH}/${requestId}`);
     return response.data;
   } catch (error) {
     if (error.response && error.response.data) {

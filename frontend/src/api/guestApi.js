@@ -1,10 +1,6 @@
-import axios from 'axios';
+import api from "./axios";
 
-const API_BASE_URL = 'http://localhost:5000/api/guests';
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true,
-});
+const API_BASE_PATH = "/guests";
 
 /**
  * Create guest
@@ -12,7 +8,7 @@ const api = axios.create({
  */
 export const createGuest = async (guestData) => {
     try {
-        const res = await api.post('/', guestData);
+        const res = await api.post(`${API_BASE_PATH}`, guestData);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to create guest' };
@@ -25,7 +21,7 @@ export const createGuest = async (guestData) => {
  */
 export const getGuests = async (options = {}) => {
     try {
-        const res = await api.get('/', { params: options });
+        const res = await api.get(`${API_BASE_PATH}`, { params: options });
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch guests' };
@@ -34,7 +30,7 @@ export const getGuests = async (options = {}) => {
 
 export const getGuestById = async (id) => {
     try {
-        const res = await api.get(`/${id}`);
+        const res = await api.get(`${API_BASE_PATH}/${id}`);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch guest' };
@@ -43,7 +39,7 @@ export const getGuestById = async (id) => {
 
 export const updateGuest = async (id, updateData) => {
     try {
-        const res = await api.put(`/${id}`, updateData);
+        const res = await api.put(`${API_BASE_PATH}/${id}`, updateData);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to update guest' };
@@ -52,11 +48,11 @@ export const updateGuest = async (id, updateData) => {
 
 export const deleteGuest = async (id) => {
     try {
-        const res = await api.delete(`/${id}`);
+        const res = await api.delete(`${API_BASE_PATH}/${id}`);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to delete guest' };
     }
 };
 
-export default api;
+

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { getEventById } from '../../api/eventApi'
-import { getOverviewData } from '../../api/overviewApi'
+import { getOverviewData } from '../../api/overViewApi'
 import { EventContext } from '../../context/EventContext'
 // Pages shown in tabs
 import GuestMasterList from '../inventory/GuestMasterList'

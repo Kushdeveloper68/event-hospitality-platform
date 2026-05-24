@@ -1,14 +1,10 @@
-import axios from 'axios';
+import api from "./axios";
 
-const API_BASE_URL = 'http://localhost:5000/api/rooms';
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    withCredentials: true,
-});
+const API_BASE_PATH = "/rooms";
 
 export const createRoom = async (roomData) => {
     try {
-        const res = await api.post('/', roomData);
+        const res = await api.post(`${API_BASE_PATH}`, roomData);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to create room' };
@@ -17,7 +13,7 @@ export const createRoom = async (roomData) => {
 
 export const getRooms = async (options = {}) => {
     try {
-        const res = await api.get('/', { params: options });
+        const res = await api.get(`${API_BASE_PATH}`, { params: options });
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch rooms' };
@@ -26,7 +22,7 @@ export const getRooms = async (options = {}) => {
 
 export const getRoomById = async (id) => {
     try {
-        const res = await api.get(`/${id}`);
+        const res = await api.get(`${API_BASE_PATH}/${id}`);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to fetch room' };
@@ -35,7 +31,7 @@ export const getRoomById = async (id) => {
 
 export const updateRoom = async (id, updateData) => {
     try {
-        const res = await api.put(`/${id}`, updateData);
+        const res = await api.put(`${API_BASE_PATH}/${id}`, updateData);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to update room' };
@@ -44,7 +40,7 @@ export const updateRoom = async (id, updateData) => {
 
 export const deleteRoom = async (id) => {
     try {
-        const res = await api.delete(`/${id}`);
+        const res = await api.delete(`${API_BASE_PATH}/${id}`);
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to delete room' };
@@ -53,11 +49,11 @@ export const deleteRoom = async (id) => {
 
 export const assignGuestToRoom = async (roomId, guestId) => {
     try {
-        const res = await api.post(`/${roomId}/assign`, { guestId });
+        const res = await api.post(`${API_BASE_PATH}/${roomId}/assign`, { guestId });
         return res.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Failed to assign guest' };
     }
 };
 
-export default api;
+
