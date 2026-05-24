@@ -9,8 +9,10 @@ const bodyPraser = require('body-parser')
 const cookiesP = require('cookie-parser');
 const path = require('path')
 const port = process.env.PORT || 5000
-const rateLimit = require("express-rate-limit");
 
+const helmet = require("helmet");
+
+const globalLimiter = require('./middlewares/globalLimiter')
 const connectToMongoDB = require('./connections/mongodbConnection')
 const userRoutes = require('./routes/userRoutes')
 const eventRoutes = require('./routes/eventRoutes')
@@ -37,6 +39,13 @@ if (!process.env.MONGO_URI) {
 connectToMongoDB(process.env.MONGO_URI)
 
 // body parser
+app.use(helmet({
+		crossOriginResourcePolicy: false,
+	}));
+
+
+
+app.use(globalLimiter);
 app.use(bodyPraser.json())
 app.use(bodyPraser.urlencoded({ extended: true }))
 app.use(cookiesP())
@@ -47,10 +56,7 @@ app.use(cors({
   credentials: true
 }));
 
-const globalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 500
-});
+
 
 app.use(globalLimiter);
 
