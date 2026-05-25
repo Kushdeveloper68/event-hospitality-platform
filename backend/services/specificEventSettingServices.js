@@ -1,10 +1,17 @@
+// backend/services/specificEventSettingServices.js
+
 const EventSettingModel = require("../models/eventSettingModel");
 const EventModel = require("../models/eventModel");
+const GuestModel = require("../models/guestModel");
+const RoomModel = require("../models/roomModel");
+const TransportModel = require("../models/transportModel");
+const ServiceRequestModel = require("../models/serviceRequestModel");
+const ScheduleActivity = require("../models/scheduleModel");
+const TeamMemberModel = require("../models/teamMemberModel");
+const ActivityLogModel = require("../models/activityLogModel");
 
 /**
  * Get settings for an event. Creates default settings if none exist.
- * @param {string} eventId
- * @returns {Promise<Object>} settings doc
  */
 const getEventSettings = async (eventId) => {
   let settings = await EventSettingModel.findOne({ event: eventId });
@@ -16,14 +23,9 @@ const getEventSettings = async (eventId) => {
 
 /**
  * Update settings for an event (upsert).
- * @param {string} eventId
- * @param {Object} updateData
- * @returns {Promise<Object>} updated settings
  */
 const updateEventSettings = async (eventId, updateData) => {
-  // Strip protected fields
   const { _id, event, createdAt, updatedAt, __v, ...safe } = updateData;
-
   const settings = await EventSettingModel.findOneAndUpdate(
     { event: eventId },
     { $set: safe },
@@ -33,10 +35,7 @@ const updateEventSettings = async (eventId, updateData) => {
 };
 
 /**
- * Update only the core event info (name, venue, startDate, endDate, description, isPrivate).
- * Delegates to EventModel directly — kept here for single-service flow.
- * @param {string} eventId
- * @param {Object} coreData
+ * Update only the core event info.
  */
 const updateEventCoreInfo = async (eventId, coreData) => {
   const allowed = ["name", "venue", "startDate", "endDate", "description", "isPrivate"];
@@ -54,7 +53,7 @@ const updateEventCoreInfo = async (eventId, coreData) => {
 
 /**
  * Archive or unarchive an event.
- * @param {string} eventId
+ *  @param {string} eventId
  * @param {boolean} archive
  */
 const setArchiveStatus = async (eventId, archive) => {
@@ -72,24 +71,31 @@ const setArchiveStatus = async (eventId, archive) => {
 };
 
 /**
- * Permanently delete an event and all its settings.
- * Cascading deletions are handled by the caller (controller) or can be
- * extended here based on requirements.
+ * Permanently delete an event and ALL related data (cascade).
  * @param {string} eventId
  */
 const deleteEventPermanently = async (eventId) => {
-  // Remove settings document
-  await EventSettingModel.deleteOne({ event: eventId });
-  // Remove event itself
-  const deleted = await EventModel.findByIdAndDelete(eventId);
-  if (!deleted) throw new Error("Event not found");
-  return deleted;
+  const event = await EventModel.findById(eventId);
+  if (!event) throw new Error("Event not found");
+
+  // Run all deletions in parallel for speed
+  await Promise.all([
+    GuestModel.deleteMany({ event: eventId }),
+    RoomModel.deleteMany({ event: eventId }),
+    TransportModel.deleteMany({ event: eventId }),
+    ServiceRequestModel.deleteMany({ event: eventId }),
+    ScheduleActivity.deleteMany({ eventId: eventId }),  // note: scheduleModel uses eventId not event
+    TeamMemberModel.deleteMany({ event: eventId }),
+    ActivityLogModel.deleteMany({ event: eventId }),
+    EventSettingModel.deleteOne({ event: eventId }),
+  ]);
+
+  await EventModel.findByIdAndDelete(eventId);
+  return event;
 };
 
 /**
- * Generate a unique URL slug based on event name.
- * @param {string} name
- * @param {string} eventId - exclude this event when checking uniqueness
+ * Generate a URL slug from an event name.
  */
 const generateSlug = (name) => {
   return name

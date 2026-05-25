@@ -58,8 +58,6 @@ app.use(cors({
 
 
 
-app.use(globalLimiter);
-
 app.use('/api/users', userRoutes)
 app.use('/api/events', eventRoutes)
 app.use('/api/guests', guestRoutes)

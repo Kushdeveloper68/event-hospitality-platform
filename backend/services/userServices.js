@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { generateOTP, sendOTPEmail } = require('../helpers/emailHelper');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key';
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRE = '7d';
 const OTP_EXPIRY_MINUTES = 10;
 
