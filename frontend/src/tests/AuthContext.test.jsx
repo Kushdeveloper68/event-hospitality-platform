@@ -1,6 +1,6 @@
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { AuthProvider, useAuth } from '../../context/AuthContext'
+import { AuthProvider, useAuth } from '../context/AuthContext'
 
 // Simple component to expose context values in tests
 function TestConsumer() {

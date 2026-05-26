@@ -3,7 +3,7 @@ import {
   requestPasswordReset,
   verifyResetOTP,
   resetPassword,
-} from '../../api/passwordResetApi'
+} from '../api/passwordResetApi'
 
 describe('passwordResetApi', () => {
   beforeEach(() => vi.clearAllMocks())
