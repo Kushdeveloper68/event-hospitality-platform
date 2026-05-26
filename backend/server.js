@@ -30,6 +30,7 @@ const mainDashboardRoutes = require('./routes/mainOprationDashboardRoutes')
 const organizationAnalyticsDashboardsRoutes = require('./routes/OrganizationAnalyticsDashboardsRoutes')
 const eventAnalyticsReportsRoutes  = require('./routes/eventAnalyticsReportsRoutes')
 const orgSettingsRoutes = require('./routes/organizationSettingRoutes')
+const passwordResetRoutes = require('./routes/passwordResetRoutes')  
 
 // connect to MongoDB
 if (!process.env.MONGO_URI) {
@@ -74,6 +75,7 @@ app.use('/api/main-dashboard', mainDashboardRoutes)
 app.use('/api/org-analytics', organizationAnalyticsDashboardsRoutes)
 app.use('/api/event-analytics', eventAnalyticsReportsRoutes)  
 app.use('/api/org-settings', orgSettingsRoutes)
+app.use('/api/password-reset', passwordResetRoutes)  
 
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)

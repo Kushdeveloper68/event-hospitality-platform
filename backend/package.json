@@ -4,8 +4,10 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "start",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "test": "jest --runInBand --forceExit",
+    "test:watch": "jest --watch --runInBand",
+    "test:coverage": "jest --coverage --runInBand --forceExit"
   },
   "author": "kush pandit",
   "license": "ISC",
@@ -22,5 +24,26 @@
     "mongoose": "^9.2.3",
     "nodemailer": "^8.0.1",
     "nodemon": "^3.1.14"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0",
+    "mongodb-memory-server": "^10.1.2",
+    "@types/jest": "^29.5.12"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/__tests__/**/*.test.js"],
+    "setupFilesAfterFramework": [],
+    "setupFiles": ["./jest.setup.js"],
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov"],
+    "collectCoverageFrom": [
+      "controllers/**/*.js",
+      "services/**/*.js",
+      "middlewares/**/*.js",
+      "!**/node_modules/**"
+    ],
+    "testTimeout": 30000
   }
 }

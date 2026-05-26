@@ -65,11 +65,35 @@ const loginLimiter = createAuthLimiter({
 	keyPrefix: "login",
     skipSuccessfulRequests: true,
 });
+const resetPasswordRequestLimiter = createAuthLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  message: 'Too many password reset requests. Please wait before trying again.',
+  keyPrefix: 'reset-request',
+  skipSuccessfulRequests: false,
+});
 
+const resetPasswordVerifyLimiter = createAuthLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many OTP attempts. Please request a new code.',
+  keyPrefix: 'reset-verify',
+  skipSuccessfulRequests: false,
+});
+
+const resetPasswordConfirmLimiter = createAuthLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many password reset attempts. Please try again later.',
+  keyPrefix: 'reset-confirm',
+  skipSuccessfulRequests: false,
+});
 module.exports = {
-	signupLimiter,
-	verifyOtpLimiter,
-	resendOtpLimiter,
-	loginLimiter,
+  signupLimiter,
+  verifyOtpLimiter,
+  resendOtpLimiter,
+  loginLimiter,
+  resetPasswordRequestLimiter,   
+  resetPasswordVerifyLimiter,    
+  resetPasswordConfirmLimiter,   
 };
-

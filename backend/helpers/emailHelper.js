@@ -105,4 +105,38 @@ const sendWelcomeBackEmail = async (email, name) => {
     }
 };
 
-module.exports = { generateOTP, sendOTPEmail, sendWelcomeEmail, sendWelcomeBackEmail };
+// Send password reset OTP email
+const sendPasswordResetEmail = async (email, otp, name) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'noreply@hospitality.com',
+      to: email,
+      subject: 'Password Reset - OTP Code',
+      html: `
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <h2 style="color: #333;">Password Reset Request</h2>
+          <p>Hi <strong>${name}</strong>,</p>
+          <p>We received a request to reset your password. Use the OTP below to proceed:</p>
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+            <h1 style="color: #e53e3e; letter-spacing: 5px; margin: 0;">${otp}</h1>
+          </div>
+          <p style="color: #666; font-size: 14px;">This OTP is valid for <strong>10 minutes</strong>.</p>
+          <p style="color: #666; font-size: 14px;">If you did not request a password reset, please ignore this email. Your password will not be changed.</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+          <p style="color: #999; font-size: 12px;">© 2026 Hospitality Platform. All rights reserved.</p>
+        </div>
+      `
+    };
+    await transporter.sendMail(mailOptions);
+    return { success: true, message: 'Password reset email sent' };
+  } catch (error) {
+    throw new Error('Error sending password reset email: ' + error.message);
+  }
+};
+module.exports = {
+  generateOTP,
+  sendOTPEmail,
+  sendWelcomeEmail,
+  sendWelcomeBackEmail,
+  sendPasswordResetEmail,  
+};

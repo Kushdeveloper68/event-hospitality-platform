@@ -1,50 +1,50 @@
-import React, {useState} from "react"
-import { loginUser } from "../../api/userApi"
-import { useAuth } from "../../context/AuthContext"
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { loginUser } from "../../api/userApi";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate , Link } from "react-router-dom";
 
 function UserLogin() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setSuccess('')
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
     // Validation
     if (!email || !password) {
-      setError('Email and password are required')
-      return
+      setError("Email and password are required");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const response = await loginUser(email, password)
+      const response = await loginUser(email, password);
 
       if (response.success) {
         // update context immediately
         if (response.user) login(response.user);
-        setSuccess('Login successful! Redirecting...')
+        setSuccess("Login successful! Redirecting...");
         setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000)
+          navigate("/dashboard");
+        }, 1000);
       }
     } catch (err) {
-      setError(err.message || 'Login failed. Please try again.')
+      setError(err.message || "Login failed. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -89,7 +89,9 @@ function UserLogin() {
           )}
           {success && (
             <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-              <p className="text-sm text-green-700 dark:text-green-400">{success}</p>
+              <p className="text-sm text-green-700 dark:text-green-400">
+                {success}
+              </p>
             </div>
           )}
 
@@ -126,12 +128,12 @@ function UserLogin() {
                 >
                   Password
                 </label>
-                <a
-                  className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
-                  href="/forgot-password"
-                >
-                  Forgot password?
-                </a>
+                  <Link
+                    to="/reset-password"
+                    className="text-sm text-primary font-semibold hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
               </div>
               <div className="relative">
                 <input
@@ -151,7 +153,7 @@ function UserLogin() {
                   disabled={loading}
                 >
                   <span className="material-symbols-outlined text-lg">
-                    {showPassword ? 'visibility_off' : 'visibility'}
+                    {showPassword ? "visibility_off" : "visibility"}
                   </span>
                 </button>
               </div>
@@ -182,7 +184,7 @@ function UserLogin() {
               type="submit"
               disabled={loading}
             >
-              {loading ? 'Signing In...' : 'Sign In'}
+              {loading ? "Signing In..." : "Sign In"}
             </button>
           </form>
 
