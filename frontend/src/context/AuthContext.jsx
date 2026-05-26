@@ -1,31 +1,25 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { logout as apiLogout } from '../api/userApi';
 
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  // read synchronously so initial render has correct value
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem('user');
     if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        console.error('failed to parse stored user', e);
-      }
+      try { return JSON.parse(stored); } catch (e) { return null; }
     }
     return null;
   });
-
-  // no longer need the useEffect initialization
 
   const login = (userData) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await apiLogout();   // clears cookie server-side + local storage
     setUser(null);
-    localStorage.removeItem('user');
   };
 
   const isAuthenticated = !!user;

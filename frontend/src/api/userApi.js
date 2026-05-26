@@ -90,13 +90,21 @@ export const getAuthToken = () => {
     return localStorage.getItem('authToken');
 };
 
-/**
- * Logout - Clear stored token
- */
-export const logout = () => {
-    localStorage.removeItem('authToken');
-};
 
+/**
+ * Logout — clears server cookie and local storage
+ */
+export const logout = async () => {
+  try {
+    await api.post(`${API_BASE_PATH}/logout`);
+  } catch (error) {
+    // Even if the request fails, clear local state
+    console.error('Server logout failed, clearing local storage anyway');
+  } finally {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+  }
+};
 /**
  * Check if user is authenticated
  * @returns {boolean}
