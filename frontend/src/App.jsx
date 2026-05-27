@@ -13,6 +13,7 @@ import {
   MainOprationDashboard,
   EventAnalyticsReports,
   OrganizationAnalyticsDashboards,
+  ActivityAndNotificationLogs,
 } from "./pages";
 // form pages
 import { UserSignup, UserLogin, CreateNewEvent, ResetPassword } from "./pages";
@@ -99,6 +100,16 @@ function App() {
                 <ProtectedRoute>
                   <DashboardLayout>
                     <CreateNewEvent />
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <ActivityAndNotificationLogs />
                   </DashboardLayout>
                 </ProtectedRoute>
               }
