@@ -31,7 +31,7 @@ const organizationAnalyticsDashboardsRoutes = require('./routes/OrganizationAnal
 const eventAnalyticsReportsRoutes  = require('./routes/eventAnalyticsReportsRoutes')
 const orgSettingsRoutes = require('./routes/organizationSettingRoutes')
 const passwordResetRoutes = require('./routes/passwordResetRoutes')  
-
+const activityAndNotificationLogsRoutes = require('./routes/activityAndNotificationLogsRoutes')
 // connect to MongoDB
 if (!process.env.MONGO_URI) {
   throw new Error("MONGO_URI missing");
@@ -76,7 +76,7 @@ app.use('/api/org-analytics', organizationAnalyticsDashboardsRoutes)
 app.use('/api/event-analytics', eventAnalyticsReportsRoutes)  
 app.use('/api/org-settings', orgSettingsRoutes)
 app.use('/api/password-reset', passwordResetRoutes)  
-
+app.use('/api/activity-logs', activityAndNotificationLogsRoutes)
 app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)
 )

@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { path: '/events', icon: 'calendar_today', label: 'Events' },
   { path: '/analytics', icon: 'analytics', label: 'Analytics' },
   { path: '/settings', icon: 'settings', label: 'Settings' },
+  { path: '/notifications', icon: 'notifications', label: 'Notifications' },
 ]
 
 function DashboardNavbar() {
