@@ -65,21 +65,27 @@ const handleCreateTransport = async (req, res) => {
  */
 const handleGetTransports = async (req, res) => {
   try {
-    const { eventId, status } = req.query;
+    const { eventId, status, page, limit } = req.query;
     if (!eventId) {
-      return res.status(400).json({ success: false, message: "eventId is required" });
+      return res.status(400).json({ success: false, message: 'eventId is required' });
     }
 
     const userId = req.user?.id;
     if (!(await verifyEventOwnership(eventId, userId))) {
-      return res.status(403).json({ success: false, message: "Forbidden: you do not own this event" });
+      return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
     }
 
-    const transports = await getTransports(eventId, status);
-    return res.status(200).json({ success: true, transports });
+    const result = await getTransports(
+      eventId,
+      status,
+      parseInt(page) || 1,
+      parseInt(limit) || 20,
+    );
+
+    return res.status(200).json({ success: true, ...result });
   } catch (error) {
-    console.error("Error fetching transports:", error);
-    return res.status(500).json({ success: false, message: error.message || "Failed to fetch transports" });
+    console.error('Error fetching transports:', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to fetch transports' });
   }
 };
 

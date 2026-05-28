@@ -17,10 +17,12 @@ export const createTransport = async (transportData) => {
 /**
  * Get all transports for an event (optionally by status)
  */
-export const getTransports = async (eventId, status) => {
+export const getTransports = async (eventId, status, page = 1, limit = 20) => {
     try {
         const params = { eventId };
         if (status && status !== 'all') params.status = status;
+        params.page = page;
+        params.limit = limit;
         const res = await api.get(`${API_BASE_PATH}`, { params });
         return res.data;
     } catch (error) {
