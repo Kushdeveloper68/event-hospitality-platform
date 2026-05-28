@@ -62,18 +62,34 @@ exports.createSchedule = async (req, res) => {
 exports.getSchedulesByEventId = async (req, res) => {
   try {
     const { eventId } = req.params;
+    const { page, limit } = req.query;
 
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({ success: false, message: 'Event not found' });
     }
-
     if (!checkOwnership(event, req)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
     }
 
-    const activities = await ScheduleActivity.find({ eventId }).sort({ startTime: 1 });
-    res.status(200).json({ success: true, activities });
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
+
+    const total = await ScheduleActivity.countDocuments({ eventId });
+    const activities = await ScheduleActivity.find({ eventId })
+      .sort({ startTime: 1 })
+      .skip(skip)
+      .limit(limitNum);
+
+    res.status(200).json({
+      success: true,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum),
+      activities,
+    });
   } catch (error) {
     console.error('Error fetching schedule activities:', error);
     res.status(500).json({ success: false, message: 'Server Error' });

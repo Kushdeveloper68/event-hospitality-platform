@@ -38,26 +38,30 @@ const handleCreateRoom = async (req, res) => {
 // list
 const handleGetRooms = async (req, res) => {
   try {
-    const { eventId } = req.query;
+    const { eventId, page, limit } = req.query;
     const userId = req.user?.id;
 
     if (!eventId) {
-      return res.status(400).json({ success: false, message: "eventId query parameter required" });
+      return res.status(400).json({ success: false, message: 'eventId query parameter required' });
     }
-    // verify ownership
     const ev = await getEventById(eventId);
     const ownerId = ev.createdBy?._id || ev.createdBy;
     if (userId && String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
     }
-    const rooms = await getRooms({ eventId });
-    return res.status(200).json({ success: true, rooms });
+
+    const result = await getRooms({
+      eventId,
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
+    });
+
+    return res.status(200).json({ success: true, ...result });
   } catch (error) {
-    console.error("Error fetching rooms", error);
-    return res.status(500).json({ success: false, message: error.message || "Failed to fetch rooms" });
+    console.error('Error fetching rooms', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to fetch rooms' });
   }
 };
-
 // single
 const handleGetRoomById = async (req, res) => {
   try {

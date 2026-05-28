@@ -52,34 +52,31 @@ const handleCreateTeamMember = async (req, res) => {
 // Get team members for an event
 const handleGetTeamMembers = async (req, res) => {
   try {
-    const { eventId } = req.query;
+    const { eventId, role, status, search, page, limit } = req.query;
     if (!eventId) {
-      return res.status(400).json({ success: false, message: "eventId query parameter is required" });
+      return res.status(400).json({ success: false, message: 'eventId query parameter is required' });
     }
 
-    // Verify ownership
     try {
       await verifyEventOwnership(eventId, req.user?.id || req.user?._id);
     } catch (err) {
-      return res.status(err.message === "Event not found" ? 404 : 403).json({ success: false, message: err.message });
+      return res.status(err.message === 'Event not found' ? 404 : 403).json({ success: false, message: err.message });
     }
 
-    // Extract filters
-    const { role, status, search } = req.query;
-    
-    const members = await teamMemberServices.getTeamMembers(eventId, {
+    const result = await teamMemberServices.getTeamMembers(eventId, {
       role,
-      status, 
-      search
+      status,
+      search,
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 20,
     });
 
-    res.status(200).json({ success: true, count: members.length, teamMembers: members });
+    res.status(200).json({ success: true, count: result.teamMembers.length, ...result });
   } catch (error) {
-    console.error("Error fetching team members:", error);
-    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+    console.error('Error fetching team members:', error);
+    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
   }
 };
-
 // Get a single team member by ID
 const handleGetTeamMemberById = async (req, res) => {
   try {
