@@ -58,6 +58,22 @@ app.use(cors({
 }));
 
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const dbStatus = mongoose.connection.readyState;
+  // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'][dbStatus];
+
+  res.status(dbStatus === 1 ? 200 : 503).json({
+    status: dbStatus === 1 ? 'ok' : 'degraded',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    database: dbState,
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
+
 
 app.use('/api/users', userRoutes)
 app.use('/api/events', eventRoutes)
