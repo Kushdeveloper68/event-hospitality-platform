@@ -18,18 +18,30 @@ const createTransport = async (transportData) => {
 /**
  * Get all transports for an event, optionally filtered by status
  */
-const getTransports = async (eventId, status) => {
+const getTransports = async (eventId, status, page = 1, limit = 20) => {
   try {
     const query = { event: eventId };
-    if (status && status !== "all") {
+    if (status && status !== 'all') {
       query.status = status;
     }
+
+    const skip = (page - 1) * limit;
+    const total = await TransportModel.countDocuments(query);
     const transports = await TransportModel.find(query)
-      .populate("guest", "fullName email phoneNumber vipStatus groupName")
-      .sort({ scheduledTime: 1 });
-    return transports;
+      .populate('guest', 'fullName email phoneNumber vipStatus groupName')
+      .sort({ scheduledTime: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    return {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      transports,
+    };
   } catch (error) {
-    throw new Error("Failed to fetch transports: " + error.message);
+    throw new Error('Failed to fetch transports: ' + error.message);
   }
 };
 

@@ -23,30 +23,45 @@ const createRoom = async (roomData) => {
  * @param {string} [options.status] // available, occupied, maintenance
  * @returns {Promise<Array>}
  */
-const getRooms = async ({ eventId, status } = {}) => {
+const getRooms = async ({ eventId, status, page = 1, limit = 20 } = {}) => {
   try {
     const query = {};
     if (eventId) query.event = eventId;
-    const rooms = await RoomModel.find(query).sort({ number: 1 });
 
-    // add occupancy count by querying guests
+    const skip = (page - 1) * limit;
+    const total = await RoomModel.countDocuments(query);
+    const rooms = await RoomModel.find(query)
+      .sort({ number: 1 })
+      .skip(skip)
+      .limit(limit);
+
+    // add occupancy count
     if (rooms.length) {
       const roomIds = rooms.map(r => r._id);
       const counts = await GuestModel.aggregate([
         { $match: { room: { $in: roomIds } } },
         { $group: { _id: '$room', count: { $sum: 1 } } }
       ]);
-      const countMap = counts.reduce((acc, cur) => { acc[cur._id.toString()] = cur.count; return acc; }, {});
+      const countMap = counts.reduce((acc, cur) => {
+        acc[cur._id.toString()] = cur.count;
+        return acc;
+      }, {});
       rooms.forEach((r, idx) => {
-        const obj = r.toObject ? r.toObject() : {...r};
+        const obj = r.toObject ? r.toObject() : { ...r };
         obj.occupancy = countMap[r._id.toString()] || 0;
         rooms[idx] = obj;
       });
     }
 
-    return rooms;
+    return {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      rooms,
+    };
   } catch (error) {
-    throw new Error("Failed to fetch rooms: " + error.message);
+    throw new Error('Failed to fetch rooms: ' + error.message);
   }
 };
 
