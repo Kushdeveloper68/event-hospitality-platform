@@ -12,6 +12,7 @@ const port = process.env.PORT || 5000
 
 const helmet = require("helmet");
 const morgan = require('morgan');
+const compression = require('compression');
 
 const globalLimiter = require('./middlewares/globalLimiter')
 const connectToMongoDB = require('./connections/mongodbConnection')
@@ -44,7 +45,8 @@ connectToMongoDB(process.env.MONGO_URI)
 app.use(helmet({
 		crossOriginResourcePolicy: false,
 	}));
-
+// 
+app.use(compression());
 // Request logging
 if (process.env.NODE_ENV === 'production') {
   app.use(morgan('combined')); // full apache-style logs in production
