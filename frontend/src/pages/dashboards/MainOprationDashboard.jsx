@@ -44,7 +44,7 @@ const STATUS_CONFIG = {
   },
   completed: {
     label: "Completed",
-    bg: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+    bg: "bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-400",
     dot: "bg-gray-400 dark:bg-gray-500",
     pulse: false,
   },
@@ -97,7 +97,7 @@ function MetricCard({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div
           className={`size-10 rounded-lg flex items-center justify-center ${accentMap[accent]}`}
@@ -122,7 +122,7 @@ function MetricCard({
           {label}
         </p>
         {loading ? (
-          <div className="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-8 w-20 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
         ) : (
           <h3 className="text-2xl font-black text-gray-900 dark:text-white">
             {value ?? 0}
@@ -144,7 +144,7 @@ function ActivityItem({ log }) {
   };
 
   return (
-    <div className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+    <div className="flex gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
       <div
         className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}
       >
@@ -193,7 +193,7 @@ function EventStatusBadge({ status }) {
 function EmptyState({ icon, title, desc, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-      <span className="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600">
+      <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600">
         {icon}
       </span>
       <div>
@@ -210,7 +210,7 @@ function SkeletonRow({ cols = 5 }) {
     <tr>
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-6 py-4">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-3/4" />
         </td>
       ))}
     </tr>
@@ -320,13 +320,13 @@ function MainOprationDashboard() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-gray-900 p-5 rounded-xl border border-neutral-border animate-pulse h-28"
+                  className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-neutral-border animate-pulse h-28"
                 />
               ))}
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border animate-pulse h-96" />
-              <div className="xl:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-neutral-border animate-pulse h-96" />
+              <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-neutral-border animate-pulse h-96" />
+              <div className="xl:col-span-2 bg-white dark:bg-slate-900/50 rounded-xl border border-neutral-border animate-pulse h-96" />
             </div>
           </div>
         </div>
@@ -374,7 +374,7 @@ function MainOprationDashboard() {
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* ── Top Navbar ── */}
-        <header className="h-16 bg-white dark:bg-gray-900 border-b border-neutral-border dark:border-gray-800 flex items-center justify-between px-8 shrink-0">
+        <header className="h-16 bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-6 flex-1 max-w-2xl">
             {/* Search */}
             <div className="relative flex-1">
@@ -382,7 +382,7 @@ function MainOprationDashboard() {
                 search
               </span>
               <input
-                className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                className="w-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
                 placeholder="Search events, guests, or tasks..."
                 type="text"
                 value={eventSearch}
@@ -405,7 +405,7 @@ function MainOprationDashboard() {
             <button
               onClick={() => fetchData(true)}
               disabled={refreshing}
-              className="size-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-neutral-muted disabled:opacity-50 transition-colors"
+              className="size-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-neutral-muted disabled:opacity-50 transition-colors"
               title="Refresh dashboard"
             >
               <span
@@ -415,13 +415,13 @@ function MainOprationDashboard() {
               </span>
             </button>
             {/* Notifications */}
-            <button className="size-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative text-neutral-muted">
+            <button className="size-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 relative text-neutral-muted">
               <span className="material-symbols-outlined">notifications</span>
               {metrics.serviceRequests > 0 && (
                 <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
               )}
             </button>
-            <div className="h-8 w-px bg-neutral-border dark:bg-gray-800 mx-2" />
+            <div className="h-8 w-px bg-neutral-border dark:bg-slate-800 mx-2" />
             {/* User */}
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">
@@ -467,7 +467,7 @@ function MainOprationDashboard() {
               </h1>
               <p className="text-sm text-neutral-muted mt-1">
                 Welcome back,{" "}
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
                   {user?.name || "Operator"}
                 </span>{" "}
                 · {user?.organizationName || ""}
@@ -542,7 +542,7 @@ function MainOprationDashboard() {
                 {activeEventStats.map((ev) => (
                   <div
                     key={ev._id}
-                    className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow"
+                    className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-start justify-between gap-2 mb-4">
                       <div className="flex-1 min-w-0">
@@ -592,7 +592,7 @@ function MainOprationDashboard() {
                       ].map((stat) => (
                         <div
                           key={stat.label}
-                          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 text-center"
+                          className="bg-gray-50 dark:bg-slate-800 rounded-lg p-2.5 text-center"
                         >
                           <p className={`text-lg font-black ${stat.color}`}>
                             {stat.value}
@@ -613,7 +613,7 @@ function MainOprationDashboard() {
                           {ev.stats.checkInRate}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
                         <div
                           className="bg-primary h-full rounded-full transition-all duration-700"
                           style={{ width: `${ev.stats.checkInRate}%` }}
@@ -638,10 +638,10 @@ function MainOprationDashboard() {
           {/* ── Main Grid: Activity + Events Table ── */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* ── Recent Activity ── */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-neutral-border dark:border-gray-800 flex justify-between items-center">
+            <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <h2 className="font-bold text-base">Recent Activity</h2>
+                  <h2 className="font-bold text-base dark:text-white">Recent Activity</h2>
                   <span className="size-2 bg-red-500 rounded-full animate-pulse" />
                 </div>
                 <button
@@ -671,7 +671,7 @@ function MainOprationDashboard() {
 
               {/* Pagination */}
               {totalActivityPages > 1 && (
-                <div className="px-6 py-3 border-t border-neutral-border dark:border-gray-800 flex items-center justify-between text-xs text-neutral-muted">
+                <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-neutral-muted">
                   <span>
                     Page {activityPage + 1} of {totalActivityPages}
                   </span>
@@ -679,7 +679,7 @@ function MainOprationDashboard() {
                     <button
                       onClick={() => setActivityPage((p) => Math.max(0, p - 1))}
                       disabled={activityPage === 0}
-                      className="px-2 py-1 rounded border border-neutral-border disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                      className="px-2 py-1 rounded border border-slate-200 dark:border-slate-800 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       ‹
                     </button>
@@ -690,7 +690,7 @@ function MainOprationDashboard() {
                         )
                       }
                       disabled={activityPage === totalActivityPages - 1}
-                      className="px-2 py-1 rounded border border-neutral-border disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                      className="px-2 py-1 rounded border border-slate-200 dark:border-slate-800 disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                     >
                       ›
                     </button>
@@ -700,9 +700,9 @@ function MainOprationDashboard() {
             </div>
 
             {/* ── Events Table ── */}
-            <div className="xl:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 shadow-sm flex flex-col">
-              <div className="px-6 py-4 border-b border-neutral-border dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-bold text-base">Events</h2>
+            <div className="xl:col-span-2 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
+              <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                <h2 className="font-bold text-base dark:text-white">Events</h2>
                 <div className="flex items-center gap-2">
                   {/* Status filter tabs */}
                   {["all", "in_progress", "upcoming", "completed"].map((s) => (
@@ -712,7 +712,7 @@ function MainOprationDashboard() {
                       className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-colors ${
                         eventStatusFilter === s
                           ? "bg-primary text-white"
-                          : "bg-gray-100 dark:bg-gray-800 text-neutral-muted hover:bg-gray-200 dark:hover:bg-gray-700"
+                          : "bg-gray-100 dark:bg-slate-800 text-neutral-muted hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                     >
                       {s === "all"
@@ -757,7 +757,7 @@ function MainOprationDashboard() {
                   />
                 ) : (
                   <table className="w-full text-left">
-                    <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-neutral-border dark:border-gray-800">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                       <tr>
                         {["Event Name", "Venue", "Date", "Status", ""].map(
                           (h) => (
@@ -817,7 +817,7 @@ function MainOprationDashboard() {
               </div>
 
               {filteredEvents.length > 0 && (
-                <div className="px-6 py-3 border-t border-neutral-border dark:border-gray-800 flex items-center justify-between text-xs text-neutral-muted">
+                <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-neutral-muted">
                   <span>
                     Showing {filteredEvents.length} of {upcomingEvents.length}{" "}
                     events
@@ -836,7 +836,7 @@ function MainOprationDashboard() {
           {/* ── Summary Stats Row ── */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Check-in overview */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-sm text-gray-900 dark:text-white">
                   Overall Check-in
@@ -851,7 +851,7 @@ function MainOprationDashboard() {
                   / {metrics.totalGuests ?? 0}
                 </span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden mt-3 mb-2">
+              <div className="w-full bg-slate-100 dark:bg-slate-700 h-2 rounded-full overflow-hidden mt-3 mb-2">
                 <div
                   className="bg-primary h-full rounded-full transition-all duration-700"
                   style={{
@@ -876,7 +876,7 @@ function MainOprationDashboard() {
             </div>
 
             {/* Event breakdown */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-bold text-sm text-gray-900 dark:text-white">
                   Event Breakdown
@@ -915,7 +915,7 @@ function MainOprationDashboard() {
                         {item.value ?? 0}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
                       <div
                         className={`${item.color} h-full rounded-full transition-all duration-700`}
                         style={{
@@ -936,7 +936,7 @@ function MainOprationDashboard() {
             </div>
 
             {/* Quick links */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
               <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-4">
                 Quick Actions
               </h3>
@@ -977,7 +977,7 @@ function MainOprationDashboard() {
                     >
                       {item.icon}
                     </span>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 group-hover:text-primary transition-colors">
                       {item.label}
                     </span>
                     <span className="material-symbols-outlined text-sm text-neutral-muted ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
