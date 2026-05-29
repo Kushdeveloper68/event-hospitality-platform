@@ -4,7 +4,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 // auth context + guard
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./context/ProtectedRoute";
-
+import PageErrorBoundary from './components/PageErrorBoundary';
 // dashboard pages
 import {
   PlatformLandingPage,
@@ -37,7 +37,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <MainOprationDashboard />
+                    <PageErrorBoundary pageName="Dashboard">
+                      <MainOprationDashboard />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -47,7 +49,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <EventDirectory />
+                    <PageErrorBoundary pageName="Events">
+                      <EventDirectory />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -59,7 +63,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <EventWorkspaceShell />
+                    <PageErrorBoundary pageName="Event workspace">
+                      <EventWorkspaceShell />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -69,7 +75,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <EventAnalyticsReports />
+                    <PageErrorBoundary pageName="Event analytics reports">
+                      <EventAnalyticsReports />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -79,7 +87,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <OrganizationAnalyticsDashboards />
+                    <PageErrorBoundary pageName="Organization analytics dashboard">
+                      <OrganizationAnalyticsDashboards />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -89,7 +99,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <OragnizationSetting />
+                    <PageErrorBoundary pageName="Organization settings">
+                      <OragnizationSetting />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -99,7 +111,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <CreateNewEvent />
+                    <PageErrorBoundary pageName="Create event">
+                      <CreateNewEvent />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
@@ -109,7 +123,9 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DashboardLayout>
-                    <ActivityAndNotificationLogs />
+                    <PageErrorBoundary pageName="Activity and notification logs">
+                      <ActivityAndNotificationLogs />
+                    </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>
               }
