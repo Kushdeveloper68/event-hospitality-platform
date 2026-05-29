@@ -11,6 +11,7 @@ const path = require('path')
 const port = process.env.PORT || 5000
 
 const helmet = require("helmet");
+const morgan = require('morgan');
 
 const globalLimiter = require('./middlewares/globalLimiter')
 const connectToMongoDB = require('./connections/mongodbConnection')
@@ -44,7 +45,12 @@ app.use(helmet({
 		crossOriginResourcePolicy: false,
 	}));
 
-
+// Request logging
+if (process.env.NODE_ENV === 'production') {
+  app.use(morgan('combined')); // full apache-style logs in production
+} else {
+  app.use(morgan('dev')); // colored compact logs in development
+}
 
 app.use(globalLimiter);
 app.use(bodyPraser.json())
@@ -93,6 +99,47 @@ app.use('/api/event-analytics', eventAnalyticsReportsRoutes)
 app.use('/api/org-settings', orgSettingsRoutes)
 app.use('/api/password-reset', passwordResetRoutes)  
 app.use('/api/activity-logs', activityAndNotificationLogsRoutes)
-app.listen(port, () =>
+
+const server = app.listen(port, () =>
   console.log('> Server is up and running on port : ' + port)
-)
+);
+
+// Graceful shutdown handler
+const shutdown = (signal) => {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+
+  server.close((err) => {
+    if (err) {
+      console.error('Error during server close:', err);
+      process.exit(1);
+    }
+
+    // Close MongoDB connection
+    const mongoose = require('mongoose');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed.');
+      console.log('Process exiting cleanly.');
+      process.exit(0);
+    });
+  });
+
+  // Force kill if graceful shutdown takes too long (10 seconds)
+  setTimeout(() => {
+    console.error('Graceful shutdown timed out. Forcing exit.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => shutdown('SIGTERM')); // sent by Docker, Kubernetes, hosting platforms
+process.on('SIGINT', () => shutdown('SIGINT'));   // sent by Ctrl+C in terminal
+
+// Handle uncaught errors so the process doesn't just die silently
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  shutdown('uncaughtException');
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  shutdown('unhandledRejection');
+});
