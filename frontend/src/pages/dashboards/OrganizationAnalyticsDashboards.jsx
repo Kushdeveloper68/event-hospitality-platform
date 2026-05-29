@@ -503,7 +503,7 @@ export default function OrganizationAnalyticsDashboards() {
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-[1440px] mx-auto space-y-6 pb-12">
+    <div className="max-w-[1440px] mx-auto space-y-6 pb-12 pt-4 px-4">
 
       {/* ── Header ── */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">

@@ -43,12 +43,12 @@ function DashboardNavbar() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5 border-b border-slate-100 dark:border-slate-800/60">
-          <div className="size-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-white" style={{ fontSize: '17px', fontVariationSettings: "'FILL' 1" }}>event_seat</span>
+          <div className="size-8 rounded-lg flex items-center justify-center">
+            <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
           </div>
           <div>
             <p className="text-[13px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">
-              EventOps
+              EventCure
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5 tracking-wider uppercase">
               Hospitality

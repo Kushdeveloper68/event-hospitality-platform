@@ -153,10 +153,10 @@ function EventWorkspaceShell() {
 
   return (
     <EventContext.Provider value={{ event, setEvent }}>
-      <div className="relative flex flex-col min-h-screen dark:bg-[#1a1f2e]">
+      <div className="relative flex flex-col min-h-screen dark:bg-slate-950">
     {/* <!-- Top Sticky Header Container --> */}
     <header
-      className=" top-0 z-50 w-full bg-white dark:bg-[#1a1f2e] border-b border-[#dbdee6] dark:border-[#2d364a] shadow-sm">
+      className=" top-0 z-50 w-full bg-white dark:bg-slate-950 border-b border-[#dbdee6] dark:border-[#2d364a] shadow-sm">
       {/* <!-- Global Navbar --> */}
       <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-4">
         {/* <!-- Left: Platform Logo & Search --> */}
@@ -283,7 +283,7 @@ function EventWorkspaceShell() {
       </div>
     </header>
     {/* <!-- Main Content Area --> */}
-    <main className="flex-1 w-full max-w-[1440px] mx-auto dark:bg-[#1a1f2e] px-6 py-8">
+    <main className="flex-1 w-full max-w-[1440px] mx-auto dark:bg-slate-950 px-6 py-8">
       {/* Tabbed Content Area */}
       <div>
         {activeTab === 'overview' && (

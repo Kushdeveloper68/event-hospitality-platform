@@ -370,7 +370,7 @@ function MainOprationDashboard() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-gray-950">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* ── Main Content ── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* ── Top Navbar ── */}

@@ -505,7 +505,7 @@ export default function OrganizationSetting() {
 
   // ── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-5xl mx-auto pb-16">
+    <div className="max-w-5xl mx-auto pb-16 px-4 pt-6 dark:bg-slate-950">
       <Toast toast={toast} />
 
       {/* ── Page header ── */}

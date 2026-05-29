@@ -98,7 +98,7 @@ function EventDirectory() {
   return (
     <div className="relative flex h-auto min-screen w-full flex-col group/design-root overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
-        <main className="flex flex-col flex-1 px-4 md:px-10 lg:px-20 xl:px-40 py-8">
+        <main className="flex flex-col flex-1 px-4 py-8">
           {/* <!-- Breadcrumbs --> */}
           <nav className="flex items-center gap-2 mb-6">
             <a className="text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-primary flex items-center gap-1"
