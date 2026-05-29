@@ -286,11 +286,11 @@ function RoomInventoryManagement() {
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <span className="material-symbols-outlined text-red-500">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg flex items-start gap-3">
+            <span className="material-symbols-outlined text-red-500 dark:text-red-400">
               error
             </span>
-            <p className="text-sm text-red-700">{error}</p>
+            <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
           </div>
         )}
 
@@ -298,46 +298,46 @@ function RoomInventoryManagement() {
         <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-500">Total Rooms</p>
-              <span className="material-symbols-outlined text-slate-400">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Rooms</p>
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
                 bed
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold tracking-tight">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {rooms.length}
               </h3>
             </div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Total Capacity
               </p>
-              <span className="material-symbols-outlined text-slate-400">
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
                 groups
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold tracking-tight">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {rooms.reduce((a, r) => a + (r.capacity || 0), 0)}
               </h3>
-              <span className="text-xs font-semibold text-slate-400">
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
                 Guests max
               </span>
             </div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-500">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Current Occupancy
               </p>
-              <span className="material-symbols-outlined text-slate-400">
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
                 check_circle
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold tracking-tight">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {rooms.reduce((a, r) => a + (r.occupancy || 0), 0)}
               </h3>
               <span className="text-xs font-semibold text-primary">
@@ -355,16 +355,16 @@ function RoomInventoryManagement() {
           </div>
           <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-slate-500">Available</p>
-              <span className="material-symbols-outlined text-slate-400">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Available</p>
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
                 door_open
               </span>
             </div>
             <div className="mt-3 flex items-baseline gap-2">
-              <h3 className="text-2xl font-bold tracking-tight">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {rooms.filter((r) => (r.occupancy || 0) < r.capacity).length}
               </h3>
-              <span className="text-xs font-semibold text-emerald-600">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 rooms available
               </span>
             </div>
@@ -378,7 +378,7 @@ function RoomInventoryManagement() {
             placeholder="Search by room number, type..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
+            className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-500 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
           />
           <button
             onClick={() => setFilterStatus("all")}
@@ -419,10 +419,10 @@ function RoomInventoryManagement() {
         {loading && (
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <span className="material-symbols-outlined text-4xl text-slate-400 animate-spin">
+              <span className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-600 animate-spin">
                 hourglass_top
               </span>
-              <p className="mt-2 text-slate-600">Loading rooms...</p>
+              <p className="mt-2 text-slate-600 dark:text-slate-400">Loading rooms...</p>
             </div>
           </div>
         )}
@@ -443,8 +443,8 @@ function RoomInventoryManagement() {
                 >
                   <div className="mb-4 flex items-start justify-between">
                     <div>
-                      <h4 className="text-lg font-bold">{room.number}</h4>
-                      <p className="text-xs text-slate-500">
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">{room.number}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         {room.type || "Standard"}
                       </p>
                     </div>
@@ -459,13 +459,13 @@ function RoomInventoryManagement() {
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-500">Capacity</span>
-                      <span className="font-semibold">{capacity} Guests</span>
+                      <span className="text-slate-500 dark:text-slate-400">Capacity</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{capacity} Guests</span>
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-500">Occupancy</span>
-                        <span className="font-bold">
+                        <span className="text-slate-500 dark:text-slate-400">Occupancy</span>
+                        <span className="font-bold text-slate-900 dark:text-white">
                           {occupancy} / {capacity}
                         </span>
                       </div>
@@ -480,7 +480,7 @@ function RoomInventoryManagement() {
                     </div>
                   </div>
                   {room.notes && (
-                    <div className="mt-3 text-xs text-slate-500 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                    <div className="mt-3 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-2 rounded">
                       {room.notes}
                     </div>
                   )}
@@ -519,13 +519,13 @@ function RoomInventoryManagement() {
         {/* Empty State */}
         {!loading && filteredRooms.length === 0 && rooms.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
-            <span className="material-symbols-outlined text-5xl text-slate-300">
+            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">
               meeting_room
             </span>
-            <p className="mt-4 text-lg font-semibold text-slate-700">
+            <p className="mt-4 text-lg font-semibold text-slate-700 dark:text-slate-300">
               No rooms yet
             </p>
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
               Create your first room to get started
             </p>
           </div>
@@ -534,13 +534,13 @@ function RoomInventoryManagement() {
         {/* Empty Search State */}
         {!loading && filteredRooms.length === 0 && rooms.length > 0 && (
           <div className="flex flex-col items-center justify-center py-12">
-            <span className="material-symbols-outlined text-5xl text-slate-300">
+            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">
               search_off
             </span>
-            <p className="mt-4 text-lg font-semibold text-slate-700">
+            <p className="mt-4 text-lg font-semibold text-slate-700 dark:text-slate-300">
               No rooms found
             </p>
-            <p className="mt-2 text-slate-500">
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
               Try adjusting your search or filters
             </p>
           </div>
@@ -574,17 +574,17 @@ function RoomInventoryManagement() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
             <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <h3 className="text-xl font-bold">Assign Guest to Room</h3>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Assign Guest to Room</h3>
               <button
                 onClick={closeAssignModal}
-                className="text-slate-500 hover:text-slate-700"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
             {assignError && (
-              <div className="mx-4 mt-4 p-3 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+              <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded text-sm text-red-700 dark:text-red-200">
                 {assignError}
               </div>
             )}
@@ -592,7 +592,7 @@ function RoomInventoryManagement() {
             <div className="flex-1 overflow-y-auto p-6">
               {availableGuests.length === 0 ? (
                 <div className="text-center py-8">
-                  <p className="text-slate-500">
+                  <p className="text-slate-500 dark:text-slate-400">
                     No unassigned guests available
                   </p>
                 </div>
@@ -648,11 +648,11 @@ function RoomInventoryManagement() {
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                  <span className="material-symbols-outlined text-red-600">
+                  <span className="material-symbols-outlined text-red-600 dark:text-red-400">
                     warning
                   </span>
                 </div>
-                <h3 className="text-xl font-bold">Delete Room?</h3>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Delete Room?</h3>
               </div>
               <p className="text-slate-600 dark:text-slate-400 mb-6">
                 Are you sure you want to delete this room? This action cannot be

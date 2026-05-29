@@ -125,19 +125,19 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
   
   <main className="max-w-4xl mx-auto px-4 py-8 md:py-12">
     {/* <!-- Breadcrumbs --> */}
-    <nav className="flex items-center gap-2 mb-6 text-sm font-medium">
-      <a className="text-[#616e89] hover:text-primary" href="#">Events</a>
-      <span className="material-symbols-outlined text-[#616e89] text-sm">chevron_right</span>
-      <a className="text-[#616e89] hover:text-primary" href="#">Event</a>
-      <span className="material-symbols-outlined text-[#616e89] text-sm">chevron_right</span>
-      <span className="text-[#111318]">{isEditing ? 'Edit Room' : 'Add Room'}</span>
+    <nav className="flex items-center gap-2 mb-6 text-sm font-medium text-slate-600 dark:text-slate-400">
+      <a className="text-slate-600 dark:text-slate-400 hover:text-primary" href="#">Events</a>
+      <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 text-sm">chevron_right</span>
+      <a className="text-slate-600 dark:text-slate-400 hover:text-primary" href="#">Event</a>
+      <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 text-sm">chevron_right</span>
+      <span className="text-slate-900 dark:text-white">{isEditing ? 'Edit Room' : 'Add Room'}</span>
     </nav>
     {/* <!-- Header --> */}
     <div className="mb-10">
-      <h1 className="text-3xl font-black text-[#111318] tracking-tight mb-2">
+      <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
         {isEditing ? 'Edit Room' : 'Add New Room'}
       </h1>
-      <p className="text-[#616e89] text-lg max-w-2xl">
+      <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl">
         Configure room details for hospitality allocation. This information
         will be used for automated capacity planning and guest check-ins.
       </p>
@@ -145,25 +145,25 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
 
     {/* Error Alert */}
     {error && (
-      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-        <span className="material-symbols-outlined text-red-500 text-2xl">error</span>
+      <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg flex items-start gap-3">
+        <span className="material-symbols-outlined text-red-500 dark:text-red-400 text-2xl">error</span>
         <div>
-          <p className="font-semibold text-red-900">{error}</p>
+          <p className="font-semibold text-red-900 dark:text-red-200">{error}</p>
         </div>
       </div>
     )}
 
     {/* <!-- Form Card --> */}
-    <div className="bg-white rounded-xl shadow-sm border border-[#dbdee6] overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
       <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
         {/* <!-- Section 1: Basic Info --> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-[#111318]">Room Number / Name <span
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">Room Number / Name <span
                 className="text-red-500">*</span></label>
             <div className="relative">
               <input
-                className={`w-full h-12 rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary text-base px-4 transition-all ${errors.number ? 'border-red-500 bg-red-50' : 'border-[#dbdee6]'}`}
+                className={`w-full h-12 rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary text-base px-4 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.number ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-200 dark:border-slate-700'}`}
                 placeholder="e.g. 101 or Executive Suite A" 
                 type="text"
                 name="number"
@@ -171,15 +171,15 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
                 onChange={handleChange}
               />
             </div>
-            {errors.number && <p className="text-xs text-red-500">{errors.number}</p>}
+            {errors.number && <p className="text-xs text-red-500 dark:text-red-400">{errors.number}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-[#111318]">Capacity (Occupants) <span
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">Capacity (Occupants) <span
                 className="text-red-500">*</span></label>
             <div className="relative flex items-center">
-              <span className="material-symbols-outlined absolute left-3 text-[#616e89] text-[20px]">groups</span>
+              <span className="material-symbols-outlined absolute left-3 text-slate-600 dark:text-slate-400 text-[20px]">groups</span>
               <input
-                className={`w-full h-12 rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary text-base pl-10 pr-4 transition-all ${errors.capacity ? 'border-red-500 bg-red-50' : 'border-[#dbdee6]'}`}
+                className={`w-full h-12 rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary text-base pl-10 pr-4 transition-all bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 ${errors.capacity ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-200 dark:border-slate-700'}`}
                 min="1" 
                 placeholder="0" 
                 type="number"
@@ -188,16 +188,16 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
                 onChange={handleChange}
               />
             </div>
-            {errors.capacity && <p className="text-xs text-red-500">{errors.capacity}</p>}
+            {errors.capacity && <p className="text-xs text-red-500 dark:text-red-400">{errors.capacity}</p>}
           </div>
         </div>
         {/* <!-- Section 2: Details --> */}
         <div className="grid grid-cols-1 gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-[#111318]">Room Category <span
+            <label className="text-sm font-semibold text-slate-900 dark:text-white">Room Category <span
                 className="text-red-500">*</span></label>
             <select
-              className={`w-full h-12 rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary text-base px-4 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%23616e89%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%20%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem_1.25rem] bg-[right_1rem_center] bg-no-repeat transition-all ${errors.type ? 'border-red-500 bg-red-50' : 'border-[#dbdee6]'}`}
+              className={`w-full h-12 rounded-lg border focus:border-primary focus:ring-1 focus:ring-primary text-base px-4 appearance-none bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-all ${errors.type ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-200 dark:border-slate-700'}`}
               name="type"
               value={formData.type}
               onChange={handleChange}
@@ -211,15 +211,15 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
               <option value="meeting">Meeting Room / Breakout</option>
               <option value="accessible">ADA Accessible</option>
             </select>
-            {errors.type && <p className="text-xs text-red-500">{errors.type}</p>}
+            {errors.type && <p className="text-xs text-red-500 dark:text-red-400">{errors.type}</p>}
           </div>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-semibold text-[#111318]">Internal Operations Notes</label>
-              <span className="text-[12px] text-[#616e89] font-normal">Optional</span>
+              <label className="text-sm font-semibold text-slate-900 dark:text-white">Internal Operations Notes</label>
+              <span className="text-[12px] text-slate-600 dark:text-slate-400 font-normal">Optional</span>
             </div>
             <textarea
-              className="w-full rounded-lg border-[#dbdee6] border focus:border-primary focus:ring-1 focus:ring-primary text-base p-4 transition-all resize-none"
+              className="w-full rounded-lg border-slate-200 dark:border-slate-700 border bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-primary focus:ring-1 focus:ring-primary text-base p-4 transition-all resize-none"
               placeholder="Mention special amenities, maintenance requirements, or restricted access details..."
               rows="4"
               name="notes"
@@ -229,9 +229,9 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
           </div>
         </div>
         {/* <!-- Action Footer --> */}
-        <div className="pt-6 border-t border-[#dbdee6] flex flex-col sm:flex-row items-center justify-end gap-3">
+        <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-3">
           <button
-            className="w-full sm:w-auto px-6 h-12 rounded-lg border border-[#dbdee6] text-[#111318] font-semibold hover:bg-[#f0f1f4] transition-colors disabled:opacity-50"
+            className="w-full sm:w-auto px-6 h-12 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white bg-white dark:bg-slate-900 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
             type="button"
             onClick={handleCancel}
             disabled={loading}
@@ -259,15 +259,15 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
       </form>
     </div>
     {/* <!-- Helper Suggestion --> */}
-    <div className="mt-8 p-4 bg-primary/5 border border-primary/10 rounded-xl flex items-start gap-4">
-      <div className="p-2 bg-primary/10 rounded-lg text-primary">
+    <div className="mt-8 p-4 bg-primary/5 dark:bg-primary/10 border border-primary/10 dark:border-primary/20 rounded-xl flex items-start gap-4">
+      <div className="p-2 bg-primary/10 dark:bg-primary/20 rounded-lg text-primary">
         <span className="material-symbols-outlined text-[24px]">edit</span>
       </div>
       <div>
-        <p className="text-sm font-semibold text-[#111318]">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white">
           Need to add multiple rooms?
         </p>
-        <p className="text-sm text-[#616e89] mt-1">
+        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           You can save time by uploading a CSV file with your entire room inventory at once.
         </p>
       </div>
