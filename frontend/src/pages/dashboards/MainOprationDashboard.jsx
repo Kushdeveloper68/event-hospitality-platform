@@ -6,6 +6,22 @@ import {
   getDashboardMetrics,
   getRecentActivity,
 } from "../../api/mainOprationDashboardApi";
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  EmptyState,
+  Input,
+  PageHeader,
+  Table,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableHeaderCell,
+  TableCell,
+} from "../../components/ui";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -88,16 +104,16 @@ function MetricCard({
   loading,
 }) {
   const accentMap = {
-    primary: "bg-primary/10 text-primary dark:bg-primary/20 dark:text-sky-300",
-    green: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
-    amber: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
-    red: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-    purple: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
-    indigo: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
+    primary: "bg-primary/10 text-primary",
+    green: "bg-success/10 text-success",
+    amber: "bg-warning/10 text-warning",
+    red: "bg-danger/10 text-danger",
+    purple: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300",
+    indigo: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300",
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
+    <Card className="p-5 flex flex-col gap-3 hover:shadow-card-hover transition-shadow">
       <div className="flex items-center justify-between">
         <div
           className={`size-10 rounded-lg flex items-center justify-center ${accentMap[accent]}`}
@@ -107,7 +123,7 @@ function MetricCard({
         {trend !== undefined && (
           <span
             className={`flex items-center gap-0.5 text-xs font-bold ${
-              trend >= 0 ? "text-emerald-600" : "text-red-500"
+              trend >= 0 ? "text-success" : "text-danger"
             }`}
           >
             <span className="material-symbols-outlined text-sm">
@@ -118,33 +134,33 @@ function MetricCard({
         )}
       </div>
       <div>
-        <p className="text-xs font-bold text-neutral-muted uppercase tracking-wider mb-1">
+        <p className="text-xs font-bold text-text-muted uppercase tracking-wider mb-1">
           {label}
         </p>
         {loading ? (
-          <div className="h-8 w-20 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-8 w-20 bg-surface-muted rounded animate-pulse" />
         ) : (
-          <h3 className="text-2xl font-black text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-black text-text">
             {value ?? 0}
           </h3>
         )}
         {sub && !loading && (
-          <p className="text-xs text-neutral-muted mt-1">{sub}</p>
+          <p className="text-xs text-text-muted mt-1">{sub}</p>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
 function ActivityItem({ log }) {
   const cfg = ACTIVITY_CONFIG[log.type] || {
     icon: "info",
-    color: "text-slate-500",
-    bg: "bg-slate-100",
+    color: "text-text-muted",
+    bg: "bg-surface-muted",
   };
 
   return (
-    <div className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+    <div className="flex gap-3 p-3 rounded-lg hover:bg-surface-muted/70 transition-colors">
       <div
         className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}
       >
@@ -153,21 +169,21 @@ function ActivityItem({ log }) {
         </span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-gray-900 dark:text-white leading-tight line-clamp-1">
+        <p className="text-sm font-semibold text-text leading-tight line-clamp-1">
           {log.message || "System activity"}
         </p>
         <div className="flex items-center gap-2 mt-0.5">
           {log.event?.name && (
-            <span className="text-[10px] text-neutral-muted font-medium truncate max-w-30">
+            <span className="text-[10px] text-text-muted font-medium truncate max-w-30">
               {log.event.name}
             </span>
           )}
           {log.priority === "high" || log.priority === "critical" ? (
-            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-red-100 text-red-700">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-danger/10 text-danger">
               {log.priority}
             </span>
           ) : null}
-          <span className="text-[10px] text-neutral-muted ml-auto shrink-0">
+          <span className="text-[10px] text-text-muted ml-auto shrink-0">
             {timeAgo(log.timestamp)}
           </span>
         </div>
@@ -178,30 +194,15 @@ function ActivityItem({ log }) {
 
 function EventStatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.upcoming;
+  const variant =
+    status === "completed" ? "neutral" : status === "in_progress" ? "success" : "primary";
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${cfg.bg}`}
-    >
+    <Badge variant={variant}>
       <span
         className={`size-1.5 rounded-full ${cfg.dot} ${cfg.pulse ? "animate-pulse" : ""}`}
       />
       {cfg.label}
-    </span>
-  );
-}
-
-function EmptyState({ icon, title, desc, action }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
-      <span className="material-symbols-outlined text-5xl text-gray-300 dark:text-gray-600">
-        {icon}
-      </span>
-      <div>
-        <p className="font-bold text-gray-600 dark:text-gray-300">{title}</p>
-        {desc && <p className="text-sm text-neutral-muted mt-1">{desc}</p>}
-      </div>
-      {action}
-    </div>
+    </Badge>
   );
 }
 
@@ -210,7 +211,7 @@ function SkeletonRow({ cols = 5 }) {
     <tr>
       {Array.from({ length: cols }).map((_, i) => (
         <td key={i} className="px-6 py-4">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+          <div className="h-4 bg-surface-muted rounded animate-pulse w-3/4" />
         </td>
       ))}
     </tr>
@@ -370,118 +371,71 @@ function MainOprationDashboard() {
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-gray-950">
-      {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* ── Top Navbar ── */}
-        <header className="h-16 bg-white dark:bg-gray-900 border-b border-neutral-border dark:border-gray-800 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-6 flex-1 max-w-2xl">
-            {/* Search */}
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-muted text-xl">
-                search
-              </span>
-              <input
-                className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                placeholder="Search events, guests, or tasks..."
-                type="text"
-                value={eventSearch}
-                onChange={(e) => setEventSearch(e.target.value)}
-              />
-            </div>
+    <div className="space-y-8">
+      {/* ── Error banner (non-blocking) ── */}
+      {error && data && (
+        <div className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-warning flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined">warning</span>
+            <span className="text-sm font-medium">{error}</span>
           </div>
-          <div className="flex items-center gap-4">
-            {/* Last updated */}
-            {lastUpdated && (
-              <span className="text-xs text-neutral-muted hidden md:block">
-                Updated{" "}
-                {lastUpdated.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            )}
-            {/* Refresh */}
-            <button
-              onClick={() => fetchData(true)}
-              disabled={refreshing}
-              className="size-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-neutral-muted disabled:opacity-50 transition-colors"
-              title="Refresh dashboard"
-            >
-              <span
-                className={`material-symbols-outlined ${refreshing ? "animate-spin" : ""}`}
-              >
-                refresh
-              </span>
-            </button>
-            {/* Notifications */}
-            <button className="size-10 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 relative text-neutral-muted">
-              <span className="material-symbols-outlined">notifications</span>
-              {metrics.serviceRequests > 0 && (
-                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-gray-900" />
-              )}
-            </button>
-            <div className="h-8 w-px bg-neutral-border dark:bg-gray-800 mx-2" />
-            {/* User */}
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold leading-none">
-                  {user?.name || "Operator"}
-                </p>
-                <p className="text-[10px] text-neutral-muted mt-1 uppercase font-bold tracking-tight">
-                  {user?.organizationName || "Operations"}
-                </p>
-              </div>
-              <div className="size-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                {(user?.name || "O").charAt(0).toUpperCase()}
-              </div>
-            </div>
-          </div>
-        </header>
+          <Button variant="ghost" size="sm" onClick={() => fetchData(true)}>
+            Retry
+          </Button>
+        </div>
+      )}
 
-        {/* ── Dashboard Content ── */}
-        <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          {/* ── Error banner (non-blocking) ── */}
-          {error && data && (
-            <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-900/40 dark:text-amber-200 px-4 py-3 rounded-xl flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-600">
-                  warning
-                </span>
-                <span className="text-sm font-medium">{error}</span>
-              </div>
-              <button
-                onClick={() => fetchData(true)}
-                className="text-sm font-bold underline hover:no-underline"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
-          {/* ── Page title ── */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
-                Operations Dashboard
-              </h1>
-              <p className="text-sm text-neutral-muted mt-1">
-                Welcome back,{" "}
-                <span className="font-semibold text-gray-700 dark:text-gray-300">
-                  {user?.name || "Operator"}
-                </span>{" "}
-                · {user?.organizationName || ""}
-              </p>
-            </div>
-            <Link to="/create-event">
-              <button className="flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-bold text-sm hover:bg-primary/90 shadow-sm transition-all">
+      <PageHeader
+        title="Operations Dashboard"
+        subtitle={`Welcome back, ${user?.name || "Operator"}${
+          user?.organizationName ? ` · ${user.organizationName}` : ""
+        }`}
+        actions={
+          <Link to="/create-event">
+            <Button
+              leadingIcon={
                 <span className="material-symbols-outlined text-[20px]">
                   add
                 </span>
-                New Event
-              </button>
-            </Link>
-          </div>
+              }
+            >
+              New Event
+            </Button>
+          </Link>
+        }
+      />
+
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex-1">
+          <Input
+            value={eventSearch}
+            onChange={(e) => setEventSearch(e.target.value)}
+            placeholder="Search events, guests, or tasks..."
+            startAdornment={
+              <span className="material-symbols-outlined text-lg">search</span>
+            }
+          />
+        </div>
+        <div className="flex items-center gap-3 text-xs text-text-muted">
+          {lastUpdated && (
+            <span>
+              Updated{" "}
+              {lastUpdated.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchData(true)}
+            isLoading={refreshing}
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
 
           {/* ── Metric Cards ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
@@ -534,23 +488,20 @@ function MainOprationDashboard() {
           {/* ── Active Events Live Panel ── */}
           {activeEventStats.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-sm font-bold text-neutral-muted uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h2 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-2">
                 <span className="size-2 bg-green-500 rounded-full animate-pulse" />
                 Live Events
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {activeEventStats.map((ev) => (
-                  <div
-                    key={ev._id}
-                    className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-5 shadow-sm hover:shadow-md transition-shadow"
-                  >
+                  <Card key={ev._id} className="p-5 hover:shadow-card-hover transition-shadow">
                     <div className="flex items-start justify-between gap-2 mb-4">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gray-900 dark:text-white text-sm line-clamp-1">
+                        <h3 className="font-bold text-text text-sm line-clamp-1">
                           {ev.name}
                         </h3>
                         {ev.venue && (
-                          <p className="text-xs text-neutral-muted mt-0.5 flex items-center gap-1">
+                          <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1">
                             <span className="material-symbols-outlined text-xs">
                               location_on
                             </span>
@@ -592,12 +543,12 @@ function MainOprationDashboard() {
                       ].map((stat) => (
                         <div
                           key={stat.label}
-                          className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2.5 text-center"
+                          className="bg-surface-muted rounded-lg p-2.5 text-center"
                         >
                           <p className={`text-lg font-black ${stat.color}`}>
                             {stat.value}
                           </p>
-                          <p className="text-[10px] text-neutral-muted font-medium">
+                          <p className="text-[10px] text-text-muted font-medium">
                             {stat.label}
                           </p>
                         </div>
@@ -606,14 +557,14 @@ function MainOprationDashboard() {
                     {/* Check-in progress bar */}
                     <div>
                       <div className="flex justify-between text-xs mb-1">
-                        <span className="text-neutral-muted font-medium">
+                        <span className="text-text-muted font-medium">
                           Check-in Progress
                         </span>
                         <span className="font-bold text-primary">
                           {ev.stats.checkInRate}%
                         </span>
                       </div>
-                      <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-surface-muted h-2 rounded-full overflow-hidden">
                         <div
                           className="bg-primary h-full rounded-full transition-all duration-700"
                           style={{ width: `${ev.stats.checkInRate}%` }}
@@ -622,14 +573,22 @@ function MainOprationDashboard() {
                     </div>
                     <Link
                       to={`/events/${ev._id}/overview`}
-                      className="mt-4 flex items-center justify-center gap-1 w-full py-2 bg-primary/5 hover:bg-primary/10 text-primary font-bold text-xs rounded-lg transition-colors"
+                      className="mt-4"
                     >
-                      <span className="material-symbols-outlined text-sm">
-                        open_in_new
-                      </span>
-                      Manage Event
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="w-full"
+                        leadingIcon={
+                          <span className="material-symbols-outlined text-sm">
+                            open_in_new
+                          </span>
+                        }
+                      >
+                        Manage Event
+                      </Button>
                     </Link>
-                  </div>
+                  </Card>
                 ))}
               </div>
             </div>
@@ -638,27 +597,28 @@ function MainOprationDashboard() {
           {/* ── Main Grid: Activity + Events Table ── */}
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             {/* ── Recent Activity ── */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-neutral-border dark:border-gray-800 flex justify-between items-center">
+            <Card className="flex flex-col">
+              <CardHeader className="justify-between">
                 <div className="flex items-center gap-2">
-                  <h2 className="font-bold text-base">Recent Activity</h2>
-                  <span className="size-2 bg-red-500 rounded-full animate-pulse" />
+                  <h2 className="text-sm font-semibold text-text">Recent Activity</h2>
+                  <span className="size-2 bg-danger rounded-full animate-pulse" />
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => fetchData(true)}
-                  disabled={refreshing}
-                  className="text-primary text-xs font-bold hover:underline disabled:opacity-50"
+                  isLoading={refreshing}
                 >
-                  {refreshing ? "Refreshing…" : "Refresh"}
-                </button>
-              </div>
+                  Refresh
+                </Button>
+              </CardHeader>
 
-              <div className="flex-1 overflow-y-auto max-h-105 custom-scrollbar p-3">
+              <CardBody className="flex-1 overflow-y-auto max-h-105 custom-scrollbar p-3">
                 {recentActivity.length === 0 ? (
                   <EmptyState
                     icon="dynamic_feed"
                     title="No activity yet"
-                    desc="Activity will appear once operations begin."
+                    description="Activity will appear once operations begin."
                   />
                 ) : (
                   <div className="space-y-1">
@@ -667,71 +627,68 @@ function MainOprationDashboard() {
                     ))}
                   </div>
                 )}
-              </div>
+              </CardBody>
 
               {/* Pagination */}
               {totalActivityPages > 1 && (
-                <div className="px-6 py-3 border-t border-neutral-border dark:border-gray-800 flex items-center justify-between text-xs text-neutral-muted">
+                <div className="px-6 py-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
                   <span>
                     Page {activityPage + 1} of {totalActivityPages}
                   </span>
                   <div className="flex gap-2">
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setActivityPage((p) => Math.max(0, p - 1))}
                       disabled={activityPage === 0}
-                      className="px-2 py-1 rounded border border-neutral-border disabled:opacity-40 hover:bg-gray-50 transition-colors"
                     >
                       ‹
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() =>
                         setActivityPage((p) =>
                           Math.min(totalActivityPages - 1, p + 1),
                         )
                       }
                       disabled={activityPage === totalActivityPages - 1}
-                      className="px-2 py-1 rounded border border-neutral-border disabled:opacity-40 hover:bg-gray-50 transition-colors"
                     >
                       ›
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
 
             {/* ── Events Table ── */}
-            <div className="xl:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 shadow-sm flex flex-col">
-              <div className="px-6 py-4 border-b border-neutral-border dark:border-gray-800 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-bold text-base">Events</h2>
-                <div className="flex items-center gap-2">
-                  {/* Status filter tabs */}
+            <Card className="xl:col-span-2 flex flex-col">
+              <CardHeader className="flex-wrap justify-between gap-3">
+                <h2 className="text-sm font-semibold text-text">Events</h2>
+                <div className="flex flex-wrap items-center gap-2">
                   {["all", "in_progress", "upcoming", "completed"].map((s) => (
-                    <button
+                    <Button
                       key={s}
+                      variant={eventStatusFilter === s ? "primary" : "secondary"}
+                      size="sm"
                       onClick={() => setEventStatusFilter(s)}
-                      className={`px-3 py-1 rounded-full text-xs font-bold capitalize transition-colors ${
-                        eventStatusFilter === s
-                          ? "bg-primary text-white"
-                          : "bg-gray-100 dark:bg-gray-800 text-neutral-muted hover:bg-gray-200 dark:hover:bg-gray-700"
-                      }`}
                     >
                       {s === "all"
                         ? "All"
                         : s === "in_progress"
                           ? "Live"
                           : s.charAt(0).toUpperCase() + s.slice(1)}
-                    </button>
+                    </Button>
                   ))}
-                  <Link
-                    to="/events"
-                    className="text-primary text-xs font-bold hover:underline ml-2"
-                  >
-                    View All
+                  <Link to="/events">
+                    <Button variant="ghost" size="sm">
+                      View All
+                    </Button>
                   </Link>
                 </div>
-              </div>
+              </CardHeader>
 
-              <div className="overflow-x-auto flex-1">
+              <CardBody className="p-0">
                 {filteredEvents.length === 0 ? (
                   <EmptyState
                     icon="event"
@@ -740,7 +697,7 @@ function MainOprationDashboard() {
                         ? "No matching events"
                         : "No events yet"
                     }
-                    desc={
+                    description={
                       eventSearch || eventStatusFilter !== "all"
                         ? "Try adjusting your search or filter."
                         : "Create your first event to get started."
@@ -748,110 +705,102 @@ function MainOprationDashboard() {
                     action={
                       !eventSearch && eventStatusFilter === "all" ? (
                         <Link to="/create-event">
-                          <button className="mt-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors">
-                            Create Event
-                          </button>
+                          <Button size="sm">Create Event</Button>
                         </Link>
                       ) : null
                     }
                   />
                 ) : (
-                  <table className="w-full text-left">
-                    <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-neutral-border dark:border-gray-800">
+                  <Table containerClassName="border-0 shadow-none rounded-none bg-transparent">
+                    <TableHead>
                       <tr>
                         {["Event Name", "Venue", "Date", "Status", ""].map(
                           (h) => (
-                            <th
-                              key={h}
-                              className="px-6 py-3 text-[10px] font-bold text-neutral-muted uppercase tracking-wider"
-                            >
-                              {h}
-                            </th>
-                          ),
+                            <TableHeaderCell key={h}>{h}</TableHeaderCell>
+                          )
                         )}
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-border dark:divide-gray-800">
+                    </TableHead>
+                    <TableBody>
                       {filteredEvents.map((ev) => (
-                        <tr
-                          key={ev._id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors group"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-sm text-gray-900 dark:text-white line-clamp-1">
+                        <TableRow key={ev._id} className="group">
+                          <TableCell>
+                            <div className="font-bold text-sm text-text line-clamp-1">
                               {ev.name}
                             </div>
                             {ev.isPrivate && (
-                              <div className="text-[10px] text-neutral-muted flex items-center gap-0.5 mt-0.5">
+                              <div className="text-[10px] text-text-muted flex items-center gap-0.5 mt-0.5">
                                 <span className="material-symbols-outlined text-xs">
                                   lock
                                 </span>
                                 Private
                               </div>
                             )}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-neutral-muted">
+                          </TableCell>
+                          <TableCell className="text-sm text-text-muted">
                             <span className="line-clamp-1">
                               {ev.venue || "—"}
                             </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-neutral-muted whitespace-nowrap">
+                          </TableCell>
+                          <TableCell className="text-sm text-text-muted whitespace-nowrap">
                             {fmtDate(ev.startDate)}
                             {ev.endDate && ` – ${fmtDate(ev.endDate)}`}
-                          </td>
-                          <td className="px-6 py-4">
+                          </TableCell>
+                          <TableCell>
                             <EventStatusBadge status={ev.status} />
-                          </td>
-                          <td className="px-6 py-4 text-right">
+                          </TableCell>
+                          <TableCell className="text-right">
                             <Link to={`/events/${ev._id}/overview`}>
-                              <button className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-all shadow-sm opacity-0 group-hover:opacity-100">
+                              <Button
+                                size="sm"
+                                className="opacity-0 group-hover:opacity-100"
+                              >
                                 Manage
-                              </button>
+                              </Button>
                             </Link>
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 )}
-              </div>
+              </CardBody>
 
               {filteredEvents.length > 0 && (
-                <div className="px-6 py-3 border-t border-neutral-border dark:border-gray-800 flex items-center justify-between text-xs text-neutral-muted">
+                <div className="px-6 py-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
                   <span>
                     Showing {filteredEvents.length} of {upcomingEvents.length}{" "}
                     events
                   </span>
-                  <Link
-                    to="/events"
-                    className="text-primary font-bold hover:underline"
-                  >
-                    See all events →
+                  <Link to="/events">
+                    <Button variant="ghost" size="sm">
+                      See all events →
+                    </Button>
                   </Link>
                 </div>
               )}
-            </div>
+            </Card>
           </div>
 
           {/* ── Summary Stats Row ── */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Check-in overview */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-6 shadow-sm">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                <h3 className="font-bold text-sm text-text">
                   Overall Check-in
                 </h3>
                 <span className="material-symbols-outlined text-primary">
                   how_to_reg
                 </span>
               </div>
-              <div className="text-3xl font-black text-gray-900 dark:text-white mb-1">
+              <div className="text-3xl font-black text-text mb-1">
                 {metrics.checkedInGuests ?? 0}
-                <span className="text-sm font-normal text-neutral-muted ml-1">
+                <span className="text-sm font-normal text-text-muted ml-1">
                   / {metrics.totalGuests ?? 0}
                 </span>
               </div>
-              <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden mt-3 mb-2">
+              <div className="w-full bg-surface-muted h-2 rounded-full overflow-hidden mt-3 mb-2">
                 <div
                   className="bg-primary h-full rounded-full transition-all duration-700"
                   style={{
@@ -866,19 +815,19 @@ function MainOprationDashboard() {
                   }}
                 />
               </div>
-              <p className="text-xs text-neutral-muted">
+              <p className="text-xs text-text-muted">
                 {metrics.totalGuests
                   ? `${Math.round(
                       (metrics.checkedInGuests / metrics.totalGuests) * 100,
                     )}% check-in rate across all events`
                   : "No guests registered yet"}
               </p>
-            </div>
+            </Card>
 
             {/* Event breakdown */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-6 shadow-sm">
+            <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                <h3 className="font-bold text-sm text-text">
                   Event Breakdown
                 </h3>
                 <span className="material-symbols-outlined text-primary">
@@ -891,7 +840,7 @@ function MainOprationDashboard() {
                     label: "Live Now",
                     value: metrics.activeEvents,
                     color: "bg-emerald-500",
-                    textColor: "text-emerald-600",
+                    textColor: "text-success",
                   },
                   {
                     label: "Upcoming",
@@ -903,19 +852,19 @@ function MainOprationDashboard() {
                     label: "Completed",
                     value: metrics.completedEvents,
                     color: "bg-gray-400",
-                    textColor: "text-gray-600",
+                    textColor: "text-text-muted",
                   },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-neutral-muted font-medium">
+                      <span className="text-text-muted font-medium">
                         {item.label}
                       </span>
                       <span className={`font-bold ${item.textColor}`}>
                         {item.value ?? 0}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-100 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden">
+                    <div className="w-full bg-surface-muted h-1.5 rounded-full overflow-hidden">
                       <div
                         className={`${item.color} h-full rounded-full transition-all duration-700`}
                         style={{
@@ -933,11 +882,11 @@ function MainOprationDashboard() {
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
 
             {/* Quick links */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-neutral-border dark:border-gray-800 p-6 shadow-sm">
-              <h3 className="font-bold text-sm text-gray-900 dark:text-white mb-4">
+            <Card className="p-6">
+              <h3 className="font-bold text-sm text-text mb-4">
                 Quick Actions
               </h3>
               <div className="space-y-2">
@@ -952,54 +901,42 @@ function MainOprationDashboard() {
                     icon: "calendar_today",
                     label: "View All Events",
                     to: "/events",
-                    accent: "text-indigo-600",
+                    accent: "text-indigo-500",
                   },
                   {
                     icon: "analytics",
                     label: "Analytics & Reports",
                     to: "/analytics",
-                    accent: "text-purple-600",
+                    accent: "text-purple-500",
                   },
                   {
                     icon: "settings",
                     label: "Platform Settings",
                     to: "/settings",
-                    accent: "text-gray-600",
+                    accent: "text-text-muted",
                   },
                 ].map((item) => (
                   <Link
                     key={item.label}
                     to={item.to}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-surface-muted transition-colors group"
                   >
                     <span
                       className={`material-symbols-outlined text-xl ${item.accent}`}
                     >
                       {item.icon}
                     </span>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 group-hover:text-primary transition-colors">
+                    <span className="text-sm font-semibold text-text group-hover:text-primary transition-colors">
                       {item.label}
                     </span>
-                    <span className="material-symbols-outlined text-sm text-neutral-muted ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="material-symbols-outlined text-sm text-text-muted ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
                       arrow_forward
                     </span>
                   </Link>
                 ))}
               </div>
-            </div>
+            </Card>
           </div>
-        </main>
-      </div>
-
-      {/* ── FAB: Create Event ── */}
-      <Link to="/create-event">
-        <button className="fixed bottom-8 right-8 size-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all group z-50">
-          <span className="material-symbols-outlined text-3xl">add</span>
-          <span className="absolute right-full mr-4 bg-gray-900 text-white text-xs font-bold py-2 px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Create New Event
-          </span>
-        </button>
-      </Link>
     </div>
   );
 }

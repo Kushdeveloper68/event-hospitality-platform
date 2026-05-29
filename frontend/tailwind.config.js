@@ -10,34 +10,54 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#2463eb",
-        "background-light": "#f6f6f8",
-        "background-dark": "#111621",
-            'neutral-text': '#111827',
-            'border-subtle': '#E5E7EB',
-            "neutral-surface": "#ffffff",
-            "neutral-border": "#e5e7eb",
-            "neutral-muted": "#6b7280",
-            "success": "#10b981",
-            "neutral-soft": "#f0f1f4",
-            "neutral-light": "#f0f1f4",
-            "border-light": "#dbdee6",
-            "success": "#07883d",
-            "warning": "#eab308",
-            "error-red": "#DC2626",
-            "danger": "#e73c08"
-
+        primary: "var(--color-primary)",
+        "primary-strong": "var(--color-primary-strong)",
+        "primary-soft": "var(--color-primary-soft)",
+        "background-light": "var(--color-background-light)",
+        "background-dark": "var(--color-background-dark)",
+        "neutral-text": "var(--color-text)",
+        "neutral-muted": "var(--color-text-muted)",
+        "neutral-surface": "var(--color-surface)",
+        "neutral-border": "var(--color-border)",
+        "neutral-soft": "var(--color-surface-muted)",
+        "neutral-light": "var(--color-surface-muted)",
+        "border-subtle": "var(--color-border)",
+        "border-light": "var(--color-border-strong)",
+        success: "var(--color-success)",
+        warning: "var(--color-warning)",
+        "error-red": "var(--color-danger)",
+        danger: "var(--color-danger)",
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          muted: "var(--color-surface-muted)",
+          elevated: "var(--color-surface-elevated)",
+        },
+        text: {
+          DEFAULT: "var(--color-text)",
+          muted: "var(--color-text-muted)",
+        },
+        border: {
+          DEFAULT: "var(--color-border)",
+          strong: "var(--color-border-strong)",
+        },
       },
 
       fontFamily: {
-        display: ["Inter", "sans-serif"]
+        display: ["Inter", "sans-serif"],
+        body: ["Inter", "sans-serif"]
       },
 
       borderRadius: {
-        DEFAULT: "0.25rem",
-        lg: "0.5rem",
-        xl: "0.75rem",
+        DEFAULT: "var(--radius-sm)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
         full: "9999px"
+      },
+
+      boxShadow: {
+        card: "var(--shadow-card)",
+        "card-hover": "var(--shadow-card-hover)",
+        soft: "var(--shadow-soft)"
       }
     }
   },

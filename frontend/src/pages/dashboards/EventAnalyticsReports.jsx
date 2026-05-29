@@ -7,6 +7,20 @@ import {
   exportServicesCsv,
   exportTransportCsv,
 } from "../../api/eventAnalyticsReportsApi";
+import {
+  Badge,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  PageHeader,
+  Table,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableHeaderCell,
+  TableCell,
+} from "../../components/ui";
 
 // ─── Formatters ───────────────────────────────────────────────────────────────
 const fmtNum = (n) => (n == null ? "—" : Number(n).toLocaleString());
@@ -29,7 +43,7 @@ const fmtHour = (h) => {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 export function Skeleton({ className = "" }) {
   return (
-    <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${className}`} />
+    <div className={`animate-pulse bg-surface-muted rounded ${className}`} />
   );
 }
 
@@ -38,7 +52,7 @@ function PageSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 h-28">
+          <div key={i} className="bg-surface rounded-2xl border border-border p-5 h-28">
             <Skeleton className="size-9 rounded-xl mb-3" />
             <Skeleton className="h-3 w-20 mb-2" />
             <Skeleton className="h-7 w-14" />
@@ -46,7 +60,7 @@ function PageSkeleton() {
         ))}
       </div>
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 h-56">
+        <div key={i} className="bg-surface rounded-2xl border border-border p-6 h-56">
           <Skeleton className="h-5 w-40 mb-4" />
           <Skeleton className="h-36 w-full rounded-xl" />
         </div>
@@ -58,31 +72,31 @@ function PageSkeleton() {
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
 export function KPICard({ icon, label, value, sub, accent = "blue", pulse = false, trend }) {
   const accentMap = {
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
-    green: "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
-    amber: "bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
-    red: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400",
-    purple: "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
-    indigo: "bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400",
-    rose: "bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400",
-    teal: "bg-teal-50 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400",
-    slate: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+    blue: "bg-primary/10 text-primary",
+    green: "bg-success/10 text-success",
+    amber: "bg-warning/10 text-warning",
+    red: "bg-danger/10 text-danger",
+    purple: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300",
+    indigo: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300",
+    rose: "bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-300",
+    teal: "bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-300",
+    slate: "bg-surface-muted text-text-muted",
   };
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col gap-3 group">
+    <Card className="p-5 hover:shadow-card-hover transition-all duration-200 flex flex-col gap-3 group">
       <div className="flex items-center justify-between">
         <div className={`size-10 rounded-xl flex items-center justify-center ${accentMap[accent]}`}>
           <span className="material-symbols-outlined text-xl">{icon}</span>
         </div>
         <div className="flex items-center gap-2">
           {pulse && (
-            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
-              <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="flex items-center gap-1 text-[10px] font-bold text-success uppercase tracking-wider">
+              <span className="size-1.5 bg-success rounded-full animate-pulse" />
               Live
             </span>
           )}
           {trend != null && (
-            <span className={`flex items-center gap-0.5 text-xs font-bold ${trend >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+            <span className={`flex items-center gap-0.5 text-xs font-bold ${trend >= 0 ? "text-success" : "text-danger"}`}>
               <span className="material-symbols-outlined text-sm">{trend >= 0 ? "trending_up" : "trending_down"}</span>
               {Math.abs(trend)}%
             </span>
@@ -90,34 +104,34 @@ export function KPICard({ icon, label, value, sub, accent = "blue", pulse = fals
         </div>
       </div>
       <div>
-        <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">{label}</p>
-        <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5 tabular-nums">{value}</p>
-        {sub && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{sub}</p>}
+        <p className="text-[11px] font-bold text-text-muted uppercase tracking-widest">{label}</p>
+        <p className="text-2xl font-black text-text mt-0.5 tabular-nums">{value}</p>
+        {sub && <p className="text-xs text-text-muted mt-1">{sub}</p>}
       </div>
-    </div>
+    </Card>
   );
 }
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 export function Section({ title, subtitle, icon, children, action, noPad = false }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-      <div className="flex items-start justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+    <Card className="overflow-hidden">
+      <CardHeader className="items-start">
         <div className="flex items-center gap-3">
           {icon && (
-            <div className="size-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-base text-blue-600 dark:text-blue-400">{icon}</span>
+            <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-base text-primary">{icon}</span>
             </div>
           )}
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">{title}</h3>
-            {subtitle && <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{subtitle}</p>}
+            <h3 className="font-bold text-text text-sm">{title}</h3>
+            {subtitle && <p className="text-xs text-text-muted mt-0.5">{subtitle}</p>}
           </div>
         </div>
         {action}
-      </div>
-      <div className={noPad ? "" : "p-6"}>{children}</div>
-    </div>
+      </CardHeader>
+      <CardBody className={noPad ? "p-0" : ""}>{children}</CardBody>
+    </Card>
   );
 }
 
@@ -128,17 +142,17 @@ export function ProgressRow({ label, value, pct, max, colorClass = "bg-blue-500"
     <div className="flex flex-col gap-1.5">
       <div className="flex justify-between items-center text-sm">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">{label}</span>
+          <span className="font-medium text-text capitalize">{label}</span>
           {badge && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">{badge}</span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface-muted text-text-muted">{badge}</span>
           )}
         </div>
-        <span className="tabular-nums text-slate-900 dark:text-white font-bold">
+        <span className="tabular-nums text-text font-bold">
           {fmtNum(value)}
-          <span className="text-slate-400 font-normal ml-1 text-xs">({pct ?? Math.round((value / (max || 1)) * 100)}%)</span>
+          <span className="text-text-muted font-normal ml-1 text-xs">({pct ?? Math.round((value / (max || 1)) * 100)}%)</span>
         </span>
       </div>
-      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+      <div className="w-full h-2 bg-surface-muted rounded-full overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${colorClass}`}
           style={{ width: `${Math.min(width, 100)}%` }}
@@ -283,9 +297,9 @@ export function HourBars({ data = [], colorClass = "bg-blue-500" }) {
 // ─── Empty chart placeholder ──────────────────────────────────────────────────
 function EmptyChart({ message = "No data available" }) {
   return (
-    <div className="flex flex-col items-center justify-center h-28 gap-2 text-slate-300 dark:text-slate-700">
+    <div className="flex flex-col items-center justify-center h-28 gap-2 text-text-muted">
       <span className="material-symbols-outlined text-4xl">bar_chart</span>
-      <p className="text-xs font-medium text-slate-400">{message}</p>
+      <p className="text-xs font-medium text-text-muted">{message}</p>
     </div>
   );
 }
@@ -293,40 +307,28 @@ function EmptyChart({ message = "No data available" }) {
 // ─── Export button ────────────────────────────────────────────────────────────
 function ExportBtn({ onClick, label, loading }) {
   return (
-    <button
+    <Button
+      variant="outline"
+      size="sm"
       onClick={onClick}
-      disabled={loading}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
+      isLoading={loading}
+      leadingIcon={
+        <span className="material-symbols-outlined text-sm">
+          {loading ? "hourglass_empty" : "download"}
+        </span>
+      }
     >
-      <span className="material-symbols-outlined text-sm">{loading ? "hourglass_empty" : "download"}</span>
       {label}
-    </button>
-  );
-}
-
-// ─── Badge ────────────────────────────────────────────────────────────────────
-function Badge({ label, variant = "default" }) {
-  const variants = {
-    default: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
-    success: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    danger: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${variants[variant]}`}>
-      {label}
-    </span>
+    </Button>
   );
 }
 
 // ─── Stat row ─────────────────────────────────────────────────────────────────
 function StatRow({ label, value, valueClass = "" }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
-      <span className="text-sm text-slate-500 dark:text-slate-400">{label}</span>
-      <span className={`text-sm font-bold tabular-nums text-slate-900 dark:text-white ${valueClass}`}>{value}</span>
+    <div className="flex items-center justify-between py-2.5 border-b border-border last:border-0">
+      <span className="text-sm text-text-muted">{label}</span>
+      <span className={`text-sm font-bold tabular-nums text-text ${valueClass}`}>{value}</span>
     </div>
   );
 }
@@ -410,10 +412,10 @@ export default function EventAnalyticsReports() {
   // ── LOADING ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="p-6 max-w-[1400px] mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="animate-spin size-5 border-2 border-blue-500 border-t-transparent rounded-full" />
-          <span className="text-slate-500 text-sm font-medium">Loading analytics…</span>
+      <div className="space-y-4">
+        <div className="flex items-center gap-3 text-text-muted">
+          <div className="animate-spin size-5 border-2 border-primary border-t-transparent rounded-full" />
+          <span className="text-sm font-medium">Loading analytics…</span>
         </div>
         <PageSkeleton />
       </div>
@@ -423,20 +425,20 @@ export default function EventAnalyticsReports() {
   // ── ERROR ─────────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <div className="p-6 max-w-[1400px] mx-auto">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-2xl p-10 flex flex-col items-center text-center gap-4">
-          <span className="material-symbols-outlined text-5xl text-red-300">sentiment_dissatisfied</span>
-          <div>
-            <h3 className="text-lg font-bold text-red-800 dark:text-red-200">Failed to load report</h3>
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">{error}</p>
-          </div>
-          <button onClick={() => fetchData()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors">
-            <span className="material-symbols-outlined text-lg">refresh</span>
-            Retry
-          </button>
+      <Card className="p-10 flex flex-col items-center text-center gap-4">
+        <span className="material-symbols-outlined text-5xl text-danger">sentiment_dissatisfied</span>
+        <div>
+          <h3 className="text-lg font-bold text-text">Failed to load report</h3>
+          <p className="text-sm text-text-muted mt-1">{error}</p>
         </div>
-      </div>
+        <Button
+          variant="danger"
+          onClick={() => fetchData()}
+          leadingIcon={<span className="material-symbols-outlined text-lg">refresh</span>}
+        >
+          Retry
+        </Button>
+      </Card>
     );
   }
 
@@ -462,60 +464,55 @@ export default function EventAnalyticsReports() {
         </div>
       )}
 
-      {/* ── Header ── */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">Analytics & Reports</span>
-              <span className="text-slate-300 dark:text-slate-700">·</span>
-              <span className="text-xs text-slate-400">{fmtDate(event?.startDate)} → {fmtDate(event?.endDate)}</span>
-            </div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{event?.name}</h1>
-            <p className="text-sm text-slate-400 mt-1 flex items-center gap-3">
-              {event?.venue && (
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">location_on</span>
-                  {event.venue}
-                </span>
-              )}
-              {lastUpdated && (
-                <span>Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
-              )}
-            </p>
+      <PageHeader
+        title={event?.name || "Event Analytics"}
+        subtitle={event?.venue || "Hospitality performance overview"}
+        badge={<Badge variant="primary">Analytics & Reports</Badge>}
+        meta={
+          <div className="flex flex-wrap items-center gap-3 text-xs text-text-muted">
+            <span>{fmtDate(event?.startDate)} → {fmtDate(event?.endDate)}</span>
+            {lastUpdated && (
+              <span>Updated {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+            )}
           </div>
-
+        }
+        actions={
           <div className="flex flex-wrap items-center gap-2">
             <ExportBtn onClick={() => handleExport("guests")} label="Guests CSV" loading={exporting.guests} />
             <ExportBtn onClick={() => handleExport("services")} label="Services CSV" loading={exporting.services} />
             <ExportBtn onClick={() => handleExport("transport")} label="Transport CSV" loading={exporting.transport} />
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={() => fetchData(true)}
-              disabled={refreshing}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+              isLoading={refreshing}
+              leadingIcon={
+                <span className="material-symbols-outlined text-sm">refresh</span>
+              }
             >
-              <span className={`material-symbols-outlined text-sm ${refreshing ? "animate-spin" : ""}`}>refresh</span>
-              {refreshing ? "Refreshing…" : "Refresh"}
-            </button>
+              Refresh
+            </Button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Tabs ── */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800/60 rounded-2xl p-1.5 overflow-x-auto">
+      <div className="flex gap-1 bg-surface-muted rounded-2xl p-1.5 overflow-x-auto">
         {tabs.map((t) => (
-          <button
+          <Button
             key={t.key}
+            variant={activeTab === t.key ? "primary" : "ghost"}
+            size="sm"
             onClick={() => setActiveTab(t.key)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
-              activeTab === t.key
-                ? "bg-white dark:bg-slate-900 text-blue-600 shadow-sm"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
+            className="flex-shrink-0"
+            leadingIcon={
+              <span className="material-symbols-outlined text-base">
+                {t.icon}
+              </span>
+            }
           >
-            <span className="material-symbols-outlined text-base">{t.icon}</span>
             <span className="hidden sm:inline">{t.label}</span>
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -733,42 +730,42 @@ export default function EventAnalyticsReports() {
           {/* Room detail table */}
           <Section title="Room Utilization Detail" subtitle="Per-room occupancy breakdown" icon="table_chart" noPad>
             {R?.roomDetails?.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-5 py-3">Room</th>
-                      <th className="px-5 py-3">Type</th>
-                      <th className="px-5 py-3 text-center">Capacity</th>
-                      <th className="px-5 py-3 text-center">Occupied</th>
-                      <th className="px-5 py-3 text-center">Available</th>
-                      <th className="px-5 py-3">Utilization</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                    {R.roomDetails.map((room, i) => (
-                      <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-5 py-3 font-bold text-slate-900 dark:text-white">{room.roomNumber}</td>
-                        <td className="px-5 py-3 capitalize text-slate-500">{room.type}</td>
-                        <td className="px-5 py-3 text-center tabular-nums">{room.capacity}</td>
-                        <td className="px-5 py-3 text-center font-bold text-emerald-600">{room.occupied}</td>
-                        <td className="px-5 py-3 text-center text-slate-400">{room.available}</td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-500 rounded-full"
-                                style={{ width: `${room.utilizationRate}%` }} />
-                            </div>
-                            <span className="text-xs font-bold tabular-nums text-slate-600 dark:text-slate-400 w-9 text-right">
-                              {room.utilizationRate}%
-                            </span>
+              <Table containerClassName="border-0 shadow-none rounded-none bg-transparent">
+                <TableHead>
+                  <tr>
+                    <TableHeaderCell>Room</TableHeaderCell>
+                    <TableHeaderCell>Type</TableHeaderCell>
+                    <TableHeaderCell className="text-center">Capacity</TableHeaderCell>
+                    <TableHeaderCell className="text-center">Occupied</TableHeaderCell>
+                    <TableHeaderCell className="text-center">Available</TableHeaderCell>
+                    <TableHeaderCell>Utilization</TableHeaderCell>
+                  </tr>
+                </TableHead>
+                <TableBody className="text-sm">
+                  {R.roomDetails.map((room, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-bold text-text">{room.roomNumber}</TableCell>
+                      <TableCell className="capitalize text-text-muted">{room.type}</TableCell>
+                      <TableCell className="text-center tabular-nums">{room.capacity}</TableCell>
+                      <TableCell className="text-center font-bold text-success">{room.occupied}</TableCell>
+                      <TableCell className="text-center text-text-muted">{room.available}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-surface-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-primary rounded-full"
+                              style={{ width: `${room.utilizationRate}%` }}
+                            />
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          <span className="text-xs font-bold tabular-nums text-text-muted w-9 text-right">
+                            {room.utilizationRate}%
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             ) : <div className="p-8"><EmptyChart message="No rooms created yet" /></div>}
           </Section>
         </div>
@@ -845,7 +842,7 @@ export default function EventAnalyticsReports() {
                         </p>
                       </div>
                     </div>
-                    <Badge label="Resolved" variant="success" />
+                    <Badge variant="success">Resolved</Badge>
                   </div>
                 ))}
               </div>
@@ -1041,8 +1038,19 @@ export default function EventAnalyticsReports() {
                           {new Date(act.startTime).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                         </p>
                       </div>
-                      <Badge label={act.status}
-                        variant={act.status === "Confirmed" ? "success" : act.status === "Active" ? "info" : act.status === "Cancelled" ? "danger" : "warning"} />
+                      <Badge
+                        variant={
+                          act.status === "Confirmed"
+                            ? "success"
+                            : act.status === "Active"
+                              ? "info"
+                              : act.status === "Cancelled"
+                                ? "danger"
+                                : "warning"
+                        }
+                      >
+                        {act.status}
+                      </Badge>
                     </div>
                   );
                 })}

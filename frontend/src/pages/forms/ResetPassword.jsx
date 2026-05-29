@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { Button, Card, Input } from '../../components/ui'
 import {
   requestPasswordReset,
   verifyResetOTP,
@@ -264,12 +265,12 @@ function ResetPassword() {
   }
 
   // ── Shared input class ──────────────────────────────────────────────────────
-  const inputClass = `w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 
-    placeholder-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none 
+  const inputClass = `w-full h-11 px-4 rounded-xl border border-border bg-surface text-text 
+    placeholder:text-text-muted focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none 
     transition-all text-sm`
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background-light flex items-center justify-center p-6">
       <div className="w-full max-w-md">
 
         {/* Logo */}
@@ -280,7 +281,7 @@ function ResetPassword() {
           <span className="text-xl font-black text-slate-900 tracking-tight">EventOps</span>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+        <Card className="p-8">
 
           {/* ── Step 4: Success ── */}
           {step === 4 ? (
@@ -298,13 +299,13 @@ function ResetPassword() {
                   Your password has been updated successfully. You can now sign in with your new password.
                 </p>
               </div>
-              <button
+              <Button
                 onClick={() => navigate('/login')}
-                className="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                className="w-full"
+                leadingIcon={<span className="material-symbols-outlined text-xl">login</span>}
               >
-                <span className="material-symbols-outlined text-xl">login</span>
                 Go to Login
-              </button>
+              </Button>
             </div>
           ) : (
             <>
@@ -313,11 +314,11 @@ function ResetPassword() {
 
               {/* Error message */}
               {error && (
-                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-200 mb-5">
-                  <span className="material-symbols-outlined text-red-500 text-lg mt-0.5 shrink-0">
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-danger/10 border border-danger/30 mb-5 text-danger">
+                  <span className="material-symbols-outlined text-danger text-lg mt-0.5 shrink-0">
                     error
                   </span>
-                  <p className="text-sm text-red-700 font-medium">{error}</p>
+                  <p className="text-sm font-medium">{error}</p>
                 </div>
               )}
 
@@ -331,43 +332,25 @@ function ResetPassword() {
                     </p>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
-                        mail
-                      </span>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={e => { setEmail(e.target.value); setError('') }}
-                        placeholder="you@example.com"
-                        className={`${inputClass} pl-11`}
-                        autoFocus
-                        required
-                      />
-                    </div>
-                  </div>
+                  <Input
+                    label="Email Address"
+                    type="email"
+                    value={email}
+                    onChange={e => { setEmail(e.target.value); setError('') }}
+                    placeholder="you@example.com"
+                    startAdornment={<span className="material-symbols-outlined text-xl">mail</span>}
+                    autoFocus
+                    required
+                  />
 
-                  <button
+                  <Button
                     type="submit"
-                    disabled={loading}
-                    className="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="w-full"
+                    isLoading={loading}
+                    leadingIcon={<span className="material-symbols-outlined text-xl">send</span>}
                   >
-                    {loading ? (
-                      <>
-                        <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending OTP…
-                      </>
-                    ) : (
-                      <>
-                        <span className="material-symbols-outlined text-xl">send</span>
-                        Send Reset Code
-                      </>
-                    )}
-                  </button>
+                    {loading ? "Sending OTP…" : "Send Reset Code"}
+                  </Button>
 
                   <p className="text-center text-sm text-slate-500">
                     Remember your password?{' '}
@@ -563,7 +546,7 @@ function ResetPassword() {
               )}
             </>
           )}
-        </div>
+        </Card>
       </div>
     </div>
   )
