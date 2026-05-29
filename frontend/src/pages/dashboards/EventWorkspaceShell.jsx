@@ -168,13 +168,13 @@ function EventWorkspaceShell() {
             {/* <!-- Left: Platform Logo & Search --> */}
             <div className="flex items-center gap-6 flex-1">
               <div className="flex items-center gap-2 text-primary">
-                <div className="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
-                  <span className="material-symbols-outlined text-xl">
-                    event_seat
-                  </span>
-                </div>
+                <Link to="/">
+                            <div className="size-8 rounded-lg flex items-center justify-center">
+                              <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
+                            </div>
+                          </Link>
                 <span className="text-xl font-bold tracking-tight text-[#111318] dark:text-white hidden lg:block">
-                  EventOps
+                  EventCure
                 </span>
               </div>
               {/* <!-- Global Search --> */}

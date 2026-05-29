@@ -42,10 +42,13 @@ function DashboardNavbar() {
       <aside className="hidden md:flex flex-col w-60 h-screen bg-white dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/60 shrink-0">
 
         {/* Logo */}
+        <Link to="/">
         <div className="flex items-center gap-3 px-5 py-5 border-b border-slate-100 dark:border-slate-800/60">
-          <div className="size-8 rounded-lg flex items-center justify-center">
-            <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
-          </div>
+          
+            <div className="size-8 rounded-lg flex items-center justify-center">
+              <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
+            </div>
+          
           <div>
             <p className="text-[13px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">
               EventCure
@@ -55,7 +58,7 @@ function DashboardNavbar() {
             </p>
           </div>
         </div>
-
+</Link>
         {/* Nav section label */}
         <div className="px-5 pt-5 pb-1">
           <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-600 uppercase tracking-widest">Navigation</p>
