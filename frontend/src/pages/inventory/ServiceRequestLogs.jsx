@@ -158,9 +158,9 @@ function ServiceRequestLogs({ eventId }) {
 
   const getUrgencyBadge = (urgency) => {
     switch (urgency) {
-      case 'emergency': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-200 uppercase">Emergency</span>;
-      case 'high': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700 border border-orange-200 uppercase">High</span>;
-      case 'low': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-200 uppercase">Low</span>;
+      case 'emergency': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50 uppercase">Emergency</span>;
+      case 'high': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900/50 uppercase">High</span>;
+      case 'low': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-900/50 uppercase">Low</span>;
       default: return null; // medium is default, don't clutter UI
     }
   };
@@ -178,13 +178,13 @@ function ServiceRequestLogs({ eventId }) {
   const getStatusBadge = (status) => {
     switch(status) {
       case 'open':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">Open</span>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">Open</span>;
       case 'in_progress':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-primary border border-blue-200">In Progress</span>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-primary dark:text-blue-400 border border-blue-200 dark:border-blue-900/50">In Progress</span>;
       case 'completed':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">Resolved</span>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">Resolved</span>;
       case 'cancelled':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200 line-through">Cancelled</span>;
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-900/50 line-through">Cancelled</span>;
       default:
         return <span>{status}</span>;
     }
@@ -210,7 +210,7 @@ function ServiceRequestLogs({ eventId }) {
   }
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+    <div className="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-slate-950 group/design-root overflow-x-hidden">
       
       {/* Toast Notification */}
       {toast && (
@@ -253,12 +253,12 @@ function ServiceRequestLogs({ eventId }) {
           <div className="flex flex-wrap items-center justify-between gap-4 p-6 lg:px-0">
             <div className="flex flex-col gap-1">
               <h1 className="text-[#111318] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Service Request Logs</h1>
-              <p className="text-[#616e89] text-base font-normal leading-normal">Manage and monitor guest hospitality requests in real-time.</p>
+              <p className="text-[#616e89] dark:text-slate-400 text-base font-normal leading-normal">Manage and monitor guest hospitality requests in real-time.</p>
             </div>
             <div className="flex gap-3 text-center items-center">
               <div className="px-4 py-2 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-lg mr-2">
-                <p className="text-[#616e89] text-[10px] font-bold uppercase whitespace-nowrap">Open / Progress</p>
-                <p className="text-[#111318] dark:text-white text-lg font-black">{summary.open} <span className="text-[#616e89] font-normal mx-0.5">/</span> <span className="text-primary">{summary.inProgress}</span></p>
+                <p className="text-[#616e89] dark:text-slate-400 text-[10px] font-bold uppercase whitespace-nowrap">Open / Progress</p>
+                <p className="text-[#111318] dark:text-white text-lg font-black">{summary.open} <span className="text-[#616e89] dark:text-slate-400 font-normal mx-0.5">/</span> <span className="text-primary">{summary.inProgress}</span></p>
               </div>
               <button
                 onClick={handleExportCSV}
@@ -332,7 +332,7 @@ function ServiceRequestLogs({ eventId }) {
 
           {/* Loading / Error States */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center gap-2">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 rounded-lg flex items-center gap-2">
               <span className="material-symbols-outlined">error</span>
               <p className="text-sm font-semibold">{error}</p>
             </div>
@@ -380,7 +380,7 @@ function ServiceRequestLogs({ eventId }) {
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-[#111318] dark:text-white">{req.guest ? req.guest.name : 'No Guest Linked'}</span>
-                              <span className="text-xs text-[#616e89]">
+                              <span className="text-xs text-[#616e89] dark:text-slate-400">
                                 {req.room ? `Room ${req.room.number}` : 'No Room Info'} • ID #{req._id.slice(-6).toUpperCase()}
                               </span>
                             </div>
@@ -388,7 +388,7 @@ function ServiceRequestLogs({ eventId }) {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <span className={`material-symbols-outlined text-lg ${typeConfig.color}`}>{typeConfig.icon}</span>
-                              <span className="text-sm font-bold text-[#111318] dark:text-gray-200">{typeConfig.label}</span>
+                              <span className="text-sm font-bold text-[#111318] dark:text-white">{typeConfig.label}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -398,18 +398,18 @@ function ServiceRequestLogs({ eventId }) {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-xs text-[#616e89] line-clamp-2 max-w-[200px]" title={req.notes}>
+                            <p className="text-xs text-[#616e89] dark:text-slate-400 line-clamp-2 max-w-[200px]" title={req.notes}>
                               {req.notes || "—"}
                             </p>
                             {req.permissionToEnter && (
-                              <p className="text-[10px] text-primary flex items-center gap-1 mt-1 font-bold tracking-wider">
+                              <p className="text-[10px] text-primary dark:text-blue-400 flex items-center gap-1 mt-1 font-bold tracking-wider">
                                 <span className="material-symbols-outlined text-[10px]">key</span> P.T.E. Granted
                               </p>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-right text-xs font-semibold text-[#616e89]">
+                          <td className="px-6 py-4 text-right text-xs font-semibold text-[#616e89] dark:text-slate-400">
                             {new Date(req.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            <span className="block text-[10px] font-normal">{new Date(req.createdAt).toLocaleDateString()}</span>
+                            <span className="block text-[10px] font-normal text-[#616e89] dark:text-slate-400">{new Date(req.createdAt).toLocaleDateString()}</span>
                           </td>
                           <td className="px-6 py-4 text-right relative">
                             <button 
@@ -424,24 +424,24 @@ function ServiceRequestLogs({ eventId }) {
                               <div ref={menuRef} className="z-40 absolute right-8 top-12 w-48 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-lg shadow-xl  py-1 origin-top-right animate-in fade-in zoom-in-95 duration-100">
                                 
                                 <div className="px-3 py-2 border-b border-[#f0f1f4] dark:border-[#2d364a]">
-                                  <p className="text-[10px] font-bold text-[#616e89] uppercase tracking-wider">Update Status</p>
+                                  <span className="text-[10px] font-bold text-[#616e89] dark:text-slate-400 uppercase tracking-wider">Update Status</span>
                                 </div>
-                                <button onClick={() => handleStatusChange(req._id, 'open')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-gray-300 hover:bg-amber-50 dark:hover:bg-amber-900/10 hover:text-amber-700 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleStatusChange(req._id, 'open')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-amber-50 dark:hover:bg-amber-900/10 hover:text-amber-700 dark:hover:text-amber-400 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">fiber_new</span> Mark Open
                                 </button>
-                                <button onClick={() => handleStatusChange(req._id, 'in_progress')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-primary transition-colors flex items-center gap-2">
+                                <button onClick={() => handleStatusChange(req._id, 'in_progress')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-primary dark:hover:text-blue-400 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">run_circle</span> In Progress
                                 </button>
-                                <button onClick={() => handleStatusChange(req._id, 'completed')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleStatusChange(req._id, 'completed')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">check_circle</span> Resolved
                                 </button>
 
                                 <div className="h-px bg-[#f0f1f4] dark:bg-[#2d364a] my-1"></div>
                                 
-                                <button onClick={() => handleEdit(req._id)} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-gray-300 hover:bg-neutral-soft dark:hover:bg-[#2d364a] transition-colors flex items-center gap-2">
+                                <button onClick={() => handleEdit(req._id)} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-neutral-soft dark:hover:bg-[#2d364a] transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">edit</span> Edit Details
                                 </button>
-                                <button onClick={() => handleDeleteClick(req)} className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleDeleteClick(req)} className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">delete</span> Delete
                                 </button>
                               </div>
@@ -457,7 +457,7 @@ function ServiceRequestLogs({ eventId }) {
               {/* Status Footer */}
               {!loading && requests.length > 0 && (
                 <div className="px-6 py-4 bg-background-light dark:bg-[#151a26] border-t border-[#dbdee6] dark:border-[#2d364a] flex items-center justify-between">
-                  <p className="text-xs font-medium text-[#616e89]">Total active list length: {requests.length}</p>
+                  <p className="text-xs font-medium text-[#616e89] dark:text-slate-400">Total active list length: {requests.length}</p>
                 </div>
               )}
             </div>

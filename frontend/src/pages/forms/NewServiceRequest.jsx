@@ -231,7 +231,7 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
               value={formData.notes}
               onChange={handleChange}
               rows="4"
-              className="w-full px-4 py-3 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm resize-none text-[#111318] dark:text-white"
+              className="w-full px-4 py-3 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm resize-none text-[#111318] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
               placeholder="Provide context on exactly what the guest needs or what the issue is..."
             ></textarea>
           </div>
@@ -246,7 +246,7 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
               onChange={handleChange}
               className="size-5 rounded border-gray-300 text-primary focus:ring-primary"
             />
-            <label htmlFor="permissionToEnter" className="text-sm font-medium text-[#111318] dark:text-gray-300 cursor-pointer select-none">
+            <label htmlFor="permissionToEnter" className="text-sm font-medium text-[#111318] dark:text-white cursor-pointer select-none">
               Guest authorized staff entry to room without presence
             </label>
           </div>
