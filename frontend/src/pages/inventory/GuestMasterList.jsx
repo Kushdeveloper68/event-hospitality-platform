@@ -271,8 +271,8 @@ const fetchGuests = async ({ quiet = false } = {}) => {
           <div className="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Guest Master List</h1>
-                <p className="text-slate-500 text-sm">Manage arrivals, room assignments and VIP status for attendees.</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Guest Master List</h1>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Manage arrivals, room assignments and VIP status for attendees.</p>
               </div>
               <button
                 onClick={openAddForm}
@@ -286,22 +286,22 @@ const fetchGuests = async ({ quiet = false } = {}) => {
 
             {/* Error Alert with Retry */}
             {error && (
-              <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <span className="material-symbols-outlined text-red-600 flex-shrink-0">error</span>
+              <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg">
+                <span className="material-symbols-outlined text-red-600 dark:text-red-400 flex-shrink-0">error</span>
                 <div className="flex-1">
-                  <p className="text-red-800 font-medium">{error}</p>
-                  <p className="text-red-700 text-sm mt-1">Please check your connection and try again.</p>
+                  <p className="text-red-800 dark:text-red-200 font-medium">{error}</p>
+                  <p className="text-red-700 dark:text-red-300 text-sm mt-1">Please check your connection and try again.</p>
                 </div>
                 <button
                   onClick={handleRetry}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded font-medium transition-colors whitespace-nowrap"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white text-sm rounded font-medium transition-colors whitespace-nowrap"
                 >
                   <span className="material-symbols-outlined text-sm">refresh</span>
                   Retry
                 </button>
                 <button
                   onClick={() => setError(null)}
-                  className="text-red-600 hover:text-red-800 font-medium"
+                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium"
                 >
                   ✕
                 </button>
@@ -309,56 +309,56 @@ const fetchGuests = async ({ quiet = false } = {}) => {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white border border-border-light shadow-sm">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-900 border border-border-light dark:border-slate-800 shadow-sm">
                 <div className="flex justify-between items-center">
-                  <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">Total Guests</p>
-                  <span className="material-symbols-outlined text-slate-400">groups</span>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Total Guests</p>
+                  <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">groups</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-slate-900 text-2xl font-bold">{loading ? '-' : total}</p>
+                  <p className="text-slate-900 dark:text-white text-2xl font-bold">{loading ? '-' : total}</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white border border-border-light shadow-sm">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-900 border border-border-light dark:border-slate-800 shadow-sm">
                 <div className="flex justify-between items-center">
-                  <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">Checked-in</p>
-                  <span className="material-symbols-outlined text-slate-400">check_circle</span>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Checked-in</p>
+                  <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">check_circle</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-slate-900 text-2xl font-bold">{loading ? '-' : checkedInCount}</p>
+                  <p className="text-slate-900 dark:text-white text-2xl font-bold">{loading ? '-' : checkedInCount}</p>
                   <p className="text-success text-xs font-bold bg-success/10 px-1.5 py-0.5 rounded">{total ? Math.round((checkedInCount/total)*100) : 0}%</p>
                 </div>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white border border-border-light shadow-sm">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-900 border border-border-light dark:border-slate-800 shadow-sm">
                 <div className="flex justify-between items-center">
-                  <p className="text-slate-500 text-sm font-medium uppercase tracking-wider">Remaining</p>
-                  <span className="material-symbols-outlined text-slate-400">pending</span>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium uppercase tracking-wider">Remaining</p>
+                  <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">pending</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-slate-900 text-2xl font-bold">{loading ? '-' : Math.max(total - checkedInCount, 0)}</p>
+                  <p className="text-slate-900 dark:text-white text-2xl font-bold">{loading ? '-' : Math.max(total - checkedInCount, 0)}</p>
                   <p className="text-danger text-xs font-bold bg-danger/10 px-1.5 py-0.5 rounded">{total ? Math.round(((total-checkedInCount)/total)*100) : 0}%</p>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col md:flex-row gap-3 p-4 bg-white border border-border-light rounded-t-xl items-center justify-between">
+            <div className="flex flex-col md:flex-row gap-3 p-4 bg-white dark:bg-slate-900 border border-border-light dark:border-slate-800 rounded-t-xl items-center justify-between">
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 <div className="relative w-full md:w-64">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600 text-lg">search</span>
                   <input
                     ref={searchInputRef}
                     value={inputValue}
                     onChange={handleSearchChange}
-                    className="w-full bg-neutral-light border-none rounded-lg h-9 pl-10 pr-4 text-sm placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20"
+                    className="w-full bg-neutral-light dark:bg-slate-800 border-none rounded-lg h-9 pl-10 pr-4 text-sm placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-white focus:ring-2 focus:ring-primary/20"
                     placeholder="Search guests or rooms..."
                     type="text"
                   />
                 </div>
                 <div className="hidden md:flex items-center gap-2">
-                  <label className="text-xs text-slate-500">VIP</label>
+                  <label className="text-xs text-slate-500 dark:text-slate-400">VIP</label>
                   <select 
                     value={vipFilter} 
                     onChange={(e) => { setVipFilter(e.target.value); setPage(1) }}
                     disabled={loading}
-                    className="h-9 rounded-lg border border-border-light bg-white px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-9 rounded-lg border border-border-light dark:border-slate-800 bg-white dark:bg-slate-800 dark:text-white px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="all">All</option>
                     <option value="vip">VIP</option>
@@ -366,12 +366,12 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                   </select>
                 </div>
                 <div className="hidden md:flex items-center gap-2">
-                  <label className="text-xs text-slate-500">Status</label>
+                  <label className="text-xs text-slate-500 dark:text-slate-400">Status</label>
                   <select 
                     value={statusFilter} 
                     onChange={(e) => { setStatusFilter(e.target.value); setPage(1) }}
                     disabled={loading}
-                    className="h-9 rounded-lg border border-border-light bg-white px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="h-9 rounded-lg border border-border-light dark:border-slate-800 bg-white dark:bg-slate-800 dark:text-white px-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="all">All</option>
                     <option value="checkedin">Checked-in</option>
@@ -380,7 +380,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-sm">
+                <span className="text-slate-400 dark:text-slate-500 text-sm">
                   Showing {Math.min((page - 1) * limit + 1, total)}-
                   {Math.min(page * limit, total)} of {total}
                 </span>
@@ -388,7 +388,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                   <button
                     onClick={() => setPage((p) => Math.max(p - 1, 1))}
                     disabled={page === 1 || loading}
-                    className="p-1 hover:bg-slate-100 rounded text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-400 dark:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Previous page"
                   >
                     <span className="material-symbols-outlined">chevron_left</span>
@@ -396,7 +396,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={page * limit >= total || loading}
-                    className="p-1 hover:bg-slate-100 rounded text-slate-900 font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded text-slate-900 dark:text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Next page"
                   >
                     <span className="material-symbols-outlined">chevron_right</span>
@@ -405,36 +405,36 @@ const fetchGuests = async ({ quiet = false } = {}) => {
               </div>
             </div>
             {loading ? (
-              <div className="bg-white border-x border-b border-border-light rounded-b-xl overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border-x border-b border-border-light dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
                 <div className="py-16 text-center">
                   <div className="flex justify-center mb-4">
                     <div className="relative w-10 h-10">
-                      <div className="absolute inset-0 rounded-full border-2 border-slate-200"></div>
+                      <div className="absolute inset-0 rounded-full border-2 border-slate-200 dark:border-slate-700"></div>
                       <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
                     </div>
                   </div>
-                  <p className="text-slate-600 font-medium">Loading guests...</p>
-                  <p className="text-slate-400 text-sm mt-1">Please wait while we fetch the data.</p>
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">Loading guests...</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Please wait while we fetch the data.</p>
                 </div>
               </div>
             ) : error && guests.length === 0 ? (
-              <div className="bg-white border-x border-b border-border-light rounded-b-xl overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border-x border-b border-border-light dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
                 <div className="py-16 text-center">
-                  <span className="material-symbols-outlined text-6xl text-slate-300 block mb-4">group_off</span>
-                  <p className="text-slate-600 font-medium">Unable to load guests</p>
-                  <p className="text-slate-400 text-sm mt-1">An error occurred while fetching the data. Please try again.</p>
+                  <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700 block mb-4">group_off</span>
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">Unable to load guests</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">An error occurred while fetching the data. Please try again.</p>
                 </div>
               </div>
             ) : guests.length === 0 ? (
-              <div className="bg-white border-x border-b border-border-light rounded-b-xl overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border-x border-b border-border-light dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
                 <div className="py-16 text-center">
-                  <span className="material-symbols-outlined text-6xl text-slate-300 block mb-4">people_outline</span>
-                  <p className="text-slate-600 font-medium">No guests found</p>
-                  <p className="text-slate-400 text-sm mt-1">Start by adding your first guest to the event.</p>
+                  <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700 block mb-4">people_outline</span>
+                  <p className="text-slate-600 dark:text-slate-400 font-medium">No guests found</p>
+                  <p className="text-slate-400 dark:text-slate-500 text-sm mt-1">Start by adding your first guest to the event.</p>
                 </div>
               </div>
             ) : (
-              <div className="bg-white border-x border-b border-border-light rounded-b-xl overflow-hidden shadow-sm">
+              <div className="bg-white dark:bg-slate-900 border-x border-b border-border-light dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead className="bg-slate-50 border-y border-border-light">
@@ -463,11 +463,11 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                                     <span className="material-symbols-outlined text-warning text-sm fill-1" title="VIP Guest">star</span>
                                   )}
                                 </div>
-                                {g.email && <div className="text-xs text-slate-400">{g.email}</div>}
+                                {g.email && <div className="text-xs text-slate-400 dark:text-slate-500">{g.email}</div>}
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">{g.phoneNumber || '-'}</td>
+                          <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">{g.phoneNumber || '-'}</td>
                           <td className="px-6 py-4">
                             {g.checkedIn ? (
                               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success/10 text-success ring-1 ring-inset ring-success/20">Checked-in</span>
@@ -549,25 +549,10 @@ const fetchGuests = async ({ quiet = false } = {}) => {
           </div>
         </main>
       </div>
-
-      <style>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(400px);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
     </div>
   )
 }
 
 export default GuestMasterList
+
+

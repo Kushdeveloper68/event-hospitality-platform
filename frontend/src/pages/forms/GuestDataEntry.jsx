@@ -270,7 +270,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                 value={form.email}
                 onChange={handleChange}
                 disabled={loading}
-                className={`w-full h-12 rounded-lg bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-full h-12 rounded-lg dark:text-white bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
                   validationErrors.email
                     ? 'border-red-300 focus:border-red-500 border'
                     : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
@@ -292,7 +292,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                 value={form.fullName}
                 onChange={handleChange}
                 disabled={loading}
-                className={`w-full h-12 rounded-lg bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`w-full h-12 rounded-lg dark:text-white bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
                   validationErrors.fullName
                     ? 'border-red-300 focus:border-red-500 border'
                     : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
@@ -315,7 +315,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                   value={form.phoneNumber}
                   onChange={handleChange}
                   disabled={loading}
-                  className={`w-full h-12 rounded-lg bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`w-full h-12 rounded-lg dark:text-white bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
                     validationErrors.phoneNumber
                       ? 'border-red-300 focus:border-red-500 border'
                       : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
@@ -337,7 +337,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                   value={form.age}
                   onChange={handleChange}
                   disabled={loading}
-                  className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 rounded-lg dark:text-white border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   placeholder="25"
                   type="number"
                 />
@@ -350,7 +350,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                 value={form.groupName}
                 onChange={handleChange}
                 disabled={loading}
-                className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-12 rounded-lg border-slate-200 dark:text-white dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 placeholder="e.g. Acme Corporation"
                 type="text"
               />
@@ -404,7 +404,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                   value={form.arrivalDatetime}
                   onChange={handleChange}
                   disabled={loading}
-                  className={`w-full h-12 rounded-lg bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`w-full h-12 rounded-lg bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-white ${
                     validationErrors.arrivalDatetime
                       ? 'border-red-300 focus:border-red-500 border'
                       : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
@@ -425,7 +425,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                   value={form.departureDatetime}
                   onChange={handleChange}
                   disabled={loading}
-                  className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 dark:text-white bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   type="datetime-local"
                 />
               </div>
@@ -438,7 +438,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                   value={form.transportMode}
                   onChange={handleChange}
                   disabled={loading}
-                  className="w-full h-12 appearance-none rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 pr-10 disabled:opacity-50 disabled:cursor-not-allowed border">
+                  className="w-full h-12 appearance-none rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 pr-10 disabled:opacity-50 disabled:cursor-not-allowed border placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white">
                   <option value="">Select transport mode...</option>
                   <option>Private Car Service</option>
                   <option>Commercial Flight</option>
@@ -457,7 +457,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                 value={form.specialRequests}
                 onChange={handleChange}
                 disabled={loading}
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-white rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="e.g. Dietary restrictions, accessibility needs, or preferred floor levels..."
                 rows="4"
               />
