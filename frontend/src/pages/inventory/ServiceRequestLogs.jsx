@@ -223,7 +223,7 @@ function ServiceRequestLogs({ eventId }) {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl shadow-xl p-6 max-w-md w-full">
+          <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-6 max-w-md w-full">
             <h3 className="text-lg font-bold text-[#111318] dark:text-white mb-2">Delete Request?</h3>
             <p className="text-[#616e89] text-sm mb-6">
               Are you sure you want to permanently delete this {requestToDelete?.requestType} request for {requestToDelete?.guest?.name || 'this guest'}? This action cannot be undone.
@@ -256,13 +256,13 @@ function ServiceRequestLogs({ eventId }) {
               <p className="text-[#616e89] dark:text-slate-400 text-base font-normal leading-normal">Manage and monitor guest hospitality requests in real-time.</p>
             </div>
             <div className="flex gap-3 text-center items-center">
-              <div className="px-4 py-2 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-lg mr-2">
+              <div className="px-4 py-2 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg mr-2">
                 <p className="text-[#616e89] dark:text-slate-400 text-[10px] font-bold uppercase whitespace-nowrap">Open / Progress</p>
                 <p className="text-[#111318] dark:text-white text-lg font-black">{summary.open} <span className="text-[#616e89] dark:text-slate-400 font-normal mx-0.5">/</span> <span className="text-primary">{summary.inProgress}</span></p>
               </div>
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] text-[#111318] dark:text-white rounded-lg text-sm font-bold hover:bg-neutral-soft dark:hover:bg-[#2d364a] transition-colors"
+                className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-[#111318] dark:text-white rounded-lg text-sm font-bold hover:bg-neutral-soft dark:hover:bg-[#2d364a] transition-colors"
                 title="Export to CSV"
               >
                 <span className="material-symbols-outlined text-lg">download</span>
@@ -280,7 +280,7 @@ function ServiceRequestLogs({ eventId }) {
 
           {/* Filters & Search */}
           <div className="pb-6">
-            <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl p-4 flex flex-wrap items-center gap-4 shadow-sm">
+            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-wrap items-center gap-4 shadow-sm">
               <div className="flex-1 min-w-[300px]">
                 <div className="relative group">
                   <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#616e89] group-focus-within:text-primary transition-colors">search</span>
@@ -349,9 +349,9 @@ function ServiceRequestLogs({ eventId }) {
               </div>
             )}
 
-            <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl overflow-visible shadow-sm">
+            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-visible shadow-sm">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-[#f0f1f4] dark:bg-[#151a26] text-[11px] font-bold text-[#616e89] uppercase tracking-widest border-b border-[#dbdee6] dark:border-[#2d364a]">
+                <thead className="bg-[#f0f1f4] dark:bg-slate-900/50 text-[11px] font-bold text-[#616e89] uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-4">Guest / Room</th>
                     <th className="px-6 py-4">Request Type</th>
@@ -361,7 +361,7 @@ function ServiceRequestLogs({ eventId }) {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#dbdee6] dark:divide-[#2d364a]">
+                <tbody className="divide-y divide-[#dbdee6] dark:bg-slate-900/50">
                   {requests.length === 0 && !loading ? (
                     <tr>
                       <td colSpan="6" className="px-6 py-12 text-center text-[#616e89]">
@@ -421,7 +421,7 @@ function ServiceRequestLogs({ eventId }) {
                             
                             {/* Actions Dropdown */}
                             {activeMenuId === req._id && (
-                              <div ref={menuRef} className="z-40 absolute right-8 top-12 w-48 bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-lg shadow-xl  py-1 origin-top-right animate-in fade-in zoom-in-95 duration-100">
+                              <div ref={menuRef} className="z-40 absolute right-8 top-12 w-48 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl  py-1 origin-top-right animate-in fade-in zoom-in-95 duration-100">
                                 
                                 <div className="px-3 py-2 border-b border-[#f0f1f4] dark:border-[#2d364a]">
                                   <span className="text-[10px] font-bold text-[#616e89] dark:text-slate-400 uppercase tracking-wider">Update Status</span>
@@ -456,7 +456,7 @@ function ServiceRequestLogs({ eventId }) {
 
               {/* Status Footer */}
               {!loading && requests.length > 0 && (
-                <div className="px-6 py-4 bg-background-light dark:bg-[#151a26] border-t border-[#dbdee6] dark:border-[#2d364a] flex items-center justify-between">
+                <div className="px-6 py-4 bg-background-light dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                   <p className="text-xs font-medium text-[#616e89] dark:text-slate-400">Total active list length: {requests.length}</p>
                 </div>
               )}
