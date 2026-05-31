@@ -14,7 +14,6 @@ import OprationalEventSchedule from "./OprationalEventSchedule";
 import EventSummaryDashboards from "./EventSummaryDashboards";
 import EventAdminstrativeSetting from "../settings/EventAdminstrativeSetting";
 import TeamMemberManagement from "../inventory/TeamMemberManagement";
-
 function EventWorkspaceShell() {
   const { user } = useAuth();
   const { eventId, tab, "*": rest } = useParams();
@@ -689,23 +688,7 @@ function EventWorkspaceShell() {
           </div>
         </main>
         {/* <!-- Footer --> */}
-        <footer className="w-full max-w-[1440px] mx-auto px-6 py-6 border-t border-[#dbdee6] dark:border-[#2d364a]">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#616e89]">
-            <p>© 2024 EventOps Hospitality SaaS. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a className="hover:text-primary" href="#">
-                System Status:{" "}
-                <span className="text-success font-bold">Optimal</span>
-              </a>
-              <a className="hover:text-primary" href="#">
-                Terms of Service
-              </a>
-              <a className="hover:text-primary" href="#">
-                Support Desk
-              </a>
-            </div>
-          </div>
-        </footer>
+    
       </div>
     </EventContext.Provider>
   );
