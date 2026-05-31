@@ -101,11 +101,10 @@ function EventDirectory() {
         <main className="flex flex-col flex-1 px-4 py-8">
           {/* <!-- Breadcrumbs --> */}
           <nav className="flex items-center gap-2 mb-6">
-            <a className="text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-primary flex items-center gap-1"
-              href="#">
+            <Link to="/dashboard" className="text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-primary flex items-center gap-1">
               <span className="material-symbols-outlined text-sm">home</span>
               Dashboard
-            </a>
+            </Link>
             <span className="text-gray-400 text-sm font-medium">
               <span className="material-symbols-outlined text-sm">chevron_right</span>
             </span>
