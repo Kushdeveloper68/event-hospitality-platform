@@ -178,28 +178,17 @@ function EventWorkspaceShell() {
                 </span>
               </div>
               {/* <!-- Global Search --> */}
-              <div className="hidden md:flex flex-1 max-w-md">
-                <div className="relative w-full group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#616e89]">
-                    <span className="material-symbols-outlined text-xl">
-                      search
-                    </span>
-                  </div>
-                  <input
-                    className="block w-full pl-10 pr-3 py-2 border-none bg-neutral-soft dark:bg-[#2d364a] dark:text-white rounded-lg leading-5 placeholder-[#616e89] focus:ring-2 focus:ring-primary/20 sm:text-sm transition-all"
-                    placeholder="Quick search guests, rooms or staff..."
-                    type="text"
-                  />
-                </div>
-              </div>
+              
             </div>
             {/* <!-- Right: Utilities & User --> */}
             <div className="flex items-center gap-3">
-              <button className="p-2 text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors relative">
+              <Link to="/notifications">
+              <button title="notifications" className="p-2 text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors relative">
                 <span className="material-symbols-outlined">notifications</span>
                 <span className="absolute top-2 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#1a1f2e]"></span>
               </button>
-              <button className="p-2 text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors">
+              </Link>
+              <button title="help" className="p-2 text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors">
                 <span className="material-symbols-outlined">help_outline</span>
               </button>
               <div className="h-8 w-px bg-[#dbdee6] dark:bg-[#2d364a] mx-2"></div>
@@ -229,12 +218,6 @@ function EventWorkspaceShell() {
               <div className="flex flex-col gap-2">
                 {/* <!-- Breadcrumb --> */}
                 <div className="flex items-center gap-2 text-xs font-medium text-[#616e89] uppercase tracking-wider">
-                  <a className="hover:text-primary transition-colors" href="#">
-                    Workspaces
-                  </a>
-                  <span className="material-symbols-outlined text-[14px]">
-                    chevron_right
-                  </span>
                   <Link
                     to="/events"
                     className="hover:text-primary transition-colors"
@@ -361,8 +344,7 @@ function EventWorkspaceShell() {
                       <p className="text-[#616e89] max-w-2xl text-lg">
                         The event is currently in full swing. We have{" "}
                         <span className="text-[#111318] dark:text-white font-bold">
-                          {overviewData?.metrics?.guests?.checkedIn || 0}
-                          guests
+                          {overviewData?.metrics?.guests?.checkedIn || 0} guests
                         </span>{" "}
                         checked in out of{" "}
                         {overviewData?.metrics?.guests?.total || 0} expected.
@@ -396,10 +378,7 @@ function EventWorkspaceShell() {
                         src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDKbZxD21XGZETliznl2BY0ABjw2hTBOlpOCLB3sRRM9QbJO6CqvX5TQgUWjffQQLmFJmyHLRA-Y55VuSg-cYkp6TiNE4gvVedvsGDr6Pw1uN7UEsWTjmGuAjl6kS4MjbfadqG8ms-ta7VxqmIpKaAB4JZTkP-hTiUive76P_qOpVbfbrR0zaqtWi2_RJiUgLcbpjZUgwkCpDYZLce9q97y5u_VL95jS4rhgBao5iDZx212pAiSU_NUnMeGdMz7FtzA8TjhfCxLCFb"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                        <span className="text-white text-xs font-bold uppercase flex items-center gap-1">
-                          <span className="size-2 rounded-full bg-red-500"></span>{" "}
-                          Live Camera 1
-                        </span>
+                        
                       </div>
                     </div>
                   </div>
