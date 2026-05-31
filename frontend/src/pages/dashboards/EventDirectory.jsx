@@ -266,16 +266,7 @@ function EventDirectory() {
           )}
         </main>
         {/* <!-- Footer --> */}
-        <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark py-8 px-10">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-500">© 2024 EventOps Enterprise. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a className="text-sm text-gray-500 hover:text-primary" href="#">Support</a>
-              <a className="text-sm text-gray-500 hover:text-primary" href="#">Documentation</a>
-              <a className="text-sm text-gray-500 hover:text-primary" href="#">API</a>
-            </div>
-          </div>
-        </footer>
+       
       </div>
     </div>
   )
