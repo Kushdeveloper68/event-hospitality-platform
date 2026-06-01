@@ -306,27 +306,167 @@ function MainOprationDashboard() {
   // ── Loading state ────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Top navbar skeleton */}
+          <header className="h-16 bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
+            <div className="flex items-center gap-6 flex-1 max-w-2xl">
+              <div className="h-10 w-full bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse hidden md:block" />
+              <div className="size-10 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+              <div className="size-10 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+              <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2" />
+              <div className="h-10 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse hidden sm:block" />
+              <div className="size-10 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
+            </div>
+          </header>
+
           <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
             <div className="flex items-center gap-3 mb-8">
               <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
-              <span className="text-neutral-muted font-medium">
-                Loading dashboard…
-              </span>
+              <span className="text-neutral-muted font-medium">Loading dashboard...</span>
             </div>
-            {/* skeleton metric cards */}
+
+            {/* Page title skeleton */}
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <div className="h-8 w-72 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                <div className="h-4 w-56 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+              </div>
+              <div className="h-10 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+            </div>
+
+            {/* Metric cards skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-neutral-border animate-pulse h-28"
-                />
+                  className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="size-10 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                    <div className="h-3 w-10 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  </div>
+                  <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                  <div className="h-8 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                  <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                </div>
               ))}
             </div>
+
+            {/* Live events skeleton */}
+            <div className="mb-8">
+              <div className="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-3" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="h-4 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                        <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                      </div>
+                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {Array.from({ length: 4 }).map((__, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-slate-100 dark:bg-slate-800 rounded-lg p-2.5"
+                        >
+                          <div className="h-6 w-8 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mx-auto mb-1" />
+                          <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse mx-auto" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                    <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse mb-4" />
+                    <div className="h-9 w-full bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Main grid skeleton */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-neutral-border animate-pulse h-96" />
-              <div className="xl:col-span-2 bg-white dark:bg-slate-900/50 rounded-xl border border-neutral-border animate-pulse h-96" />
+              <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+                  <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                </div>
+                <div className="p-3 space-y-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex gap-3 p-3 rounded-lg">
+                      <div className="size-9 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse" />
+                      <div className="flex-1">
+                        <div className="h-4 w-4/5 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-2" />
+                        <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="xl:col-span-2 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  <div className="flex items-center gap-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-7 w-16 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"
+                      />
+                    ))}
+                    <div className="h-4 w-14 bg-slate-200 dark:bg-slate-800 rounded animate-pulse ml-2" />
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto flex-1">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+                      <tr>
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <th key={i} className="px-6 py-3">
+                            <div className="h-3 w-16 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-neutral-border dark:divide-gray-800">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <SkeletonRow key={i} cols={5} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                  <div className="h-3 w-28 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Summary cards skeleton */}
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                    <div className="size-5 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  </div>
+                  <div className="h-8 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-3" />
+                  <div className="h-2 w-full bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse mb-2" />
+                  <div className="h-3 w-4/5 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                </div>
+              ))}
             </div>
           </div>
         </div>
