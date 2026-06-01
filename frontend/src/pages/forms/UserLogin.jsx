@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { loginUser } from "../../api/userApi";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate , Link } from "react-router-dom";
-
+import {Footer} from "../../components/";
 function UserLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -48,47 +48,31 @@ function UserLogin() {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col items-center justify-center p-6">
+      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <div className="flex flex-1 items-center justify-center p-6 md:p-10">
         {/* <!-- Main Login Card --> */}
-        <div className="w-full max-w-md bg-white dark:bg-[#1c222d] rounded-lg shadow-sm border border-[#e5e7eb] dark:border-[#2d3646] p-8 md:p-10">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/95 p-8 shadow-xl shadow-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-slate-950/30 md:p-10">
           {/* <!-- Logo Section --> */}
           <div className="flex flex-col items-center mb-8">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-white mb-4">
-              <svg
-                className="h-8 w-8"
-                fill="none"
-                viewBox="0 0 48 48"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g clipPath="url(#clip0_6_543)">
-                  <path
-                    d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z"
-                    fill="currentColor"
-                  ></path>
-                </g>
-                <defs>
-                  <clippath id="clip0_6_543">
-                    <rect fill="white" height="48" width="48"></rect>
-                  </clippath>
-                </defs>
-              </svg>
-            </div>
-            <h2 className="text-[#111318] dark:text-white text-2xl font-bold leading-tight tracking-tight">
+            <Link to="/" className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white transition-transform hover:scale-105">
+              <span className="material-symbols-outlined text-[28px]">layers</span>
+            </Link>
+            <h2 className="text-slate-900 dark:text-slate-100 text-2xl font-bold leading-tight tracking-tight">
               Welcome back
             </h2>
-            <p className="mt-2 text-[#6b7280] dark:text-[#9ca3af] text-sm text-center">
+            <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm text-center">
               Please enter your details to sign in.
             </p>
           </div>
 
           {/* <!-- Alert Messages --> */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/40">
               <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
             </div>
           )}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-950/40">
               <p className="text-sm text-green-700 dark:text-green-400">
                 {success}
               </p>
@@ -100,14 +84,14 @@ function UserLogin() {
             {/* <!-- Email Field --> */}
             <div>
               <label
-                className="block text-sm font-medium text-[#111827] dark:text-white mb-1.5"
+                className="mb-1.5 block text-sm font-medium text-slate-900 dark:text-slate-100"
                 htmlFor="email"
               >
                 Email
               </label>
               <div className="relative">
                 <input
-                  className="block w-full rounded-lg border border-[#d1d5db] dark:border-[#374151] bg-white dark:bg-[#111621] px-4 py-3 text-[#111827] dark:text-white placeholder-[#9ca3af] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm disabled:bg-gray-100 dark:disabled:bg-gray-800"
+                  className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-900"
                   id="email"
                   placeholder="Enter your email"
                   required
@@ -123,21 +107,21 @@ function UserLogin() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label
-                  className="block text-sm font-medium text-[#111827] dark:text-white"
+                  className="block text-sm font-medium text-slate-900 dark:text-slate-100"
                   htmlFor="password"
                 >
                   Password
                 </label>
                   <Link
                     to="/reset-password"
-                    className="text-sm text-primary font-semibold hover:underline"
+                    className="text-sm font-semibold text-primary hover:underline"
                   >
                     Forgot password?
                   </Link>
               </div>
               <div className="relative">
                 <input
-                  className="block w-full rounded-lg border border-[#d1d5db] dark:border-[#374151] bg-white dark:bg-[#111621] px-4 py-3 text-[#111827] dark:text-white placeholder-[#9ca3af] focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all text-sm disabled:bg-gray-100 dark:disabled:bg-gray-800"
+                  className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-900"
                   id="password"
                   placeholder="Enter your password"
                   required
@@ -147,7 +131,7 @@ function UserLogin() {
                   disabled={loading}
                 />
                 <button
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#6b7280] hover:text-[#111827] dark:hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={loading}
@@ -162,7 +146,7 @@ function UserLogin() {
             {/* <!-- Remember Me & Terms (Optional context placeholder) --> */}
             <div className="flex items-center">
               <input
-                className="h-4 w-4 rounded border-[#d1d5db] text-primary focus:ring-primary"
+                className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600"
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
@@ -171,7 +155,7 @@ function UserLogin() {
                 disabled={loading}
               />
               <label
-                className="ml-2 block text-xs text-[#6b7280] dark:text-[#9ca3af]"
+                className="ml-2 block text-xs text-slate-600 dark:text-slate-400"
                 htmlFor="remember-me"
               >
                 Remember me for 30 days
@@ -180,7 +164,7 @@ function UserLogin() {
 
             {/* <!-- Sign In Button --> */}
             <button
-              className="flex w-full items-center justify-center rounded-lg bg-primary disabled:bg-gray-400 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all"
+              className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-400"
               type="submit"
               disabled={loading}
             >
@@ -189,32 +173,21 @@ function UserLogin() {
           </form>
 
           {/* <!-- Footer Section --> */}
-          <div className="mt-8 border-t border-[#f3f4f6] dark:border-[#2d3646] pt-6 text-center">
-            <p className="text-sm text-[#6b7280] dark:text-[#9ca3af]">
+          <div className="mt-8 border-t border-slate-200 pt-6 text-center dark:border-slate-800">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Don't have an account?
-              <a
-                className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                href="/signup"
+              <Link
+                className="font-semibold text-primary transition-colors hover:text-primary/80"
+                to="/signup"
               >
                 Create an account
-              </a>
+              </Link>
             </p>
           </div>
         </div>
-
-        {/* <!-- Decorative Background Element (Subtle context indicator) --> */}
-        <div className="mt-8 text-center opacity-40">
-          <p className="text-xs font-medium uppercase tracking-widest text-[#6b7280] dark:text-[#9ca3af]">
-            Enterprise SaaS Hospitality Platform
-          </p>
         </div>
       </div>
-
-      {/* <!-- Image Placeholder Context (Background decorative pattern) --> */}
-      <div className="fixed top-0 left-0 -z-10 h-full w-full pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"></div>
-      </div>
+      <Footer />
     </>
   );
 }

@@ -1,8 +1,8 @@
 import React, {useState, useEffect} from "react"
 import { signupInitiate, verifyOTP, resendOTP } from "../../api/userApi"
 import { useAuth } from "../../context/AuthContext"
-import { useNavigate } from 'react-router-dom';
-
+import { useNavigate, Link } from 'react-router-dom';
+import {Footer} from "../../components/";
 function UserSignup() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -128,48 +128,48 @@ function UserSignup() {
   return (
     <>
      {/* <!-- Top Navigation Bar --> */}
-  <header className="w-full bg-white dark:bg-background-dark border-b border-border-subtle dark:border-gray-800 px-6 py-4">
+  <header className="w-full border-b border-slate-200 bg-slate-50/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
     <div className="max-w-7xl mx-auto flex items-center justify-between">
-      <div className="flex items-center gap-2 text-primary">
-        <div className="size-8 bg-primary rounded flex items-center justify-center text-white">
+      <Link to="/" className="flex items-center gap-2 text-primary transition-opacity hover:opacity-90">
+        <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
           <span className="material-symbols-outlined text-xl">layers</span>
         </div>
-        <h2 className="text-neutral-text dark:text-white text-lg font-bold tracking-tight">
+        <h2 className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Hospitality Platform
         </h2>
-      </div>
+      </Link>
       <div className="hidden md:flex items-center gap-4">
-        <span className="text-sm text-gray-500 dark:text-gray-400">Already have an account?</span>
-        <button className="text-primary text-sm font-semibold hover:underline">
+        <span className="text-sm text-slate-600 dark:text-slate-400">Already have an account?</span>
+        <Link to="/login" className="text-sm font-semibold text-primary hover:underline">
           Log in
-        </button>
+        </Link>
       </div>
     </div>
   </header>
   {/* <!-- Main Content Area --> */}
-  <main className="flex-1 flex items-center justify-center p-6 sm:p-12">
-    <div className="w-full max-w-[480px]">
+  <main className="flex-1 flex items-center justify-center bg-slate-50 px-6 py-10 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:p-12">
+    <div className="w-full max-w-120">
       {/* <!-- Signup Card --> */}
       <div
-        className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-border-subtle dark:border-gray-800 overflow-hidden">
+        className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-slate-950/30">
         <div className="p-8 sm:p-10">
           {/* <!-- Header --> */}
           <div className="mb-8 text-center sm:text-left">
             {step === 1 ? (
               <>
-                <h1 className="text-neutral-text dark:text-white text-3xl font-bold tracking-tight mb-2">
+                <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Create your account
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400 text-base">
+                <p className="text-base text-slate-600 dark:text-slate-400">
                   Join your operations team on the hospitality platform.
                 </p>
               </>
             ) : (
               <>
-                <h1 className="text-neutral-text dark:text-white text-3xl font-bold tracking-tight mb-2">
+                <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                   Verify your email
                 </h1>
-                <p className="text-gray-500 dark:text-gray-400 text-base">
+                <p className="text-base text-slate-600 dark:text-slate-400">
                   We sent a verification code to <strong>{email}</strong>
                 </p>
               </>
@@ -178,12 +178,12 @@ function UserSignup() {
 
           {/* <!-- Alert Messages --> */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/40">
               <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
             </div>
           )}
           {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-950/40">
               <p className="text-sm text-green-700 dark:text-green-400">{success}</p>
             </div>
           )}
@@ -193,10 +193,10 @@ function UserSignup() {
             <form className="space-y-5" onSubmit={handleSignupSubmit}>
               {/* <!-- Full Name --> */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-neutral-text dark:text-gray-200">Full Name</label>
+                <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Full Name</label>
                 <div className="relative">
                   <input
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                     placeholder="John Doe" 
                     type="text" 
                     value={name} 
@@ -207,9 +207,9 @@ function UserSignup() {
               </div>
               {/* <!-- Business Email --> */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-neutral-text dark:text-gray-200">Business Email</label>
+                <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Business Email</label>
                 <input
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="name@company.com" 
                   type="email" 
                   value={email} 
@@ -219,9 +219,9 @@ function UserSignup() {
               </div>
               {/* <!-- Organization Name --> */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-neutral-text dark:text-gray-200">Organization Name</label>
+                <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Organization Name</label>
                 <input
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="Acme Events Corp" 
                   type="text" 
                   value={organizationName} 
@@ -231,10 +231,10 @@ function UserSignup() {
               </div>
               {/* <!-- Password --> */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-neutral-text dark:text-gray-200">Password</label>
+                <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">Password</label>
                 <div className="relative group">
                   <input
-                    className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all pr-12"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 pr-12 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                     placeholder="••••••••" 
                     type="password" 
                     value={password} 
@@ -242,35 +242,32 @@ function UserSignup() {
                     disabled={loading}
                   />
                   <button
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
                     type="button">
                     <span className="material-symbols-outlined text-[20px]">visibility</span>
                   </button>
                 </div>
-                <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-1">
+                <p className="mt-1 text-[12px] text-slate-600 dark:text-slate-400">
                   Must be at least 8 characters with a symbol.
                 </p>
               </div>
               {/* <!-- Terms --> */}
               <div className="flex items-start gap-3 py-2">
                 <input 
-                  className="mt-1 size-4 rounded border-border-subtle text-primary focus:ring-primary" 
+                  className="mt-1 size-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600" 
                   id="terms"
                   type="checkbox" 
                   checked={termConditions}  
                   onChange={(e) => setTermConditions(e.target.checked)}
                   disabled={loading}
                 />
-                <label className="text-sm text-gray-500 dark:text-gray-400 leading-tight" htmlFor="terms">
-                  I agree to the
-                  <a className="text-primary hover:underline" href="#">Terms of Service</a>
-                  and
-                  <a className="text-primary hover:underline" href="#">Privacy Policy</a>.
+                <label className="text-sm leading-tight text-slate-600 dark:text-slate-400" htmlFor="terms">
+                  I agree to the <span className="text-primary">Terms of Service</span> and <span className="text-primary">Privacy Policy</span>.
                 </label>
               </div>
               {/* <!-- Primary Button --> */}
               <button
-                className="w-full bg-primary hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 font-bold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:bg-gray-400"
                 type="submit"
                 disabled={loading}
               >
@@ -285,11 +282,11 @@ function UserSignup() {
             <form className="space-y-6" onSubmit={handleOTPSubmit}>
               {/* <!-- OTP Input --> */}
               <div className="space-y-3">
-                <label className="block text-sm font-semibold text-neutral-text dark:text-gray-200">
+                <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
                   Verification Code
                 </label>
                 <input
-                  className="w-full px-4 py-4 bg-white dark:bg-gray-800 border border-border-subtle dark:border-gray-700 rounded-lg text-neutral-text dark:text-white placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-center text-2xl font-bold tracking-widest"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-4 text-center text-2xl font-bold tracking-widest text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                   placeholder="000000"
                   type="text"
                   maxLength="6"
@@ -301,14 +298,14 @@ function UserSignup() {
                   }}
                   disabled={loading}
                 />
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   This code expires in: <strong>{formatTime(otpTimer)}</strong>
                 </p>
               </div>
 
               {/* <!-- Submit Button --> */}
               <button
-                className="w-full bg-primary hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 font-bold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:bg-gray-400"
                 type="submit"
                 disabled={loading || otp.length !== 6}
               >
@@ -318,7 +315,7 @@ function UserSignup() {
 
               {/* <!-- Resend OTP --> */}
               <div className="text-center">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
                   Didn't receive the code?
                 </p>
                 <button
@@ -332,43 +329,43 @@ function UserSignup() {
               </div>
 
               {/* <!-- Back to Signup --> */}
-              <button
-                className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 text-neutral-text dark:text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                type="button"
-                onClick={() => {
-                  setStep(1)
-                  setOtp('')
-                  setOtpTimer(0)
-                }}
-                disabled={loading}
-              >
-                Back to Signup
-              </button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <button
+                  className="flex-1 rounded-lg bg-slate-200 px-6 py-3 font-semibold text-slate-900 transition-colors hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                  type="button"
+                  onClick={() => {
+                    setStep(1)
+                    setOtp('')
+                    setOtpTimer(0)
+                  }}
+                  disabled={loading}
+                >
+                  Back to Signup
+                </button>
+                <Link
+                  to="/login"
+                  className="flex flex-1 items-center justify-center rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition-colors hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-300 dark:hover:border-primary dark:hover:text-primary"
+                >
+                  Go to Login
+                </Link>
+              </div>
             </form>
           )}
         </div>
 
         {/* <!-- Card Footer (Mobile Visible) --> */}
-        <div className="bg-gray-50 dark:bg-gray-800/50 px-8 py-4 text-center md:hidden">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+        <div className="bg-slate-50 px-8 py-4 text-center dark:bg-slate-900/60 md:hidden">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Already have an account?
-            <a className="text-primary font-semibold hover:underline" href="#">Log in</a>
+            <Link className="font-semibold text-primary hover:underline" to="/login">Log in</Link>
           </p>
         </div>
       </div>
 
-      {/* <!-- Global Footer --> */}
-      <footer className="mt-8 text-center text-xs text-gray-400 dark:text-gray-500 uppercase tracking-widest font-medium">
-        Enterprise Reliability • ISO 27001 Certified
-      </footer>
+      
     </div>
   </main>
-
-  {/* <!-- Visual Background Element (Subtle) --> */}
-  <div className="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-    <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
-    <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]"></div>
-  </div>
+  <Footer />
     </>
   )
 }
