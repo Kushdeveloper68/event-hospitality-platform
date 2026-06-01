@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getEventById } from "../../api/eventApi";
 import { getOverviewData } from "../../api/overViewApi";
+import { exportEventWorkbook } from "../../api/eventAnalyticsReportsApi";
 import { EventContext } from "../../context/EventContext";
 // Pages shown in tabs
 import GuestMasterList from "../inventory/GuestMasterList";
@@ -24,6 +25,9 @@ function EventWorkspaceShell() {
   const [overviewData, setOverviewData] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewError, setOverviewError] = useState(null);
+  const [exportingData, setExportingData] = useState(false);
+  const [exportMessage, setExportMessage] = useState(null);
+  const exportMessageTimerRef = useRef(null);
 
   // keep tab in sync with url param
   useEffect(() => {
@@ -46,6 +50,14 @@ function EventWorkspaceShell() {
       loadOverview();
     }
   }, [eventId, activeTab]);
+
+  useEffect(() => {
+    return () => {
+      if (exportMessageTimerRef.current) {
+        window.clearTimeout(exportMessageTimerRef.current);
+      }
+    };
+  }, []);
 
   const loadOverview = async () => {
     try {
@@ -126,6 +138,36 @@ function EventWorkspaceShell() {
       ),
     };
     return badges[status] || badges.upcoming;
+  };
+
+  const handleExportData = async () => {
+    if (exportingData || !eventId) return;
+
+    try {
+      setExportingData(true);
+      setExportMessage(null);
+
+      const result = await exportEventWorkbook(eventId, event?.name || "event");
+
+      setExportMessage({
+        type: result.success ? "success" : "error",
+        text: result.message,
+      });
+    } catch (err) {
+      console.error("Error exporting event workbook:", err);
+      setExportMessage({
+        type: "error",
+        text: "Failed to export event data",
+      });
+    } finally {
+      setExportingData(false);
+      if (exportMessageTimerRef.current) {
+        window.clearTimeout(exportMessageTimerRef.current);
+      }
+      exportMessageTimerRef.current = window.setTimeout(() => {
+        setExportMessage(null);
+      }, 4000);
+    }
   };
 
   if (loading) {
@@ -256,19 +298,30 @@ function EventWorkspaceShell() {
                 </div>
               </div>
               {/* <!-- Quick Action Buttons --> */}
-              <div className="flex items-center gap-3">
-                <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d364a] border border-[#dbdee6] dark:border-[#3d475c] text-[#111318] dark:text-white font-semibold text-sm rounded-lg hover:bg-neutral-soft transition-colors">
+              <div className="flex flex-col items-end gap-2">
+                <button
+                  type="button"
+                  onClick={handleExportData}
+                  disabled={exportingData}
+                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#2d364a] border border-[#dbdee6] dark:border-[#3d475c] text-[#111318] dark:text-white font-semibold text-sm rounded-lg hover:bg-neutral-soft transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
                   <span className="material-symbols-outlined text-xl">
-                    share
+                    {exportingData ? "hourglass_top" : "share"}
                   </span>
-                  Export Data
+                  {exportingData ? "Exporting..." : "Export Data"}
                 </button>
-                <button className="flex items-center gap-2 px-5 py-2 bg-primary text-white font-bold text-sm rounded-lg hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
-                  <span className="material-symbols-outlined text-xl">
-                    add_circle
-                  </span>
-                  New Entry
-                </button>
+                {exportMessage && (
+                  <div
+                    className={`max-w-sm rounded-lg px-3 py-2 text-xs font-medium shadow-sm ${
+                      exportMessage.type === "success"
+                        ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900/40"
+                        : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/40"
+                    }`}
+                  >
+                    {exportMessage.text}
+                  </div>
+                )}
+                
               </div>
             </div>
           </div>
