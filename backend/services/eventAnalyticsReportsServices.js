@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const ExcelJS = require("exceljs");
 const EventModel = require("../models/eventModel");
 const GuestModel = require("../models/guestModel");
 const RoomModel = require("../models/roomModel");
@@ -735,6 +736,325 @@ const getTransportLogCsv = async (eventId) => {
     .join("\n");
 };
 
+const slugifyFilename = (value) =>
+  String(value || "event")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50) || "event";
+
+const formatExportDate = (value) => (value ? new Date(value).toLocaleString() : "");
+
+const columnLetter = (index) => {
+  let result = "";
+  let current = index;
+
+  while (current > 0) {
+    const remainder = (current - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    current = Math.floor((current - 1) / 26);
+  }
+
+  return result;
+};
+
+const buildWorksheet = (workbook, sheetName, columns, rows) => {
+  const worksheet = workbook.addWorksheet(sheetName);
+  worksheet.columns = columns;
+  worksheet.addRows(rows);
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+  headerRow.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FF111827" },
+  };
+  headerRow.alignment = { vertical: "middle" };
+
+  worksheet.eachRow((row) => {
+    row.alignment = { vertical: "top", wrapText: true };
+  });
+
+  worksheet.columns.forEach((column) => {
+    const headerWidth = String(column.header || "").length;
+    const cellWidths = rows.map((row) => String(row[column.key] ?? "").length);
+    column.width = Math.min(Math.max(headerWidth + 2, ...cellWidths, 12), 36);
+  });
+
+  worksheet.autoFilter = `A1:${columnLetter(columns.length)}1`;
+
+  return worksheet;
+};
+
+const getEventWorkbookBuffer = async (eventId) => {
+  const eid = toObjectId(eventId);
+
+  const [
+    event,
+    rooms,
+    guests,
+    serviceRequests,
+    transports,
+    teamMembers,
+    scheduleActivities,
+    guestRoomCounts,
+  ] = await Promise.all([
+    EventModel.findById(eid).populate("createdBy", "name email").lean(),
+    RoomModel.find({ event: eid }).sort({ number: 1 }).lean(),
+    GuestModel.find({ event: eid })
+      .populate("room", "number type capacity")
+      .sort({ fullName: 1 })
+      .lean(),
+    ServiceRequestModel.find({ event: eid })
+      .populate("guest", "fullName email")
+      .populate("room", "number")
+      .sort({ createdAt: -1 })
+      .lean(),
+    TransportModel.find({ event: eid })
+      .populate("guest", "fullName email")
+      .sort({ scheduledTime: 1 })
+      .lean(),
+    TeamMemberModel.find({ event: eid }).sort({ createdAt: -1 }).lean(),
+    ScheduleActivity.find({ eventId: eid }).sort({ startTime: 1 }).lean(),
+    GuestModel.aggregate([
+      { $match: { event: eid, room: { $ne: null } } },
+      { $group: { _id: "$room", count: { $sum: 1 } } },
+    ]),
+  ]);
+
+  if (!event) {
+    throw new Error("Event not found");
+  }
+
+  const roomCountMap = guestRoomCounts.reduce((acc, item) => {
+    acc[String(item._id)] = item.count;
+    return acc;
+  }, {});
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "EventCure";
+  workbook.created = new Date();
+  workbook.modified = new Date();
+  workbook.title = `${event.name} Export`;
+  workbook.subject = "Event data export";
+  workbook.company = "EventCure";
+
+  buildWorksheet(
+    workbook,
+    "Event Summary",
+    [
+      { header: "Field", key: "field" },
+      { header: "Value", key: "value" },
+    ],
+    [
+      { field: "Event Name", value: event.name || "" },
+      { field: "Venue", value: event.venue || "" },
+      { field: "Start Date", value: formatExportDate(event.startDate) },
+      { field: "End Date", value: formatExportDate(event.endDate) },
+      { field: "Private Event", value: event.isPrivate ? "Yes" : "No" },
+      {
+        field: "Owner",
+        value: event.createdBy
+          ? `${event.createdBy.name || ""}${event.createdBy.email ? ` (${event.createdBy.email})` : ""}`.trim()
+          : "",
+      },
+      { field: "Total Rooms", value: rooms.length },
+      { field: "Total Guests", value: guests.length },
+      { field: "Total Services", value: serviceRequests.length },
+      { field: "Total Transport Requests", value: transports.length },
+      { field: "Total Team Members", value: teamMembers.length },
+      { field: "Total Schedule Items", value: scheduleActivities.length },
+      { field: "Export Generated At", value: new Date().toLocaleString() },
+    ],
+  );
+
+  buildWorksheet(
+    workbook,
+    "Rooms",
+    [
+      { header: "Room Number", key: "roomNumber" },
+      { header: "Type", key: "type" },
+      { header: "Capacity", key: "capacity" },
+      { header: "Guest Count", key: "guestCount" },
+      { header: "Available Slots", key: "availableSlots" },
+      { header: "Notes", key: "notes" },
+      { header: "Created At", key: "createdAt" },
+      { header: "Updated At", key: "updatedAt" },
+    ],
+    rooms.map((room) => ({
+      roomNumber: room.number || "",
+      type: room.type || "",
+      capacity: room.capacity ?? 1,
+      guestCount: roomCountMap[String(room._id)] || 0,
+      availableSlots: Math.max((room.capacity ?? 1) - (roomCountMap[String(room._id)] || 0), 0),
+      notes: room.notes || "",
+      createdAt: formatExportDate(room.createdAt),
+      updatedAt: formatExportDate(room.updatedAt),
+    })),
+  );
+
+  buildWorksheet(
+    workbook,
+    "Guests",
+    [
+      { header: "Full Name", key: "fullName" },
+      { header: "Email", key: "email" },
+      { header: "Phone", key: "phoneNumber" },
+      { header: "Age", key: "age" },
+      { header: "Group", key: "groupName" },
+      { header: "VIP", key: "vipStatus" },
+      { header: "Checked In", key: "checkedIn" },
+      { header: "Check-In Time", key: "checkedInAt" },
+      { header: "Check-Out Time", key: "checkedOutAt" },
+      { header: "Room", key: "roomNumber" },
+      { header: "Room Type", key: "roomType" },
+      { header: "Arrival", key: "arrivalDatetime" },
+      { header: "Departure", key: "departureDatetime" },
+      { header: "Transport Mode", key: "transportMode" },
+      { header: "Special Requests", key: "specialRequests" },
+      { header: "Created At", key: "createdAt" },
+      { header: "Updated At", key: "updatedAt" },
+    ],
+    guests.map((guest) => ({
+      fullName: guest.fullName || "",
+      email: guest.email || "",
+      phoneNumber: guest.phoneNumber || "",
+      age: guest.age ?? "",
+      groupName: guest.groupName || "",
+      vipStatus: guest.vipStatus ? "Yes" : "No",
+      checkedIn: guest.checkedIn ? "Yes" : "No",
+      checkedInAt: formatExportDate(guest.checkedInAt),
+      checkedOutAt: formatExportDate(guest.checkedOutAt),
+      roomNumber: guest.room?.number || "",
+      roomType: guest.room?.type || "",
+      arrivalDatetime: formatExportDate(guest.arrivalDatetime),
+      departureDatetime: formatExportDate(guest.departureDatetime),
+      transportMode: guest.transportMode || "",
+      specialRequests: guest.specialRequests || "",
+      createdAt: formatExportDate(guest.createdAt),
+      updatedAt: formatExportDate(guest.updatedAt),
+    })),
+  );
+
+  buildWorksheet(
+    workbook,
+    "Services",
+    [
+      { header: "ID", key: "id" },
+      { header: "Guest", key: "guest" },
+      { header: "Room", key: "room" },
+      { header: "Type", key: "requestType" },
+      { header: "Urgency", key: "urgency" },
+      { header: "Status", key: "status" },
+      { header: "Permission to Enter", key: "permissionToEnter" },
+      { header: "Notes", key: "notes" },
+      { header: "Created At", key: "createdAt" },
+      { header: "Updated At", key: "updatedAt" },
+    ],
+    serviceRequests.map((request) => ({
+      id: request._id.toString().slice(-8).toUpperCase(),
+      guest: request.guest ? request.guest.fullName : "N/A",
+      room: request.room ? request.room.number : "N/A",
+      requestType: request.requestType || "",
+      urgency: request.urgency || "",
+      status: request.status || "",
+      permissionToEnter: request.permissionToEnter ? "Yes" : "No",
+      notes: request.notes || "",
+      createdAt: formatExportDate(request.createdAt),
+      updatedAt: formatExportDate(request.updatedAt),
+    })),
+  );
+
+  buildWorksheet(
+    workbook,
+    "Schedule",
+    [
+      { header: "Title", key: "title" },
+      { header: "Workstream", key: "workstream" },
+      { header: "Start Time", key: "startTime" },
+      { header: "End Time", key: "endTime" },
+      { header: "Location", key: "location" },
+      { header: "Assigned To", key: "assignedTo" },
+      { header: "Status", key: "status" },
+      { header: "Description", key: "description" },
+      { header: "Created At", key: "createdAt" },
+      { header: "Updated At", key: "updatedAt" },
+    ],
+    scheduleActivities.map((activity) => ({
+      title: activity.title || "",
+      workstream: activity.workstream || "",
+      startTime: formatExportDate(activity.startTime),
+      endTime: formatExportDate(activity.endTime),
+      location: activity.location || "",
+      assignedTo: activity.assignedTo || "",
+      status: activity.status || "",
+      description: activity.description || "",
+      createdAt: formatExportDate(activity.createdAt),
+      updatedAt: formatExportDate(activity.updatedAt),
+    })),
+  );
+
+  buildWorksheet(
+    workbook,
+    "Team",
+    [
+      { header: "Name", key: "name" },
+      { header: "Email", key: "email" },
+      { header: "Role", key: "role" },
+      { header: "Status", key: "status" },
+      { header: "Last Active", key: "lastActive" },
+      { header: "Created At", key: "createdAt" },
+      { header: "Updated At", key: "updatedAt" },
+    ],
+    teamMembers.map((member) => ({
+      name: member.name || "",
+      email: member.email || "",
+      role: member.role || "",
+      status: member.status || "",
+      lastActive: formatExportDate(member.lastActive),
+      createdAt: formatExportDate(member.createdAt),
+      updatedAt: formatExportDate(member.updatedAt),
+    })),
+  );
+
+  buildWorksheet(
+    workbook,
+    "Transport",
+    [
+      { header: "Guest", key: "guest" },
+      { header: "Driver", key: "driverName" },
+      { header: "Vehicle", key: "vehicleId" },
+      { header: "Pickup Location", key: "pickupLocation" },
+      { header: "Dropoff Location", key: "dropoffLocation" },
+      { header: "Scheduled Time", key: "scheduledTime" },
+      { header: "Status", key: "status" },
+      { header: "Notes", key: "notes" },
+      { header: "Created At", key: "createdAt" },
+      { header: "Updated At", key: "updatedAt" },
+    ],
+    transports.map((transport) => ({
+      guest: transport.guest ? transport.guest.fullName : "Group/General",
+      driverName: transport.driverName || "",
+      vehicleId: transport.vehicleId || "",
+      pickupLocation: transport.pickupLocation || "",
+      dropoffLocation: transport.dropoffLocation || "",
+      scheduledTime: formatExportDate(transport.scheduledTime),
+      status: transport.status || "",
+      notes: transport.notes || "",
+      createdAt: formatExportDate(transport.createdAt),
+      updatedAt: formatExportDate(transport.updatedAt),
+    })),
+  );
+
+  const buffer = await workbook.xlsx.writeBuffer();
+
+  return {
+    buffer: Buffer.from(buffer),
+    filename: `event-data-${slugifyFilename(event.name)}-${Date.now()}.xlsx`,
+  };
+};
+
 module.exports = {
   getGuestAnalytics,
   getRoomAnalytics,
@@ -747,4 +1067,5 @@ module.exports = {
   getGuestListCsv,
   getServiceRequestsCsv,
   getTransportLogCsv,
+  getEventWorkbookBuffer,
 };

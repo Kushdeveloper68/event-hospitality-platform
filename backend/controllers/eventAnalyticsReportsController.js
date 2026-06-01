@@ -10,6 +10,7 @@ const {
   getGuestListCsv,
   getServiceRequestsCsv,
   getTransportLogCsv,
+  getEventWorkbookBuffer,
 } = require("../services/eventAnalyticsReportsServices");
 const { getEventById } = require("../services/eventServices");
 
@@ -242,6 +243,33 @@ const handleExportTransport = async (req, res) => {
   }
 };
 
+// ─── GET /api/event-analytics/:eventId/export/workbook ───────────────────────
+const handleExportWorkbook = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { authorized } = await verifyOwnership(eventId, req.user?.id);
+    if (!authorized) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    const { buffer, filename } = await getEventWorkbookBuffer(eventId);
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", buffer.length);
+
+    return res.status(200).send(buffer);
+  } catch (error) {
+    console.error("Error exporting event workbook:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: error.message || "Failed to export event workbook" });
+  }
+};
+
 module.exports = {
   handleGetFullReport,
   handleGetGuestAnalytics,
@@ -254,4 +282,5 @@ module.exports = {
   handleExportGuests,
   handleExportServices,
   handleExportTransport,
+  handleExportWorkbook,
 };

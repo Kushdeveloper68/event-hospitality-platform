@@ -2,6 +2,38 @@ import api from "./axios";
 
 const API_BASE_PATH = "/event-analytics";
 
+const slugifyFilename = (value) =>
+  String(value || "event")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50) || "event";
+
+const saveBlobFile = (blob, filename) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
+const extractErrorMessage = async (error, fallbackMessage) => {
+  const data = error.response?.data;
+
+  if (data instanceof Blob) {
+    try {
+      const text = await data.text();
+      const parsed = JSON.parse(text);
+      return parsed.message || fallbackMessage;
+    } catch {
+      return fallbackMessage;
+    }
+  }
+
+  return data?.message || fallbackMessage;
+};
+
 /**
  * Full analytics report for one event — all sections in one request.
  * Use on initial page load.
@@ -210,5 +242,39 @@ export const exportTransportCsv = async (eventId, eventName = "event") => {
     return { success: true };
   } catch (error) {
     return { success: false, message: "Failed to export transport CSV" };
+  }
+};
+
+/**
+ * Download a multi-sheet workbook with the event's core operational data
+ * @param {string} eventId
+ * @param {string} eventName
+ */
+export const exportEventWorkbook = async (eventId, eventName = "event") => {
+  try {
+    const response = await api.get(
+      `${API_BASE_PATH}/${eventId}/export/workbook`,
+      {
+        responseType: "blob",
+      },
+    );
+
+    saveBlobFile(
+      response.data,
+      `event-data-${slugifyFilename(eventName)}.xlsx`,
+    );
+
+    return {
+      success: true,
+      message: "Event workbook downloaded successfully",
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: await extractErrorMessage(
+        error,
+        "Failed to export event workbook",
+      ),
+    };
   }
 };

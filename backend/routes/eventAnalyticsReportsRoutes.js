@@ -13,6 +13,7 @@ const {
   handleExportGuests,
   handleExportServices,
   handleExportTransport,
+  handleExportWorkbook,
 } = require("../controllers/eventAnalyticsReportsController");
 
 // All routes protected
@@ -53,5 +54,8 @@ router.get("/:eventId/export/services", handleExportServices);
 
 // GET /api/event-analytics/:eventId/export/transport
 router.get("/:eventId/export/transport", handleExportTransport);
+
+// GET /api/event-analytics/:eventId/export/workbook
+router.get("/:eventId/export/workbook", handleExportWorkbook);
 
 module.exports = router;
