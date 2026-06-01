@@ -121,6 +121,15 @@ function Footer() {
         <div className="pt-8 border-t border-gray-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500 dark:text-slate-500">
             © {new Date().getFullYear()} EventCure Inc. All rights reserved.
+            <span className="mx-2">•</span>
+            <a
+              href="https://kushdeveloper.me"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium hover:text-primary transition-colors"
+            >
+              Made by Kush Developer
+            </a>
           </p>
           <div className="flex gap-6">
             <a

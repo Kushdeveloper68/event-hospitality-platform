@@ -2664,6 +2664,21 @@ export default function PlatformLandingPage() {
               }}
             >
               © 2026 EventOps Hospitality SaaS. All rights reserved.
+              <span style={{ margin: "0 8px" }}>•</span>
+              <a
+                href="https://kushdeveloper.me"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "#475569",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                }}
+                onMouseEnter={(e) => (e.target.style.color = "#94a3b8")}
+                onMouseLeave={(e) => (e.target.style.color = "#475569")}
+              >
+                Made by Kush Developer
+              </a>
             </p>
             <div style={{ display: "flex", gap: "24px" }}>
               {["Privacy Policy", "Terms of Service", "Cookie Policy"].map(
