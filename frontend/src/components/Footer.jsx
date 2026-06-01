@@ -7,21 +7,18 @@ function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-6">
-              <div className="text-primary">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  viewBox="0 0 48 48"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"
-                    fill="currentColor"
-                  ></path>
-                </svg>
-              </div>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">Event Hospitality</span>
+               <div className="size-8 rounded-lg flex items-center justify-center">
+              <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
             </div>
+          
+          <div>
+            <p className="text-[13px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">
+              EventCure
+            </p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5 tracking-wider uppercase">
+              Hospitality
+            </p>
+          </div> </div>
             <p className="text-gray-500 dark:text-slate-400 max-w-xs text-sm leading-relaxed">
               The ultimate platform for enterprise hospitality management. Built
               for scale, designed for simplicity.
@@ -123,7 +120,7 @@ function Footer() {
         </div>
         <div className="pt-8 border-t border-gray-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-gray-500 dark:text-slate-500">
-            © 2024 Event Hospitality Management Inc. All rights reserved.
+            © {new Date().getFullYear()} EventCure Inc. All rights reserved.
           </p>
           <div className="flex gap-6">
             <a
