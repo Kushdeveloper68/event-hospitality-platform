@@ -13,6 +13,7 @@ const guestRoutes = require('../../routes/guestRoutes');
 const passwordResetRoutes = require('../../routes/passwordResetRoutes');
 const checkInRoutes = require('../../routes/checkInRoutes');
 const roomRoutes = require('../../routes/roomRoutes');
+const eventAnalyticsReportsRoutes = require('../../routes/eventAnalyticsReportsRoutes');
 
 const app = express();
 
@@ -27,5 +28,6 @@ app.use('/api/guests', guestRoutes);
 app.use('/api/password-reset', passwordResetRoutes);
 app.use('/api/checkin', checkInRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/event-analytics', eventAnalyticsReportsRoutes);
 
 module.exports = app;
