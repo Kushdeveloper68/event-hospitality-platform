@@ -48,6 +48,31 @@ function UserLogin() {
 
   return (
     <>
+        {/* <!-- Top Navigation Bar --> */}
+  <header className="w-full border-b border-slate-200 bg-slate-50/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+    <div className="max-w-7xl mx-auto flex items-center justify-between">
+      <Link to="/" className="flex items-center gap-2 text-primary transition-opacity hover:opacity-90">
+        <div className="size-8 rounded-lg flex items-center justify-center">
+              <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
+            </div>
+          
+          <div>
+            <p className="text-[13px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">
+              EventCure
+            </p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5 tracking-wider uppercase">
+              Hospitality
+            </p>
+          </div>
+      </Link>
+      <div className="hidden md:flex items-center gap-4">
+        <span className="text-sm text-slate-600 dark:text-slate-400">Already have an account?</span>
+        <Link to="/login" className="text-sm font-semibold text-primary hover:underline">
+          Log in
+        </Link>
+      </div>
+    </div>
+  </header>
       <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <div className="flex flex-1 items-center justify-center p-6 md:p-10">
         {/* <!-- Main Login Card --> */}
