@@ -5,6 +5,8 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./context/ProtectedRoute";
 import PageErrorBoundary from './components/PageErrorBoundary';
+import GoogleAuthSuccess from "./pages/auth/GoogleAuthSuccess";
+
 // dashboard pages
 import {
   PlatformLandingPage,
@@ -30,6 +32,7 @@ function App() {
             <Route path="/" element={<PlatformLandingPage />} />
             <Route path="/signup" element={<UserSignup />} />
             <Route path="/login" element={<UserLogin />} />
+            <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
 
             {/* Dashboard routes wrapped with layout and protected */}
             <Route
