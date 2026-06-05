@@ -37,6 +37,7 @@ import OprationSuccessIndicator from "./others/OprationSuccessIndicator";
 import PageNotFound from "./others/PageNotFound";
 import SystemLoadingState from "./others/SystemLoadingState";
 import UnauthorizedAccessWarning from "./others/UnauthorizedAccessWarning";
+import TermsAndConditions from './others/Termsandconditions';
 
 export {
   //dashboards/
@@ -78,4 +79,5 @@ export {
   PageNotFound,
   SystemLoadingState,
   UnauthorizedAccessWarning,
+  TermsAndConditions
 };
