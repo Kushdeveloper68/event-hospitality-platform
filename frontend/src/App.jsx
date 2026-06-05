@@ -20,20 +20,24 @@ import {
 // form pages
 import { UserSignup, UserLogin, CreateNewEvent, ResetPassword } from "./pages";
 // settings / others
-import { OragnizationSetting, PageNotFound } from "./pages";
+import { OragnizationSetting, PageNotFound , TermsAndConditions} from "./pages";
 import { ThemeProvider } from "./context/ThemeContext";
+import { ScrollToTop } from "./components";
 
 function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
         <BrowserRouter>
+        <ScrollToTop />
           <Routes>
             <Route path="/" element={<PlatformLandingPage />} />
             <Route path="/signup" element={<UserSignup />} />
             <Route path="/login" element={<UserLogin />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
-
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="*" element={<PageNotFound />} />
             {/* Dashboard routes wrapped with layout and protected */}
             <Route
               path="/dashboard"
@@ -47,6 +51,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/events"
               element={
@@ -133,8 +138,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="*" element={<PageNotFound />} />
+           
           </Routes>
         </BrowserRouter>
       </ThemeProvider>

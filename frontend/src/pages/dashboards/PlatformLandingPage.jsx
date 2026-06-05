@@ -2678,11 +2678,11 @@ export default function PlatformLandingPage() {
               </a>
             </p>
             <div style={{ display: "flex", gap: "24px" }}>
-              {["Privacy Policy", "Terms of Service", "Cookie Policy"].map(
+              {[{ name: "Privacy Policy", slug: "/privacy" }, { name: "Terms of Service", slug: "/terms" }, { name: "Cookie Policy", slug: "/cookies" }].map(
                 (l) => (
-                  <a
-                    key={l}
-                    href="#"
+                  <Link 
+                    key={l.name}
+                    to={l.slug}
                     style={{
                       fontFamily: "'DM Sans',sans-serif",
                       fontSize: "0.82rem",
@@ -2690,8 +2690,8 @@ export default function PlatformLandingPage() {
                       textDecoration: "none",
                     }}
                   >
-                    {l}
-                  </a>
+                    {l.name}
+                  </Link>
                 ),
               )}
             </div>

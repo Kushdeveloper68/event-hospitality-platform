@@ -98,7 +98,7 @@ function Footer() {
                   content: "Privacy Policy",
                 },
                 {
-                  redirect: "#",
+                  redirect: "/terms",
                   content: " Terms of Service",
                 },
                 {
@@ -107,12 +107,12 @@ function Footer() {
                 },
               ].map((item, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     className="hover:text-primary transition-colors"
-                    href={item.redirect}
+                    to={item.redirect}
                   >
                     {item.content}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
