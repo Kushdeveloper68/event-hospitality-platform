@@ -775,20 +775,17 @@ export default function PlatformLandingPage() {
               style={{
                 width: 36,
                 height: 36,
-                background: "linear-gradient(135deg,#2463eb,#7c3aed)",
                 borderRadius: "10px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 0 20px rgba(36,99,235,0.4)",
               }}
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "18px", color: "#fff" }}
-              >
-                event_seat
-              </span>
+              <img
+                src="/event-logo-with-icon-dark-bg-removebg-preview.png"
+                alt="EventCure Logo"
+                loading="lazy"
+              />
             </div>
             <span
               style={{
