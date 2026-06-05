@@ -796,7 +796,7 @@ export default function PlatformLandingPage() {
                 letterSpacing: "-0.02em",
               }}
             >
-              EventOps
+              EventCure
             </span>
           </div>
 
