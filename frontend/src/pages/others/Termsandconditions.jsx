@@ -333,7 +333,7 @@ export default function TermsAndConditions() {
                     key={term}
                     className="flex gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
                   >
-                    <span className="font-bold text-slate-800 dark:text-slate-200 min-w-[160px] shrink-0 text-sm">
+                    <span className="font-bold text-slate-800 dark:text-slate-200 min-w-40 shrink-0 text-sm">
                       {term}
                     </span>
                     <span className="text-slate-600 dark:text-slate-400 text-sm">

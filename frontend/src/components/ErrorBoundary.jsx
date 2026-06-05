@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
+        <div className="flex flex-col items-center justify-center min-h-100 p-8 text-center">
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-2xl p-10 max-w-lg w-full">
             <span className="material-symbols-outlined text-5xl text-red-400 mb-4 block">
               error
