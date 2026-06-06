@@ -39,6 +39,7 @@ import SystemLoadingState from "./others/SystemLoadingState";
 import UnauthorizedAccessWarning from "./others/UnauthorizedAccessWarning";
 import TermsAndConditions from './others/Termsandconditions';
 import PrivacyPolicy from './others/PrivacyPolicy';
+import UserManual from './others/UserManual';
 
 export {
   //dashboards/
@@ -81,5 +82,6 @@ export {
   SystemLoadingState,
   UnauthorizedAccessWarning,
   TermsAndConditions,
-  PrivacyPolicy
+  PrivacyPolicy,
+  UserManual
 };

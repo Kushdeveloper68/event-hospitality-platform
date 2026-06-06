@@ -20,7 +20,7 @@ import {
 // form pages
 import { UserSignup, UserLogin, CreateNewEvent, ResetPassword } from "./pages";
 // settings / others
-import { OragnizationSetting, PageNotFound , TermsAndConditions, PrivacyPolicy} from "./pages";
+import { OragnizationSetting, PageNotFound , TermsAndConditions, PrivacyPolicy, UserManual} from "./pages";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ScrollToTop } from "./components";
 
@@ -36,6 +36,7 @@ function App() {
             <Route path="/login" element={<UserLogin />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/manual" element={<UserManual />} />
             <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<PageNotFound />} />
