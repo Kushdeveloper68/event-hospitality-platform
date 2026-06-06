@@ -94,7 +94,7 @@ function Footer() {
             <ul className="space-y-3 text-sm text-gray-600 dark:text-slate-400">
               {[
                 {
-                  redirect: "#",
+                  redirect: "/privacy",
                   content: "Privacy Policy",
                 },
                 {
@@ -103,8 +103,8 @@ function Footer() {
                 },
                 {
                   redirect: "#",
-                  content: "Security",
-                },
+                  content: "User Manual",
+                }, 
               ].map((item, index) => (
                 <li key={index}>
                   <Link
