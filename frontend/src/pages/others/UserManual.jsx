@@ -126,25 +126,13 @@ function Step({ number, title, children }) {
   );
 }
 
-function ImagePlaceholder({ label, height = "h-52" }) {
+function ImagePlaceholder({ label, height = "h-full" , link }) {
   return (
     <div
-      className={`${height} w-full my-5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex flex-col items-center justify-center gap-3`}
+      className={`${height} w-full overflow-hidden my-5 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 flex flex-col items-center justify-center gap-3`}
     >
-      <span
-        className="material-symbols-outlined text-slate-400 dark:text-slate-600"
-        style={{ fontSize: "40px" }}
-      >
-        image
-      </span>
-      <div className="text-center px-4">
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          Screenshot needed
-        </p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-          {label}
-        </p>
-      </div>
+     <img src={link} alt={label} loading="lazy"/>
+     
     </div>
   );
 }
@@ -559,7 +547,7 @@ export default function UserManual() {
                   automatically. Your organization is created and ready to use.
                 </Step>
 
-                <ImagePlaceholder label="Sign-up page showing the registration form with name, email, organization, and password fields" />
+                <ImagePlaceholder link={"/usermanualImage/signup.png"}  label="Sign-up page showing the registration form with name, email, organization, and password fields" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
                   Signing in
@@ -658,9 +646,9 @@ export default function UserManual() {
                   organizational metric.
                 </p>
 
-                <ImagePlaceholder
+                <ImagePlaceholder link={"/usermanualImage/operationsdashboard.png"}
                   label="Full screenshot of the Operations Dashboard showing metric cards, live events panel, recent activity feed, and events table"
-                  height="h-72"
+                  
                 />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
@@ -787,7 +775,7 @@ export default function UserManual() {
                   Upcoming / Completed) and search by event name.
                 </p>
 
-                <ImagePlaceholder label="Events Directory page showing event cards in a 3-column grid with status badges (Live, Upcoming, Completed)" />
+                <ImagePlaceholder link={"/usermanualImage/eventdirectory.png"} label="Events Directory page showing event cards in a 3-column grid with status badges (Live, Upcoming, Completed)" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
                   Creating a new event
@@ -859,9 +847,9 @@ export default function UserManual() {
                   to open it.
                 </p>
 
-                <ImagePlaceholder
+                <ImagePlaceholder link={"/usermanualImage/eventworkspace.png"}
                   label="Event Workspace Shell showing the top navigation bar, event header with breadcrumb, status badge, and the horizontal tab bar with all 10 tabs"
-                  height="h-48"
+                  
                 />
 
                 <p>The workspace tabs are:</p>
@@ -946,7 +934,7 @@ export default function UserManual() {
                   here you can add, edit, search, filter, and delete guests.
                 </p>
 
-                <ImagePlaceholder label="Guest Master List page showing the data table with columns: Name, Phone, Status, Room #, Arrival, Departure, and Actions" />
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceGuest.png"} label="Guest Master List page showing the data table with columns: Name, Phone, Status, Room #, Arrival, Departure, and Actions" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
                   Adding a guest
@@ -974,7 +962,7 @@ export default function UserManual() {
                   immediately in the master list.
                 </Step>
 
-                <ImagePlaceholder label="Guest Data Entry form split into two columns: Personal Information (left) and Logistics & Arrival (right)" />
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceGuestAdd.png"} label="Guest Data Entry form split into two columns: Personal Information (left) and Logistics & Arrival (right)" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
                   Guest fields reference
@@ -1116,7 +1104,7 @@ export default function UserManual() {
                   need to manage.
                 </p>
 
-                <ImagePlaceholder label="Room Inventory page showing 4-column card grid with room cards displaying number, type, capacity bar, occupancy progress, and action buttons" />
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceRooms.png"} label="Room Inventory page showing 4-column card grid with room cards displaying number, type, capacity bar, occupancy progress, and action buttons" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
                   Adding a room
@@ -1236,9 +1224,9 @@ export default function UserManual() {
                   systems with a live, click-to-action interface.
                 </p>
 
-                <ImagePlaceholder
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceCheckIn.png"}
                   label="Check-in Desk showing 3 columns: Arriving Today (blue header), Checked-in (green header), and Pending Arrivals (amber header) with guest cards in each"
-                  height="h-64"
+                 
                 />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
@@ -1344,7 +1332,7 @@ export default function UserManual() {
                   spreadsheets with a live, filterable log.
                 </p>
 
-                <ImagePlaceholder label="Transport Coordination page showing metric cards (Total, Scheduled, In Transit, Completed) and the transport table with status badges and progress bars" />
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceTransport.png"} label="Transport Coordination page showing metric cards (Total, Scheduled, In Transit, Completed) and the transport table with status badges and progress bars" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
                   Scheduling a transport
@@ -1484,7 +1472,7 @@ export default function UserManual() {
                   miscellaneous requests.
                 </p>
 
-                <ImagePlaceholder label="Service Requests page showing the table with columns: Guest/Room, Request Type with icon, Status badge, Urgency badge, Notes, Time, and Actions dropdown" />
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceServiceReq.png"} label="Service Requests page showing the table with columns: Guest/Room, Request Type with icon, Status badge, Urgency badge, Notes, Time, and Actions dropdown" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
                   Creating a service request
@@ -1620,9 +1608,9 @@ export default function UserManual() {
                   event programming.
                 </p>
 
-                <ImagePlaceholder
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceSchedule.png"}
                   label="Schedule timeline view showing the sidebar with 5 workstreams (Main Sessions, Transport, Catering, Staffing, Media/AV), date tabs at the top, and colored activity blocks on the timeline grid"
-                  height="h-72"
+                  
                 />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
@@ -1791,7 +1779,7 @@ export default function UserManual() {
                   status.
                 </p>
 
-                <ImagePlaceholder label="Team Management page showing the data table with member name, email, role badge, status indicator, last active timestamp, and actions column" />
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceTeam.png"} label="Team Management page showing the data table with member name, email, role badge, status indicator, last active timestamp, and actions column" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
                   Adding a team member
@@ -1959,9 +1947,9 @@ export default function UserManual() {
                   ))}
                 </div>
 
-                <ImagePlaceholder
+                <ImagePlaceholder link={"/usermanualImage/eventworkspaceReport.png"}
                   label="Event Analytics Reports page showing the tab bar and Overview tab with KPI cards, check-in by hour bars, service type breakdown, and room occupancy donut chart"
-                  height="h-64"
+                  
                 />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
@@ -2114,7 +2102,7 @@ export default function UserManual() {
                   />
                 </div>
 
-                <ImagePlaceholder label="Organization Settings page showing the sidebar with 5 tabs and the Profile section open with full name, email (disabled), job title, and timezone fields" />
+                <ImagePlaceholder link={"/usermanualImage/setting.png"} label="Organization Settings page showing the sidebar with 5 tabs and the Profile section open with full name, email (disabled), job title, and timezone fields" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
                   Event Administrative Settings
@@ -2203,7 +2191,7 @@ export default function UserManual() {
                   auto-refreshes every 30 seconds.
                 </p>
 
-                <ImagePlaceholder label="Activity Logs page showing summary stat pills at the top, filter bar with search/event/type/priority/date filters, and the live activity feed with colored left-accent borders by priority" />
+                <ImagePlaceholder link={"/usermanualImage/notification.png"} label="Activity Logs page showing summary stat pills at the top, filter bar with search/event/type/priority/date filters, and the live activity feed with colored left-accent borders by priority" />
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-4 mb-3">
                   Log types
