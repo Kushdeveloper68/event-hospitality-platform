@@ -102,7 +102,7 @@ function Footer() {
                   content: " Terms of Service",
                 },
                 {
-                  redirect: "#",
+                  redirect: "/manual",
                   content: "User Manual",
                 }, 
               ].map((item, index) => (

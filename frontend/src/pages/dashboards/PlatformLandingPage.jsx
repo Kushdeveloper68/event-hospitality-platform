@@ -805,11 +805,11 @@ export default function PlatformLandingPage() {
             style={{ display: "flex", alignItems: "center", gap: "32px" }}
             className="hidden-mobile"
           >
-            {["Features", "How It Works", "Use Cases", "FAQ"].map(
+            {["Features", "Manual", "Use Cases", "FAQ"].map(
               (item) => (
                 <a
                   key={item}
-                  href={`#${item.toLowerCase().replace(/ /g, "-")}`}
+                  href={`${item.toLowerCase().replace(/ /g, "-")}`}
                   style={{
                     fontFamily: "'DM Sans',sans-serif",
                     fontSize: "0.9rem",
@@ -905,11 +905,11 @@ export default function PlatformLandingPage() {
             padding: mobileOpen ? "16px 24px 24px" : "0 24px",
           }}
         >
-          {["Features", "How It Works", "Use Cases", "FAQ"].map(
+          {["Features", "Manual", "Use Cases", "FAQ"].map(
             (item) => (
               <a
                 key={item}
-                href={`#${item.toLowerCase().replace(/ /g, "-")}`}
+                href={`${item.toLowerCase().replace(/ /g, "-")}`}
                 onClick={() => setMobileOpen(false)}
                 style={{
                   display: "block",
