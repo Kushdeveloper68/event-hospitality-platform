@@ -38,6 +38,7 @@ import PageNotFound from "./others/PageNotFound";
 import SystemLoadingState from "./others/SystemLoadingState";
 import UnauthorizedAccessWarning from "./others/UnauthorizedAccessWarning";
 import TermsAndConditions from './others/Termsandconditions';
+import PrivacyPolicy from './others/PrivacyPolicy';
 
 export {
   //dashboards/
@@ -79,5 +80,6 @@ export {
   PageNotFound,
   SystemLoadingState,
   UnauthorizedAccessWarning,
-  TermsAndConditions
+  TermsAndConditions,
+  PrivacyPolicy
 };
