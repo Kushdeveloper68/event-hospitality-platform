@@ -37,6 +37,7 @@ function RoomInventoryManagement() {
   // assignment modal state
   const [assignRoomId, setAssignRoomId] = useState(null);
   const [availableGuests, setAvailableGuests] = useState([]);
+  const [guestSearchQuery, setGuestSearchQuery] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState(null);
 
@@ -147,6 +148,7 @@ function RoomInventoryManagement() {
 
   const openAssignModal = async (roomId) => {
     setAssignRoomId(roomId);
+    setGuestSearchQuery("");
     try {
       const res = await getGuests({ eventId, limit: 1000 });
       if (res.success) {
@@ -161,6 +163,7 @@ function RoomInventoryManagement() {
   const closeAssignModal = () => {
     setAssignRoomId(null);
     setAvailableGuests([]);
+    setGuestSearchQuery("");
     setAssignError(null);
   };
 
@@ -219,6 +222,18 @@ function RoomInventoryManagement() {
     setSearchParams({});
   };
 
+  const filteredGuests = availableGuests.filter((guest) => {
+    const query = guestSearchQuery.trim().toLowerCase();
+    if (!query) return true;
+
+    return (
+      guest.fullName?.toLowerCase().includes(query) ||
+      guest.email?.toLowerCase().includes(query) ||
+      guest.phone?.toLowerCase().includes(query) ||
+      guest.ticketType?.toLowerCase().includes(query)
+    );
+  });
+
   if (action === "addRoom" || action === "editRoom") {
     return (
       <RoomconfigurationForm
@@ -234,24 +249,7 @@ function RoomInventoryManagement() {
     <div className="relative flex min-h-screen flex-col">
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
         {/* <!-- Breadcrumbs --> */}
-        <nav className="mb-4 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-          <a className="hover:text-primary" href="#">
-            Events
-          </a>
-          <span className="material-symbols-outlined text-base">
-            chevron_right
-          </span>
-          <a
-            className="hover:text-primary text-slate-900 dark:text-white"
-            href="#"
-          >
-            Event
-          </a>
-          <span className="material-symbols-outlined text-base">
-            chevron_right
-          </span>
-          <span className="text-primary">Room Inventory</span>
-        </nav>
+        
         {/* <!-- Header Section --> */}
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
@@ -589,16 +587,36 @@ function RoomInventoryManagement() {
               </div>
             )}
 
+            <div className="px-6 pt-4">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Search Guest
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={guestSearchQuery}
+                  onChange={(e) => setGuestSearchQuery(e.target.value)}
+                  placeholder="Search by name, email, phone..."
+                  className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+
             <div className="flex-1 overflow-y-auto p-6">
-              {availableGuests.length === 0 ? (
+              {filteredGuests.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-slate-500 dark:text-slate-400">
-                    No unassigned guests available
+                    {availableGuests.length === 0
+                      ? "No unassigned guests available"
+                      : "No guests match your search"}
                   </p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {availableGuests.map((guest) => (
+                  {filteredGuests.map((guest) => (
                     <button
                       key={guest._id}
                       onClick={() => handleAssignment(guest._id)}
