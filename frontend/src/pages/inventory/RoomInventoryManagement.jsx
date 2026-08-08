@@ -39,6 +39,7 @@ function RoomInventoryManagement() {
   const [availableGuests, setAvailableGuests] = useState([]);
   const [guestSearchQuery, setGuestSearchQuery] = useState("");
   const [assigning, setAssigning] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
   const [assignError, setAssignError] = useState(null);
 
   // delete confirmation modal state
@@ -149,14 +150,22 @@ function RoomInventoryManagement() {
   const openAssignModal = async (roomId) => {
     setAssignRoomId(roomId);
     setGuestSearchQuery("");
+    setAssignLoading(true);
+    setAssignError(null);
+    setAvailableGuests([]);
     try {
       const res = await getGuests({ eventId, limit: 1000 });
       if (res.success) {
         setAvailableGuests(res.guests.filter((g) => !g.room));
+      } else {
+        setAssignError(res.message || "Failed to load available guests");
       }
     } catch (e) {
       console.warn("load guests for assign", e);
+      setAssignError("Failed to load available guests");
       showToast("Failed to load available guests", "error");
+    } finally {
+      setAssignLoading(false);
     }
   };
 
@@ -165,6 +174,7 @@ function RoomInventoryManagement() {
     setAvailableGuests([]);
     setGuestSearchQuery("");
     setAssignError(null);
+    setAssignLoading(false);
   };
 
   const handleAssignment = async (guestId) => {
@@ -606,7 +616,16 @@ function RoomInventoryManagement() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6">
-              {filteredGuests.length === 0 ? (
+              {assignLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="relative mb-4 h-10 w-10">
+                    <div className="absolute inset-0 rounded-full border-2 border-slate-200 dark:border-slate-700"></div>
+                    <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                  </div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Loading guests...</p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Fetching available guests from the server.</p>
+                </div>
+              ) : filteredGuests.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-slate-500 dark:text-slate-400">
                     {availableGuests.length === 0
@@ -625,7 +644,7 @@ function RoomInventoryManagement() {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold">{guest.fullName}</p>
+                          <p className="font-semibold dark:text-white">{guest.fullName}</p>
                           <p className="text-sm text-slate-500">
                             {guest.email}
                           </p>
