@@ -453,11 +453,11 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                         <tr key={g._id} className="hover:bg-slate-50/80 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="bg-blue-100 text-primary font-bold rounded-full size-8 flex items-center justify-center text-xs">
+                              <div className="bg-blue-100  text-primary font-bold rounded-full size-8 flex items-center justify-center text-xs">
                                 {g.fullName ? g.fullName.split(' ').map((w) => w[0]).join('').toUpperCase() : '?'}
                               </div>
                               <div>
-                                <div className="flex items-center gap-1.5 font-semibold text-slate-900 text-sm">
+                                <div className="flex items-center dark:text-stone-100 gap-1.5 font-semibold text-slate-900 text-sm">
                                   {g.fullName}
                                   {g.vipStatus && (
                                     <span className="material-symbols-outlined text-warning text-sm fill-1" title="VIP Guest">star</span>
