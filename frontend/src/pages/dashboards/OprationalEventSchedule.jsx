@@ -31,6 +31,38 @@ export default function OprationalEventSchedule() {
   };
   const [formData, setFormData] = useState(initialForm);
 
+  const formatDateKeyLocal = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const formatDateTimeInputLocal = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+  const buildLocalDateTime = (dateKey, hours, minutes) => {
+    if (!dateKey) return '';
+    const [year, month, day] = dateKey.split('-').map(Number);
+    const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    const localYear = date.getFullYear();
+    const localMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const localDay = String(date.getDate()).padStart(2, '0');
+    const localHours = String(date.getHours()).padStart(2, '0');
+    const localMinutes = String(date.getMinutes()).padStart(2, '0');
+    return `${localYear}-${localMonth}-${localDay}T${localHours}:${localMinutes}`;
+  };
+
   useEffect(() => {
     if (eventId) {
       fetchData();
@@ -59,7 +91,7 @@ export default function OprationalEventSchedule() {
         current.setHours(0,0,0,0);
         last.setHours(0,0,0,0);
         while (current <= last) {
-            datesMap.set(current.getTime(), current.toISOString());
+        datesMap.set(current.getTime(), formatDateKeyLocal(current));
             current.setDate(current.getDate() + 1);
         }
     }
@@ -68,7 +100,7 @@ export default function OprationalEventSchedule() {
         if (!s.startTime) return;
         const d = new Date(s.startTime);
         d.setHours(0,0,0,0);
-        datesMap.set(d.getTime(), d.toISOString());
+      datesMap.set(d.getTime(), formatDateKeyLocal(d));
     });
     
     const sortedTimes = Array.from(datesMap.keys()).sort();
@@ -90,14 +122,11 @@ export default function OprationalEventSchedule() {
   // 2. Filter Schedules for currently selected date, search, and status
   const filteredSchedules = useMemo(() => {
     if (!selectedDate) return [];
-    const targetDate = new Date(selectedDate);
-    targetDate.setHours(0,0,0,0);
+    const targetDateKey = selectedDate;
     
     return schedules.filter(s => {
         // Date match
-        const sDate = new Date(s.startTime);
-        sDate.setHours(0,0,0,0);
-        if (sDate.getTime() !== targetDate.getTime()) return false;
+      if (formatDateKeyLocal(s.startTime) !== targetDateKey) return false;
         
         // Status match
         if (statusFilter !== 'All' && s.status !== statusFilter) return false;
@@ -123,11 +152,8 @@ export default function OprationalEventSchedule() {
     
     // Auto populate time based on selected date tab
     if (selectedDate) {
-        const d = new Date(selectedDate);
-        d.setHours(9, 0, 0, 0); // 9am default
-        defStart = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-        d.setHours(10, 0, 0, 0); // 10am default end
-        defEnd = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        defStart = buildLocalDateTime(selectedDate, 9, 0);
+        defEnd = buildLocalDateTime(selectedDate, 10, 0);
     }
     
     setFormData({ ...initialForm, startTime: defStart, endTime: defEnd });
@@ -138,8 +164,8 @@ export default function OprationalEventSchedule() {
     setModalMode('edit');
     setFormData({
       ...activity,
-      startTime: activity.startTime ? new Date(activity.startTime).toISOString().slice(0, 16) : '',
-      endTime: activity.endTime ? new Date(activity.endTime).toISOString().slice(0, 16) : ''
+      startTime: formatDateTimeInputLocal(activity.startTime),
+      endTime: formatDateTimeInputLocal(activity.endTime)
     });
     setShowModal(true);
   };
@@ -203,7 +229,7 @@ export default function OprationalEventSchedule() {
     let end = new Date(endStr);
     
     // Cross-day clamping. Since we display targetDate, clamp to 00:00 and 23:59 of that date
-    const targetDate = new Date(selectedDate);
+    const targetDate = new Date(`${selectedDate}T00:00:00`);
     const dayStart = new Date(targetDate);
     dayStart.setHours(0,0,0,0);
     const dayEnd = new Date(targetDate);
@@ -291,7 +317,7 @@ export default function OprationalEventSchedule() {
         {/* Date Tabs */}
         <div className="flex px-6 overflow-x-auto hide-scrollbar bg-slate-50/50 dark:bg-slate-900/60">
           {eventDates.map(dateStr => {
-            const d = new Date(dateStr);
+            const d = new Date(`${dateStr}T00:00:00`);
             const isActive = selectedDate === dateStr;
             const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
             const monthDay = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -375,7 +401,7 @@ export default function OprationalEventSchedule() {
                   })}
                   {wsActivities.length === 0 && (
                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button onClick={() => { setModalMode('create'); let def = ''; if(selectedDate){ let d=new Date(selectedDate); d.setHours(9); def=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16); } setFormData({...initialForm, workstream: ws.name, startTime: def, endTime: def}); setShowModal(true); }} className="text-[10px] font-bold text-slate-400 border border-slate-200 border-dashed rounded px-3 py-1 bg-white hover:text-primary hover:border-primary shadow-sm">
+                         <button onClick={() => { setModalMode('create'); const defStart = selectedDate ? buildLocalDateTime(selectedDate, 9, 0) : ''; const defEnd = selectedDate ? buildLocalDateTime(selectedDate, 10, 0) : ''; setFormData({...initialForm, workstream: ws.name, startTime: defStart, endTime: defEnd}); setShowModal(true); }} className="text-[10px] font-bold text-slate-400 border border-slate-200 border-dashed rounded px-3 py-1 bg-white hover:text-primary hover:border-primary shadow-sm">
                            + Add Block to {ws.name}
                          </button>
                      </div>
@@ -506,11 +532,11 @@ export default function OprationalEventSchedule() {
                 <div className="grid grid-cols-2 gap-5">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Start Time</label>
-                    <input required type="datetime-local" value={formData.startTime} onChange={e => setFormData({...formData, startTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                    <input required type="datetime-local" value={formatDateTimeInputLocal(formData.startTime)} onChange={e => setFormData({...formData, startTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">End Time</label>
-                    <input required type="datetime-local" value={formData.endTime} onChange={e => setFormData({...formData, endTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                    <input required type="datetime-local" value={formatDateTimeInputLocal(formData.endTime)} onChange={e => setFormData({...formData, endTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-5">
