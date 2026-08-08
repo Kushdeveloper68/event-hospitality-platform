@@ -14,6 +14,7 @@ export default function OprationalEventSchedule() {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState('create');
+  const [validationErrors, setValidationErrors] = useState({});
   
   const [statusFilter, setStatusFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,6 +62,12 @@ export default function OprationalEventSchedule() {
     const localHours = String(date.getHours()).padStart(2, '0');
     const localMinutes = String(date.getMinutes()).padStart(2, '0');
     return `${localYear}-${localMonth}-${localDay}T${localHours}:${localMinutes}`;
+  };
+
+  const parseLocalDateTime = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
   };
 
   useEffect(() => {
@@ -147,6 +154,7 @@ export default function OprationalEventSchedule() {
 
   const handleOpenCreate = () => {
     setModalMode('create');
+    setValidationErrors({});
     let defStart = '';
     let defEnd = '';
     
@@ -162,6 +170,7 @@ export default function OprationalEventSchedule() {
 
   const handleOpenEdit = (activity) => {
     setModalMode('edit');
+    setValidationErrors({});
     setFormData({
       ...activity,
       startTime: formatDateTimeInputLocal(activity.startTime),
@@ -172,6 +181,32 @@ export default function OprationalEventSchedule() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errors = {};
+    const startDateTime = parseLocalDateTime(formData.startTime);
+    const endDateTime = parseLocalDateTime(formData.endTime);
+
+    if (!formData.title?.trim()) errors.title = 'Activity title is required';
+    if (!formData.workstream?.trim()) errors.workstream = 'Workstream is required';
+    if (!formData.startTime) {
+      errors.startTime = 'Start time is required';
+    } else if (!startDateTime) {
+      errors.startTime = 'Please enter a valid start time';
+    }
+    if (!formData.endTime) {
+      errors.endTime = 'End time is required';
+    } else if (!endDateTime) {
+      errors.endTime = 'Please enter a valid end time';
+    }
+    if (startDateTime && endDateTime && endDateTime <= startDateTime) {
+      errors.startTime = 'Start time must be before end time';
+      errors.endTime = 'End time must be after start time';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
     const dataToSubmit = { ...formData, eventId };
     
     if (modalMode === 'create') {
@@ -179,6 +214,7 @@ export default function OprationalEventSchedule() {
       if (res.success) {
         setSchedules([...schedules, res.activity]);
         setShowModal(false);
+        setValidationErrors({});
         // If they created an activity for a totally new date, ensure it shows up (eventDates auto updates via useMemo)
       } else {
         alert(res.message);
@@ -191,6 +227,7 @@ export default function OprationalEventSchedule() {
           setSelectedActivity(res.activity);
         }
         setShowModal(false);
+        setValidationErrors({});
       } else {
         alert(res.message);
       }
@@ -511,6 +548,7 @@ export default function OprationalEventSchedule() {
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Activity Title</label>
                   <input required autoFocus type="text" value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500" placeholder="E.g., Opening Keynote Session" />
+                  {validationErrors.title && <p className="mt-1 text-xs font-medium text-red-500">{validationErrors.title}</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-5">
                   <div>
@@ -533,10 +571,12 @@ export default function OprationalEventSchedule() {
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">Start Time</label>
                     <input required type="datetime-local" value={formatDateTimeInputLocal(formData.startTime)} onChange={e => setFormData({...formData, startTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                    {validationErrors.startTime && <p className="mt-1 text-xs font-medium text-red-500">{validationErrors.startTime}</p>}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider dark:text-slate-300">End Time</label>
                     <input required type="datetime-local" value={formatDateTimeInputLocal(formData.endTime)} onChange={e => setFormData({...formData, endTime: e.target.value})} className="w-full rounded-xl border border-slate-200 text-sm p-3 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all bg-slate-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+                    {validationErrors.endTime && <p className="mt-1 text-xs font-medium text-red-500">{validationErrors.endTime}</p>}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-5">

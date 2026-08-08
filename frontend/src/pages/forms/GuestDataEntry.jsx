@@ -27,7 +27,25 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
       errors.email = 'Please enter a valid email address'
     }
     if (!form.phoneNumber?.trim()) errors.phoneNumber = 'Phone number is required'
-    if (!form.arrivalDatetime) errors.arrivalDatetime = 'Arrival date is required'
+
+    const arrivalDatetime = parseLocalDateTime(form.arrivalDatetime)
+    const departureDatetime = parseLocalDateTime(form.departureDatetime)
+
+    if (!form.arrivalDatetime) {
+      errors.arrivalDatetime = 'Arrival date is required'
+    } else if (!arrivalDatetime) {
+      errors.arrivalDatetime = 'Please enter a valid arrival date and time'
+    }
+
+    if (form.departureDatetime && !departureDatetime) {
+      errors.departureDatetime = 'Please enter a valid departure date and time'
+    }
+
+    if (arrivalDatetime && departureDatetime && departureDatetime <= arrivalDatetime) {
+      errors.arrivalDatetime = 'Arrival must be before departure'
+      errors.departureDatetime = 'Departure must be after arrival'
+    }
+
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
@@ -44,6 +62,12 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
     transportMode: '',
     specialRequests: '',
   })
+
+  const parseLocalDateTime = (value) => {
+    if (!value) return null
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? null : date
+  }
 
   useEffect(() => {
     // if guestId prop provided, load the guest
@@ -197,6 +221,12 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
         }`}>
           <div className="flex items-center gap-2">
             {toast.type === 'success' && <span className="material-symbols-outlined">check_circle</span>}
+                {validationErrors.departureDatetime && (
+                  <p className="text-red-500 text-xs font-medium flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">error</span>
+                    {validationErrors.departureDatetime}
+                  </p>
+                )}
             {toast.type === 'error' && <span className="material-symbols-outlined">error</span>}
             {toast.type === 'warning' && <span className="material-symbols-outlined">warning</span>}
             {toast.type === 'info' && <span className="material-symbols-outlined">info</span>}
