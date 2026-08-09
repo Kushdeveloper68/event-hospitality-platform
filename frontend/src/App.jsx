@@ -9,7 +9,7 @@ import GoogleAuthSuccess from "./pages/auth/GoogleAuthSuccess";
 
 // dashboard pages
 import {
-  PlatformLandingPage,
+  Landingpage,
   EventDirectory,
   EventWorkspaceShell,
   MainOprationDashboard,
@@ -31,7 +31,7 @@ function App() {
         <BrowserRouter>
         <ScrollToTop />
           <Routes>
-            <Route path="/" element={<PlatformLandingPage />} />
+            <Route path="/" element={<Landingpage />} />
             <Route path="/signup" element={<UserSignup />} />
             <Route path="/login" element={<UserLogin />} />
             <Route path="/terms" element={<TermsAndConditions />} />

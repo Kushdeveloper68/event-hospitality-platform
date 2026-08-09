@@ -6,7 +6,7 @@ import EventWorkspaceShell from "./dashboards/EventWorkspaceShell";
 import MainOprationDashboard from "./dashboards/MainOprationDashboard";
 import OprationalEventSchedule from "./dashboards/OprationalEventSchedule";
 import OrganizationAnalyticsDashboards from "./dashboards/OrganizationAnalyticsDashboards";
-import PlatformLandingPage from "./dashboards/PlatformLandingPage";
+import Landingpage from "./dashboards/Landingpage";
 // form/
 import CreateNewEvent from "./forms/CreateNewEvent";
 import GuestDataEntry from "./forms/GuestDataEntry";
@@ -50,7 +50,7 @@ export {
   MainOprationDashboard,
   OprationalEventSchedule,
   OrganizationAnalyticsDashboards,
-  PlatformLandingPage,
+  Landingpage,
   // forms/
   CreateNewEvent,
   GuestDataEntry,
