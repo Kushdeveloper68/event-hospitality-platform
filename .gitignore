@@ -5,3 +5,5 @@ node_modules
 
 # ignoring .env file
 .env
+# ignoring package-lock.json file 
+package-lock.json
