@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap");
 @import "tailwindcss";
 @config '../tailwind.config.js';
 
@@ -16,17 +16,35 @@
   border-right: 3px solid #2463eb;
 }
 
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #684646;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #2b6ae9;
+  background: #cbd5e1;
   border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .custom-scrollbar {
+  scrollbar-color: #334155 transparent;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 .hide-scrollbar::-webkit-scrollbar {
