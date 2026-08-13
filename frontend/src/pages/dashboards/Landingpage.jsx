@@ -92,7 +92,7 @@ const modules = [
 const audience = [
   {
     image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLtcxHL1lDXida13rJjxzHwjEpGQfoQMqgkfwThNCtzDaQHopo_o6Bwkzh_TorVFlGQIw7n0yTHh8NPw73DyEBYpAHQ4JZkWYvuimVtfMw50hX1_VeR1XXZjgaACtmesa0b-8JUV-bcFJv0rwFe2zMQZtTQWnBpOhGOOaAOFnLfbMVaWKbjq4jJfLjQvwOdadhrFlrOtLBP6rp3BLg1S-y5RUthlEpkpWs0B55ggrTI-zuOPb3On1OWh2PQ",
+      "https://img.icons8.com/?size=100&id=4xZxsZDAEP1D&format=png&color=000000",
     tint: "#F7EAE0",
     tag: "Control",
     title: "Event Directors",
@@ -100,7 +100,7 @@ const audience = [
   },
   {
     image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLvTKl3nfQoOnSyJXEBTGMjRsNJ0DTvN14zWhXK4UFzwW5AsP5gqXg6Y5ht6TRl4c3ZsyUKWxk-IMn_6WwkeKLKYYzDGVUtBqp7hl0j5y9gtISj6_gLSqX8cNwfD7smwhQbrLDQsw7zySPogr1bzmbiLcGs0KhHXShZMr2t7L8dTL5zBdL8jJuVwQZf2uGtBoTOjtJ6_aCfMvCFR3Dcrw4fj1PvO6aj8mDU-2herwaAI6jSGvnXGy-Xc_Gc",
+      "https://img.icons8.com/?size=100&id=59043&format=png&color=000000",
     tint: "#ecf6ef",
     tag: "Logistics",
     title: "Ops Managers",
@@ -108,7 +108,7 @@ const audience = [
   },
   {
     image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLvN8G0V41eDnx8hgBQaJD8OrEGYU4MSoyDUHDaMlwA2-2uLjYe7Glk299oQgeQoIhqAwqlBvHy3ZgCyQSj42RbfqpPJsr6nM09Hlh339FG4c3H4r30MluBW71fN1Qzu3hYppVxlLplAWLGkxYFxwLkDMxdeFW2ANWOG9qzzbxd9TJF9pdnu2TKm73w2AqZ7vCdPsjM4oxgpIHrG2Kol1x9CfKYU_Fk6QENjHgJy5owQ5-e0o-zsdbUNTLI",
+      "https://img.icons8.com/?size=100&id=nHVf0reZBEPi&format=png&color=000000",
     tint: "#F7EAE0",
     tag: "Mobile",
     title: "Floor Staff",
@@ -116,7 +116,7 @@ const audience = [
   },
   {
     image:
-      "https://lh3.googleusercontent.com/aida/AP1WRLsuSi6CW-tHxkv0djpI1JVD3d26-jBjn_TmpyhaTn4Ed8AlzVkEifZavAh2_UU2qg7Ip6DXtsj8HQPHAcJEVfmwm2fsBzMkAKrQjQlCIu4JStETN5sTuNWIkZz8BdhnbtaagHVrnGThqlr53Xy3dFmlXMkf-_5s3dEJGBjJ_xacBzG0fF3xbhaZpl-YgUrdKrHjsVWPuFQquxufjMdOhHmjaxz5k7X4Bm-VnrqdFFxRYzzTg3zy0WM8mQE",
+      "https://img.icons8.com/?size=100&id=uRr5LBwSLy50&format=png&color=000000",
     tint: "#ecf6ef",
     tag: "Fleet",
     title: "Logistics Teams",
@@ -208,48 +208,6 @@ export default function Landingpage() {
 
   return (
     <div className="landing-shell min-h-screen bg-[#FFFDFC] text-[#141d1a]" style={bodyStyle}>
-      <style>{`html { scroll-behavior: smooth; }
-.hide-scrollbar::-webkit-scrollbar { display: none; }
-.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-@keyframes lpFadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes lpFloat {
-  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
-  50% { transform: translate3d(0, -10px, 0) scale(1.02); }
-}
-
-.lp-animate { animation: lpFadeUp 0.75s ease-out both; }
-.lp-animate-delay-1 { animation: lpFadeUp 0.85s ease-out 0.08s both; }
-.lp-animate-delay-2 { animation: lpFadeUp 0.95s ease-out 0.16s both; }
-.lp-float { animation: lpFloat 10s ease-in-out infinite; }
-
-.lp-card { transition: transform 240ms ease, box-shadow 240ms ease, border-color 240ms ease, background-color 240ms ease; will-change: transform; }
-.lp-card:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(23, 32, 28, 0.12); }
-
-.lp-surface { box-shadow: 0 18px 48px rgba(23, 32, 28, 0.08); }
-.lp-button { transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease; }
-.lp-button:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(3, 47, 30, 0.16); }
-.lp-pill { transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease, color 220ms ease, box-shadow 220ms ease; }
-.lp-pill:hover { transform: translateY(-1px); }
-.lp-section { position: relative; overflow: hidden; }
-
-@media (prefers-reduced-motion: reduce) {
-  .lp-animate,
-  .lp-animate-delay-1,
-  .lp-animate-delay-2,
-  .lp-float,
-  .lp-card,
-  .lp-button,
-  .lp-pill {
-    animation: none !important;
-    transition: none !important;
-  }
-}
-`}</style>
 
       <nav
         className={`fixed top-0 z-50 w-full border-b border-[#c1c8c24d] bg-[#f2fcf5d9] backdrop-blur-xl transition-all duration-300 ${
@@ -257,9 +215,14 @@ export default function Landingpage() {
         }`}
       >
         <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6">
-          <Link className="lp-animate text-2xl leading-8 font-semibold text-[#032f1e]" to="/" style={headlineStyle}>
+          {/* adding image logo flex event-logo-with-icon-dark-bg-removebg-preview.png */}
+          <div className="flex items-center gap-2">
+<img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" className="h-12 w-12" />
+          <Link className="lp-animate text-2xl leading-8  font-semibold text-[#032f1e]" to="/" style={headlineStyle}>
             EventCure
           </Link>
+          </div>
+          
           <div className="hidden items-center gap-6 md:flex">
             <Link className="lp-pill rounded-full px-3 py-2 text-sm leading-4 font-medium text-[#414844] transition-colors duration-200 hover:bg-[#ecf6ef] hover:text-[#032f1e]" to="/#product">Product</Link>
             <Link className="lp-pill rounded-full px-3 py-2 text-sm leading-4 font-medium text-[#414844] transition-colors duration-200 hover:bg-[#ecf6ef] hover:text-[#032f1e]" to="/manual">How it works</Link>
@@ -268,7 +231,7 @@ export default function Landingpage() {
           </div>
           <div className="flex items-center gap-4">
             <Link className="lp-pill hidden rounded-full px-4 py-2 text-sm leading-4 font-medium text-[#414844] transition-colors hover:bg-[#ecf6ef] hover:text-[#032f1e] md:inline-block" to="/login">Sign in</Link>
-            <Link className="lp-button rounded-full bg-[#032f1e] px-6 py-3 text-sm leading-4 font-medium text-[#ffffff] shadow-[0_10px_24px_rgba(3,47,30,0.16)] hover:bg-[#1d4533]" to="/#beta">Join Beta</Link>
+            <Link className="lp-button rounded-full bg-[#032f1e] px-6 py-3 text-sm leading-4 font-medium text-[#ffffff] shadow-[0_10px_24px_rgba(3,47,30,0.16)] hover:bg-[#1d4533]" to="/login">Join Beta</Link>
           </div>
         </div>
       </nav>
@@ -487,9 +450,6 @@ export default function Landingpage() {
         </section>
 
         <section className="lp-section border-y border-[#c1c8c24d] bg-[#Fdfbf7] py-12" id="beta">
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="lp-float absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-[#f7eae0] blur-3xl" />
-          </div>
           <div className="mx-auto max-w-3xl px-6 text-center">
             <h2 className={`${textStyles.displayLg} mb-6 text-[#032f1e]`} style={headlineStyle}>We're still building EventCure.</h2>
             <p className={`${textStyles.bodyLg} mb-12 text-[#414844]`} style={bodyStyle}>Join our early access program to help shape the future of event operations.</p>
@@ -556,26 +516,95 @@ export default function Landingpage() {
           <div className="mx-auto max-w-3xl px-6">
             <h2 className={`${textStyles.displayLg} mb-6 text-[#032f1e]`} style={headlineStyle}>Your next event deserves a better operations desk.</h2>
             <p className={`${textStyles.bodyLg} mb-10 text-[#414844]`} style={bodyStyle}>Stop relying on messy spreadsheets and disjointed tools. Bring precision to your event logistics.</p>
-            <Link className="lp-button inline-block rounded-full bg-[#032f1e] px-10 py-5 text-lg leading-7 font-medium text-[#ffffff] shadow-[0_10px_24px_rgba(3,47,30,0.16)] hover:bg-[#1d4533]" to="/#beta">Request Beta Access</Link>
+            <Link className="lp-button inline-block rounded-full bg-[#032f1e] px-10 py-5 text-lg leading-7 font-medium text-[#ffffff] shadow-[0_10px_24px_rgba(3,47,30,0.16)] hover:bg-[#1d4533]" to="/login">Request Beta Access</Link>
           </div>
         </section>
       </main>
 
-      <footer className="w-full border-t border-[#c1c8c24d] bg-[#f2fcf5] py-8">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 md:flex-row md:items-center">
-          <div className="flex flex-col items-center gap-2 md:items-start">
-            <div className={`${textStyles.headlineSm} font-bold text-[#032f1e]`} style={headlineStyle}>EventCure</div>
-            <div className={`${textStyles.bodySm} text-[#414844]`} style={bodyStyle}>Event operations, organised.</div>
-            <div className="mt-4 text-xs leading-4 font-semibold text-[#414844]">© 2024 EventCure. All rights reserved. Precision in every detail.</div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Link className="text-xs leading-4 font-semibold text-[#414844] transition-colors hover:text-[#9a4523]" to="/privacy">Privacy Policy</Link>
-            <Link className="text-xs leading-4 font-semibold text-[#414844] transition-colors hover:text-[#9a4523]" to="/terms">Terms of Service</Link>
-            <Link className="text-xs leading-4 font-semibold text-[#414844] transition-colors hover:text-[#9a4523]" to="/manual">Contact Support</Link>
-            <Link className="text-xs leading-4 font-semibold text-[#414844] transition-colors hover:text-[#9a4523]" to="/privacy">Security</Link>
-          </div>
-        </div>
-      </footer>
+     <footer className="w-full border-t border-white/10 bg-gradient-to-b from-black via-[#050505] to-[#0b0b0b] py-8">
+  <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 px-6 md:flex-row md:items-center">
+
+    {/* EventCure */}
+    <div className="flex flex-col items-center gap-2 md:items-start">
+      <img
+        src="/event-logo-with-icon-and-name-with-dark-bg.png"
+        alt="EventCure"
+        className="h-25 w-auto object-contain"
+      />
+
+      <div
+        className={`${textStyles.bodySm} text-white/60`}
+        style={bodyStyle}
+      >
+        Event operations, organised.
+      </div>
+
+      <div className="mt-4 text-xs leading-4 font-semibold text-white/40">
+        © 2026 EventCure. All rights reserved. Precision in every detail.
+      </div>
+    </div>
+
+    {/* Founder */}
+    <div className="flex flex-col items-center gap-2 md:items-start">
+      <div
+        className={`${textStyles.headlineSm} font-bold text-white`}
+        style={headlineStyle}
+      >
+        Founder & CEO
+      </div>
+
+      <div
+        className={`${textStyles.bodySm} text-white/60`}
+        style={bodyStyle}
+      >
+        <a
+          href="https://kushdeveloper.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#9a4523] transition-colors hover:text-[#c7653d]"
+        >
+          Kush Developer
+        </a>
+      </div>
+
+      <div className="mt-4 text-xs leading-4 font-semibold text-white/40">
+        © 2026 Kush Developer. All rights reserved.
+      </div>
+    </div>
+
+    {/* Footer Links */}
+    <div className="flex flex-wrap justify-center gap-x-6 gap-y-3">
+      <Link
+        className="text-xs leading-4 font-semibold text-white/60 transition-colors hover:text-white"
+        to="/privacy"
+      >
+        Privacy Policy
+      </Link>
+
+      <Link
+        className="text-xs leading-4 font-semibold text-white/60 transition-colors hover:text-white"
+        to="/terms"
+      >
+        Terms of Service
+      </Link>
+
+      <Link
+        className="text-xs leading-4 font-semibold text-white/60 transition-colors hover:text-white"
+        to="/manual"
+      >
+        Contact Support
+      </Link>
+
+      <Link
+        className="text-xs leading-4 font-semibold text-white/60 transition-colors hover:text-white"
+        to="/privacy"
+      >
+        Security
+      </Link>
+    </div>
+
+  </div>
+</footer>
     </div>
   );
 }
