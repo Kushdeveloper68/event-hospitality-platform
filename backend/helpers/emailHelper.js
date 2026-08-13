@@ -6,14 +6,25 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
 
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+  host: "smtp.gmail.com",
   port: 465,
   secure: true,
   family: 4,
-    auth: {
-        user: process.env.EMAIL_USER ,
-        pass: process.env.EMAIL_PASSWORD 
-    }
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
+  },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("SMTP connection failed:", error);
+  } else {
+    console.log("SMTP server is ready");
+  }
 });
 
 // Generate OTP
