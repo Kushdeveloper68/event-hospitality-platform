@@ -516,7 +516,7 @@ function EventAdminstrativeSetting() {
             </span>
           </nav>
           <div className="flex items-center gap-3 flex-wrap">
-            <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white">
+            <h2 className="font-display text-section-h2 text-slate-900 dark:text-white">
               Administrative Settings
             </h2>
             <span
@@ -747,7 +747,7 @@ function EventAdminstrativeSetting() {
                 <button
                   onClick={handleSaveCoreInfo}
                   disabled={saving}
-                  className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-blue-700 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary-600 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {saving ? (
                     <>
@@ -871,7 +871,7 @@ function EventAdminstrativeSetting() {
                 <button
                   onClick={handleSavePreferences}
                   disabled={saving}
-                  className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-blue-700 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary-600 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {saving ? (
                     <>
@@ -984,7 +984,7 @@ function EventAdminstrativeSetting() {
                 <button
                   onClick={handleSavePreferences}
                   disabled={saving}
-                  className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-blue-700 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 text-sm font-bold text-white bg-primary rounded-lg hover:bg-primary-600 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
                 >
                   {saving ? (
                     <>

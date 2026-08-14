@@ -27,7 +27,7 @@ function TOCItem({ section, active, onClick }) {
       onClick={() => onClick(section.id)}
       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-sm transition-all duration-150 ${
         active
-          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-semibold"
+          ? "bg-primary-50 dark:bg-primary-500/10 text-primary-700 dark:text-primary-400 font-semibold"
           : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300"
       }`}
     >
@@ -49,9 +49,9 @@ function Section({ id, icon, title, children }) {
   return (
     <section id={id} className="scroll-mt-24">
       <div className="flex items-center gap-3 mb-5">
-        <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+        <div className="size-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
           <span
-            className="material-symbols-outlined text-blue-600 dark:text-blue-400"
+            className="material-symbols-outlined text-primary-600 dark:text-primary-400"
             style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}
           >
             {icon}
@@ -205,7 +205,7 @@ export default function TermsAndConditions() {
           {/* Hero */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 mb-8">
             <div className="flex items-start gap-4">
-              <div className="size-14 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
+              <div className="size-14 rounded-2xl bg-primary-600 flex items-center justify-center shrink-0">
                 <span
                   className="material-symbols-outlined text-white"
                   style={{
@@ -217,7 +217,7 @@ export default function TermsAndConditions() {
                 </span>
               </div>
               <div>
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                <h1 className="font-display text-page-h1 text-slate-900 dark:text-white mb-2">
                   Terms & Conditions
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed max-w-2xl">
@@ -841,7 +841,7 @@ export default function TermsAndConditions() {
                     className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800"
                   >
                     <span
-                      className="material-symbols-outlined text-blue-500 mb-2 block"
+                      className="material-symbols-outlined text-primary-500 mb-2 block"
                       style={{
                         fontSize: "20px",
                         fontVariationSettings: "'FILL' 1",
@@ -876,17 +876,17 @@ export default function TermsAndConditions() {
             <div className="flex justify-center gap-4 mt-2">
               <Link
                 to="/privacy"
-                className="hover:text-blue-500 transition-colors"
+                className="hover:text-primary-500 transition-colors"
               >
                 Privacy Policy
               </Link>
               <Link
                 to="/manual"
-                className="hover:text-blue-500 transition-colors"
+                className="hover:text-primary-500 transition-colors"
               >
                 User Manual
               </Link>
-              <Link to="/" className="hover:text-blue-500 transition-colors">
+              <Link to="/" className="hover:text-primary-500 transition-colors">
                 Home
               </Link>
             </div>

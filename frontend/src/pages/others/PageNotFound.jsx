@@ -40,7 +40,7 @@ function PageNotFound() {
               </div>
 
               <div className="space-y-4">
-                <h1 className="max-w-xl text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+                <h1 className="font-display max-w-xl text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
                   We could not find this page.
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-slate-600 dark:text-slate-400 sm:text-lg">

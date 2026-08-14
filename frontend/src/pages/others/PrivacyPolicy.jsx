@@ -28,7 +28,7 @@ function TOCItem({ section, active, onClick }) {
       onClick={() => onClick(section.id)}
       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-sm transition-all duration-150 ${
         active
-          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-semibold"
+          ? "bg-primary-50 dark:bg-primary-500/10 text-primary-700 dark:text-primary-400 font-semibold"
           : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300"
       }`}
     >
@@ -50,9 +50,9 @@ function Section({ id, icon, title, children }) {
   return (
     <section id={id} className="scroll-mt-24">
       <div className="flex items-center gap-3 mb-5">
-        <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+        <div className="size-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
           <span
-            className="material-symbols-outlined text-blue-600 dark:text-blue-400"
+            className="material-symbols-outlined text-primary-600 dark:text-primary-400"
             style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}
           >
             {icon}
@@ -80,11 +80,11 @@ function Highlight({ children, type = "warning" }) {
       iconColor: "text-amber-500",
     },
     info: {
-      bg: "bg-blue-50 dark:bg-blue-500/10",
-      border: "border-blue-200 dark:border-blue-500/20",
-      text: "text-blue-800 dark:text-blue-300",
+      bg: "bg-primary-50 dark:bg-primary-500/10",
+      border: "border-primary-200 dark:border-primary-500/20",
+      text: "text-primary-800 dark:text-primary-300",
       icon: "info",
-      iconColor: "text-blue-500",
+      iconColor: "text-primary-500",
     },
     success: {
       bg: "bg-emerald-50 dark:bg-emerald-500/10",
@@ -152,7 +152,7 @@ function DataTable({ rows }) {
 
 function RightCard({ icon, title, desc, color = "blue" }) {
   const colorMap = {
-    blue: "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/40",
+    blue: "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-900/40",
     green:
       "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/40",
     purple:
@@ -296,7 +296,7 @@ export default function PrivacyPolicy() {
           {/* Hero */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 mb-8">
             <div className="flex items-start gap-4">
-              <div className="size-14 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
+              <div className="size-14 rounded-2xl bg-primary-600 flex items-center justify-center shrink-0">
                 <span
                   className="material-symbols-outlined text-white"
                   style={{
@@ -308,7 +308,7 @@ export default function PrivacyPolicy() {
                 </span>
               </div>
               <div>
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                <h1 className="font-display text-page-h1 text-slate-900 dark:text-white mb-2">
                   Privacy Policy
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed max-w-2xl">
@@ -345,7 +345,7 @@ export default function PrivacyPolicy() {
                     </span>
                     GDPR Compliant
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1.5 rounded-full">
                     <span
                       className="material-symbols-outlined"
                       style={{ fontSize: "14px" }}
@@ -611,7 +611,7 @@ export default function PrivacyPolicy() {
                     className="flex gap-3 p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20"
                   >
                     <span
-                      className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5"
+                      className="material-symbols-outlined text-primary-500 shrink-0 mt-0.5"
                       style={{
                         fontSize: "18px",
                         fontVariationSettings: "'FILL' 1",
@@ -624,7 +624,7 @@ export default function PrivacyPolicy() {
                         <p className="text-sm font-bold text-slate-900 dark:text-white">
                           {item.title}
                         </p>
-                        <span className="text-[10px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded-full uppercase tracking-wide">
+                        <span className="text-[10px] font-bold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-2 py-0.5 rounded-full uppercase tracking-wide">
                           {item.basis}
                         </span>
                       </div>
@@ -1068,7 +1068,7 @@ export default function PrivacyPolicy() {
                   },
                 ].map((item) => {
                   const colorMap = {
-                    blue: "border-blue-100 dark:border-blue-900/40 bg-blue-50/30 dark:bg-blue-900/10",
+                    blue: "border-primary-100 dark:border-primary-900/40 bg-primary-50/30 dark:bg-primary-900/10",
                     green:
                       "border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-900/10",
                     amber:
@@ -1077,7 +1077,7 @@ export default function PrivacyPolicy() {
                       "border-purple-100 dark:border-purple-900/40 bg-purple-50/30 dark:bg-purple-900/10",
                   };
                   const iconColorMap = {
-                    blue: "text-blue-500",
+                    blue: "text-primary-500",
                     green: "text-emerald-500",
                     amber: "text-amber-500",
                     purple: "text-purple-500",
@@ -1384,7 +1384,7 @@ export default function PrivacyPolicy() {
                   },
                 ].map((item) => {
                   const colorMap = {
-                    blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30 text-blue-600 dark:text-blue-400",
+                    blue: "bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-900/30 text-primary-600 dark:text-primary-400",
                     amber:
                       "bg-amber-50 dark:bg-amber-900/20 border-amber-100 dark:border-amber-900/30 text-amber-600 dark:text-amber-400",
                     purple:
@@ -1445,17 +1445,17 @@ export default function PrivacyPolicy() {
             <div className="flex justify-center gap-4 mt-2">
               <Link
                 to="/terms"
-                className="hover:text-blue-500 transition-colors"
+                className="hover:text-primary-500 transition-colors"
               >
                 Terms of Service
               </Link>
               <Link
                 to="/manual"
-                className="hover:text-blue-500 transition-colors"
+                className="hover:text-primary-500 transition-colors"
               >
                 User Manual
               </Link>
-              <Link to="/" className="hover:text-blue-500 transition-colors">
+              <Link to="/" className="hover:text-primary-500 transition-colors">
                 Home
               </Link>
             </div>

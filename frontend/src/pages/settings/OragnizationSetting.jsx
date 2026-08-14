@@ -139,7 +139,7 @@ function SectionCard({ title, subtitle, icon, children }) {
           </span>
         </div>
         <div>
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          <h2 className="font-display text-card-h3 text-slate-900 dark:text-white">
             {title}
           </h2>
           {subtitle && (
@@ -510,7 +510,7 @@ export default function OrganizationSetting() {
 
       {/* ── Page header ── */}
       <div className="mb-8">
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+        <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
           Settings
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">

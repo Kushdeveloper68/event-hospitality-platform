@@ -27,7 +27,7 @@ function TOCItem({ section, active, onClick }) {
       onClick={() => onClick(section.id)}
       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-sm transition-all duration-150 ${
         active
-          ? "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-semibold"
+          ? "bg-primary-50 dark:bg-primary-500/10 text-primary-700 dark:text-primary-400 font-semibold"
           : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300"
       }`}
     >
@@ -48,9 +48,9 @@ function TOCItem({ section, active, onClick }) {
 function SectionTitle({ id, icon, title }) {
   return (
     <div className="flex items-center gap-3 mb-5" id={id}>
-      <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+      <div className="size-10 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center shrink-0">
         <span
-          className="material-symbols-outlined text-blue-600 dark:text-blue-400"
+          className="material-symbols-outlined text-primary-600 dark:text-primary-400"
           style={{ fontSize: "20px", fontVariationSettings: "'FILL' 1" }}
         >
           {icon}
@@ -66,11 +66,11 @@ function SectionTitle({ id, icon, title }) {
 function Note({ type = "info", children }) {
   const styles = {
     info: {
-      bg: "bg-blue-50 dark:bg-blue-500/10",
-      border: "border-blue-200 dark:border-blue-500/20",
+      bg: "bg-primary-50 dark:bg-primary-500/10",
+      border: "border-primary-200 dark:border-primary-500/20",
       icon: "info",
-      iconColor: "text-blue-500",
-      text: "text-blue-800 dark:text-blue-300",
+      iconColor: "text-primary-500",
+      text: "text-primary-800 dark:text-primary-300",
     },
     tip: {
       bg: "bg-emerald-50 dark:bg-emerald-500/10",
@@ -113,7 +113,7 @@ function Note({ type = "info", children }) {
 function Step({ number, title, children }) {
   return (
     <div className="flex gap-4 mb-6">
-      <div className="shrink-0 size-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-black mt-0.5">
+      <div className="shrink-0 size-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-black mt-0.5">
         {number}
       </div>
       <div className="flex-1">
@@ -162,7 +162,7 @@ function FeatureRow({ icon, title, desc }) {
 
 function Badge({ label, color = "blue" }) {
   const colors = {
-    blue: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+    blue: "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400",
     green:
       "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
     amber:
@@ -244,7 +244,7 @@ export default function UserManual() {
             </span>
             <Link
               to="/dashboard"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
+              className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline"
             >
               <span
                 className="material-symbols-outlined"
@@ -316,7 +316,7 @@ export default function UserManual() {
               placeholder="Search sections..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full mb-3 px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full mb-3 px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-primary-500/20"
             />
             <nav className="space-y-0.5 max-h-[calc(100vh-220px)] overflow-y-auto">
               {filteredSections.map((s) => (
@@ -341,7 +341,7 @@ export default function UserManual() {
           {/* Hero banner */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-8 mb-8">
             <div className="flex items-start gap-5">
-              <div className="size-16 rounded-2xl bg-blue-600 flex items-center justify-center shrink-0">
+              <div className="size-16 rounded-2xl bg-primary-600 flex items-center justify-center shrink-0">
                 <span
                   className="material-symbols-outlined text-white"
                   style={{
@@ -353,7 +353,7 @@ export default function UserManual() {
                 </span>
               </div>
               <div>
-                <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+                <h1 className="font-display text-page-h1 text-slate-900 dark:text-white mb-2">
                   EventCure User Manual
                 </h1>
                 <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed max-w-2xl">
@@ -371,7 +371,7 @@ export default function UserManual() {
                     </span>
                     Version 1.0
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-full">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1.5 rounded-full">
                     <span
                       className="material-symbols-outlined"
                       style={{ fontSize: "14px" }}
@@ -729,7 +729,7 @@ export default function UserManual() {
                       className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl"
                     >
                       <span
-                        className="material-symbols-outlined text-blue-600 dark:text-blue-400"
+                        className="material-symbols-outlined text-primary-600 dark:text-primary-400"
                         style={{ fontSize: "18px" }}
                       >
                         {icon}
@@ -883,7 +883,7 @@ export default function UserManual() {
                       className="flex items-start gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
                     >
                       <span
-                        className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5"
+                        className="material-symbols-outlined text-primary-500 shrink-0 mt-0.5"
                         style={{ fontSize: "16px" }}
                       >
                         {icon}
@@ -1932,7 +1932,7 @@ export default function UserManual() {
                       className="flex items-start gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
                     >
                       <span
-                        className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5"
+                        className="material-symbols-outlined text-primary-500 shrink-0 mt-0.5"
                         style={{ fontSize: "16px" }}
                       >
                         {icon}
@@ -2226,7 +2226,7 @@ export default function UserManual() {
                       className="flex items-start gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg"
                     >
                       <span
-                        className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5"
+                        className="material-symbols-outlined text-primary-500 shrink-0 mt-0.5"
                         style={{ fontSize: "16px" }}
                       >
                         {icon}
@@ -2365,7 +2365,7 @@ export default function UserManual() {
                   >
                     <div className="flex items-start gap-3 p-4 bg-slate-50 dark:bg-slate-800/50">
                       <span
-                        className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5"
+                        className="material-symbols-outlined text-primary-500 shrink-0 mt-0.5"
                         style={{
                           fontSize: "18px",
                           fontVariationSettings: "'FILL' 1",
@@ -2385,9 +2385,9 @@ export default function UserManual() {
                   </div>
                 ))}
 
-                <div className="mt-8 p-5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl flex items-start gap-4">
+                <div className="mt-8 p-5 bg-primary-50 dark:bg-primary-500/10 border border-primary-200 dark:border-primary-500/20 rounded-xl flex items-start gap-4">
                   <span
-                    className="material-symbols-outlined text-blue-500 shrink-0 mt-0.5"
+                    className="material-symbols-outlined text-primary-500 shrink-0 mt-0.5"
                     style={{
                       fontSize: "24px",
                       fontVariationSettings: "'FILL' 1",
@@ -2396,10 +2396,10 @@ export default function UserManual() {
                     support_agent
                   </span>
                   <div>
-                    <p className="font-bold text-blue-900 dark:text-blue-300 mb-1">
+                    <p className="font-bold text-primary-900 dark:text-primary-300 mb-1">
                       Still need help?
                     </p>
-                    <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed">
+                    <p className="text-sm text-primary-700 dark:text-primary-400 leading-relaxed">
                       Our support team is available at{" "}
                       <strong>support@eventcure.io</strong>. For legal queries,
                       contact <strong>legal@eventcure.io</strong>. For API and
@@ -2421,17 +2421,17 @@ export default function UserManual() {
             <div className="flex justify-center gap-4 mt-2">
               <Link
                 to="/privacy"
-                className="hover:text-blue-500 transition-colors"
+                className="hover:text-primary-500 transition-colors"
               >
                 Privacy Policy
               </Link>
               <Link
                 to="/terms"
-                className="hover:text-blue-500 transition-colors"
+                className="hover:text-primary-500 transition-colors"
               >
                 Terms of Service
               </Link>
-              <Link to="/" className="hover:text-blue-500 transition-colors">
+              <Link to="/" className="hover:text-primary-500 transition-colors">
                 Home
               </Link>
             </div>
