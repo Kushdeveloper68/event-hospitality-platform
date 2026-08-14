@@ -117,7 +117,7 @@ function TransportEntryForm({ eventId, transportId, onDone, onCancel }) {
       </nav>
 
       <div className="mb-10">
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+        <h1 className="font-display text-page-h1 text-slate-900 dark:text-white mb-2">
           {isEditing ? 'Edit Transport Details' : 'Schedule New Transport'}
         </h1>
         <p className="text-slate-500 text-lg max-w-2xl">
@@ -265,7 +265,7 @@ function TransportEntryForm({ eventId, transportId, onDone, onCancel }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full sm:w-auto px-8 h-12 rounded-lg bg-primary text-white font-semibold hover:bg-blue-700 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full sm:w-auto px-8 h-12 rounded-lg bg-primary text-white font-semibold hover:bg-primary-600 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading ? (
                 <>

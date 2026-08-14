@@ -114,22 +114,22 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
 
   if (initialLoad) {
     return (
-      <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#1a1f2e] rounded-xl border border-[#dbdee6] dark:border-[#2d364a]">
+      <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-surface-dark rounded-xl border border-border-light dark:border-slate-800">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-        <p className="mt-4 text-[#616e89] text-sm">Loading request details...</p>
+        <p className="mt-4 text-slate-500 text-sm">Loading request details...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-[#1a1f2e] border border-[#dbdee6] dark:border-[#2d364a] rounded-xl shadow-sm overflow-hidden">
-      <div className="px-6 py-5 border-b border-[#dbdee6] dark:border-[#2d364a] flex items-center justify-between">
-        <h2 className="text-xl font-bold text-[#111318] dark:text-white">
+    <div className="bg-white dark:bg-surface-dark border border-border-light dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
+      <div className="px-6 py-5 border-b border-border-light dark:border-slate-800 flex items-center justify-between">
+        <h2 className="font-display text-card-h3 text-slate-900 dark:text-white">
           {memberId ? 'Edit Service Request' : 'New Service Request'}
         </h2>
         <button
           onClick={onCancel}
-          className="p-2 text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors"
+          className="p-2 text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors"
         >
           <span className="material-symbols-outlined">close</span>
         </button>
@@ -148,14 +148,14 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
             
             {/* Request Type */}
             <div>
-              <label className="block text-sm font-bold text-[#111318] dark:text-white mb-2">
+              <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
                 Request Type <span className="text-red-500">*</span>
               </label>
               <select
                 name="requestType"
                 value={formData.requestType}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-[#111318] dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-slate-900 dark:text-white"
                 required
               >
                 <option value="housekeeping">Housekeeping</option>
@@ -168,14 +168,14 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
 
             {/* Urgency */}
             <div>
-              <label className="block text-sm font-bold text-[#111318] dark:text-white mb-2">
+              <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
                 Priority Level
               </label>
               <select
                 name="urgency"
                 value={formData.urgency}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-[#111318] dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-slate-900 dark:text-white"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -186,14 +186,14 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
 
             {/* Linked Room (Optional) */}
             <div>
-              <label className="block text-sm font-bold text-[#111318] dark:text-white mb-2">
+              <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
                 Assigned Room (Optional)
               </label>
               <select
                 name="room"
                 value={formData.room}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-[#111318] dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-slate-900 dark:text-white"
               >
                 <option value="">-- No Room Attached --</option>
                 {rooms.map(r => (
@@ -204,14 +204,14 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
 
             {/* Linked Guest (Optional) */}
             <div>
-              <label className="block text-sm font-bold text-[#111318] dark:text-white mb-2">
+              <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
                 Assigned Guest (Optional)
               </label>
               <select
                 name="guest"
                 value={formData.guest}
                 onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-[#111318] dark:text-white"
+                className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm text-slate-900 dark:text-white"
               >
                 <option value="">-- No Guest Attached --</option>
                 {guests.map(g => (
@@ -223,7 +223,7 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
 
           {/* Notes Workspace */}
           <div>
-            <label className="block text-sm font-bold text-[#111318] dark:text-white mb-2">
+            <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
               Request Details / Notes
             </label>
             <textarea
@@ -231,7 +231,7 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
               value={formData.notes}
               onChange={handleChange}
               rows="4"
-              className="w-full px-4 py-3 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary text-sm resize-none text-[#111318] dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
+              className="w-full px-4 py-3 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm resize-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
               placeholder="Provide context on exactly what the guest needs or what the issue is..."
             ></textarea>
           </div>
@@ -246,17 +246,17 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
               onChange={handleChange}
               className="size-5 rounded border-gray-300 text-primary focus:ring-primary"
             />
-            <label htmlFor="permissionToEnter" className="text-sm font-medium text-[#111318] dark:text-white cursor-pointer select-none">
+            <label htmlFor="permissionToEnter" className="text-sm font-medium text-slate-900 dark:text-white cursor-pointer select-none">
               Guest authorized staff entry to room without presence
             </label>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-[#dbdee6] dark:border-[#2d364a]">
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-border-light dark:border-slate-800">
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-2.5 text-sm font-bold text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors"
+              className="px-6 py-2.5 text-sm font-bold text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors"
               disabled={loading}
             >
               Cancel

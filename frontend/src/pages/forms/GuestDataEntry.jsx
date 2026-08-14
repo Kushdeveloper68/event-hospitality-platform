@@ -217,7 +217,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
           toast.type === 'success' ? 'bg-green-500' : 
           toast.type === 'error' ? 'bg-red-500' : 
           toast.type === 'warning' ? 'bg-yellow-500' : 
-          'bg-blue-500'
+          'bg-primary-500'
         }`}>
           <div className="flex items-center gap-2">
             {toast.type === 'success' && <span className="material-symbols-outlined">check_circle</span>}
@@ -277,7 +277,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
         </nav>
         <div className="flex justify-between items-end">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Add / Edit Guest</h1>
+            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">Add / Edit Guest</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">Configure profile details and logistical requirements for
               the upcoming event.</p>
           </div>
@@ -290,7 +290,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
           className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
             <span className="material-symbols-outlined text-primary">person</span>
-            <h3 className="font-bold text-slate-900 dark:text-white">Personal Information</h3>
+            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">Personal Information</h3>
           </div>
           <div className="p-6 space-y-6">
             <div className="space-y-2">
@@ -337,7 +337,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
                 </p>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number <span className="text-red-500">*</span></label>
                 <input
@@ -423,10 +423,10 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
           className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
             <span className="material-symbols-outlined text-primary">local_shipping</span>
-            <h3 className="font-bold text-slate-900 dark:text-white">Logistics &amp; Arrival</h3>
+            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">Logistics &amp; Arrival</h3>
           </div>
           <div className="p-6 space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Arrival Datetime <span className="text-red-500">*</span></label>
                 <input
@@ -509,7 +509,7 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
           <button 
             type="submit" 
             disabled={saving || loading}
-            className="px-8 py-3 text-sm font-bold text-white bg-primary rounded-lg shadow-md shadow-primary/20 hover:bg-blue-700 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center gap-3"
+            className="px-8 py-3 text-sm font-bold text-white bg-primary rounded-lg shadow-md shadow-primary/20 hover:bg-primary-600 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center gap-3"
           >
             {saving ? (
               <>

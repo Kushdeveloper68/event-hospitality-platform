@@ -134,7 +134,7 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
     </nav>
     {/* <!-- Header --> */}
     <div className="mb-10">
-      <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight mb-2">
+      <h1 className="font-display text-page-h1 text-slate-900 dark:text-white mb-2">
         {isEditing ? 'Edit Room' : 'Add New Room'}
       </h1>
       <p className="text-slate-600 dark:text-slate-400 text-lg max-w-2xl">
@@ -239,7 +239,7 @@ function RoomconfigurationForm({ eventId, roomId, onDone, onCancel }) {
             Cancel
           </button>
           <button
-            className="w-full sm:w-auto px-8 h-12 rounded-lg bg-primary text-white font-semibold hover:bg-blue-700 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-8 h-12 rounded-lg bg-primary text-white font-semibold hover:bg-primary-600 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             type="submit"
             disabled={loading}
           >
