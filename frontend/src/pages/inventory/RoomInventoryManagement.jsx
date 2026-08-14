@@ -1,471 +1,759 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom';
-import { getServiceRequests, deleteServiceRequest, updateServiceStatus, getServiceSummary } from '../../api/serviceReqApi';
-import NewServiceRequest from '../forms/NewServiceRequest';
+import React, { useEffect, useState } from "react";
+import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import {
+  getRooms,
+  createRoom,
+  updateRoom,
+  deleteRoom,
+  assignGuestToRoom,
+} from "../../api/roomApi";
+import { getGuests } from "../../api/guestApi";
+import RoomconfigurationForm from "../forms/RoomconfigurationForm";
 
-function ServiceRequestLogs({ eventId }) {
+function RoomInventoryManagement() {
+  const { eventId: paramEventId } = useParams();
+  const eventId = paramEventId;
   const [searchParams, setSearchParams] = useSearchParams();
-  const action = searchParams.get('action');
-  const requestId = searchParams.get('id');
+  const navigate = useNavigate();
 
-  const [requests, setRequests] = useState([]);
-  const [summary, setSummary] = useState({ total: 0, open: 0, inProgress: 0, resolved: 0 });
-  const [loading, setLoading] = useState(true);
+  const action = searchParams.get("action"); // 'addRoom' or 'editRoom'
+  const editingId = searchParams.get("id");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const LIMIT = 20;
+  const [rooms, setRooms] = useState([]);
+  const [filteredRooms, setFilteredRooms] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    type: "info",
+  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all"); // all, available, occupied
 
-  // Filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  // assignment modal state
+  const [assignRoomId, setAssignRoomId] = useState(null);
+  const [availableGuests, setAvailableGuests] = useState([]);
+  const [guestSearchQuery, setGuestSearchQuery] = useState("");
+  const [assigning, setAssigning] = useState(false);
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignError, setAssignError] = useState(null);
 
-  // Row actions
-  const [activeMenuId, setActiveMenuId] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [requestToDelete, setRequestToDelete] = useState(null);
-  const menuRef = useRef(null);
+  // delete confirmation modal state
+  const [deleteRoomId, setDeleteRoomId] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Notifications
-  const [toast, setToast] = useState(null);
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
+  const showToast = (msg, type = "info", duration = 4000) => {
+    setToast({ show: true, message: msg, type });
+    setTimeout(
+      () => setToast({ show: false, message: "", type: "info" }),
+      duration,
+    );
   };
 
-  const loadData = async () => {
+  const fetchRooms = async () => {
     if (!eventId) return;
     setLoading(true);
+    setError(null);
     try {
-      const [listRes, summaryRes] = await Promise.all([
-        getServiceRequests(eventId, { search: searchTerm, requestType: typeFilter, status: statusFilter }),
-        getServiceSummary(eventId)
-      ]);
-
-      if (listRes.success) setRequests(listRes.serviceRequests);
-      if (summaryRes.success && summaryRes.summary) {
-        const s = summaryRes.summary;
-        setSummary({
-          total: s.total || 0,
-          open: s.pending || 0,
-          inProgress: s.inProgress || 0,
-          resolved: s.resolved || 0
-        });
+      const res = await getRooms({ eventId, page: currentPage, limit: LIMIT });
+      if (res.success) {
+        setRooms(res.rooms);
+        setTotalPages(res.totalPages || 1);
+        setTotalCount(res.total || 0);
+      } else {
+        setError(res.message || "Failed to load rooms");
+        showToast(res.message || "Failed to load rooms", "error");
       }
     } catch (err) {
-      console.error("Failed to load requests", err);
-      setError("Failed to load service requests.");
+      console.error("fetchRooms", err);
+      setError("Error loading rooms");
+      showToast("Error loading rooms", "error");
     } finally {
       setLoading(false);
     }
   };
 
+  // Filter rooms based on search and status
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      loadData();
-    }, 300); // 300ms debounce on search
-    return () => clearTimeout(delayDebounceFn);
-  }, [eventId, searchTerm, typeFilter, statusFilter]);
+    let filtered = rooms;
 
-  // Click outside menu handler
+    // Search filter
+    if (searchQuery) {
+      filtered = filtered.filter(
+        (r) =>
+          r.number.toString().includes(searchQuery) ||
+          r.type?.includes(searchQuery) ||
+          r.notes?.includes(searchQuery),
+      );
+    }
+
+    // Status filter
+    if (filterStatus === "available") {
+      filtered = filtered.filter((r) => (r.occupancy || 0) < r.capacity);
+    } else if (filterStatus === "occupied") {
+      filtered = filtered.filter((r) => (r.occupancy || 0) > 0);
+    }
+
+    setFilteredRooms(filtered);
+  }, [searchQuery, filterStatus, rooms]);
+
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setActiveMenuId(null);
-      }
+    fetchRooms();
+  }, [eventId, currentPage]);
+
+  const getRoomStatus = (room) => {
+    const occupancy = room.occupancy || 0;
+    const capacity = room.capacity || 1;
+
+    if (occupancy === 0) return "available";
+    if (occupancy < capacity) return "partial";
+    return "full";
+  };
+
+  const getStatusBadge = (room) => {
+    const status = getRoomStatus(room);
+    const statusConfig = {
+      available: {
+        bgColor: "bg-emerald-50",
+        textColor: "text-emerald-700",
+        dotColor: "bg-emerald-500",
+        label: "Available",
+        darkBg: "dark:bg-emerald-900/30",
+        darkText: "dark:text-emerald-400",
+      },
+      partial: {
+        bgColor: "bg-primary/10",
+        textColor: "text-primary",
+        dotColor: "bg-primary",
+        label: "Partial",
+        darkBg: "dark:bg-primary/20",
+        darkText: "dark:text-primary",
+      },
+      full: {
+        bgColor: "bg-primary/10",
+        textColor: "text-primary",
+        dotColor: "bg-primary",
+        label: "Full",
+        darkBg: "dark:bg-primary/20",
+        darkText: "dark:text-primary",
+      },
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
-  const handleEdit = (id) => {
-    setActiveMenuId(null);
-    setSearchParams({ action: 'editService', id });
+    const config = statusConfig[status];
+    return config;
   };
 
-  const handleDeleteClick = (reqItem) => {
-    setActiveMenuId(null);
-    setRequestToDelete(reqItem);
-    setShowDeleteModal(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!requestToDelete) return;
+  const openAssignModal = async (roomId) => {
+    setAssignRoomId(roomId);
+    setGuestSearchQuery("");
+    setAssignLoading(true);
+    setAssignError(null);
+    setAvailableGuests([]);
     try {
-      const res = await deleteServiceRequest(requestToDelete._id);
+      const res = await getGuests({ eventId, limit: 1000 });
       if (res.success) {
-        showToast('Service request deleted successfully');
-        loadData();
+        setAvailableGuests(res.guests.filter((g) => !g.room));
       } else {
-        showToast(res.message || 'Failed to delete request', 'error');
+        setAssignError(res.message || "Failed to load available guests");
       }
-    } catch (err) {
-      showToast('Network error', 'error');
+    } catch (e) {
+      console.warn("load guests for assign", e);
+      setAssignError("Failed to load available guests");
+      showToast("Failed to load available guests", "error");
     } finally {
-      setShowDeleteModal(false);
-      setRequestToDelete(null);
+      setAssignLoading(false);
     }
   };
 
-  const handleExportCSV = () => {
-    if (requests.length === 0) {
-      showToast('No data to export', 'error');
-      return;
-    }
-
-    const headers = ['ID', 'Guest', 'Room', 'Type', 'Urgency', 'Status', 'Notes', 'Created At'];
-    const rows = requests.map(req => [
-      req._id,
-      req.guest?.name || 'N/A',
-      req.room?.number || 'N/A',
-      req.requestType,
-      req.urgency,
-      req.status,
-      req.notes?.replace(/,/g, ';') || '',
-      new Date(req.createdAt).toLocaleString()
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `service_requests_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast('Exporting to CSV...');
+  const closeAssignModal = () => {
+    setAssignRoomId(null);
+    setAvailableGuests([]);
+    setGuestSearchQuery("");
+    setAssignError(null);
+    setAssignLoading(false);
   };
 
-  const handleStatusChange = async (id, newStatus) => {
-    setActiveMenuId(null);
+  const handleAssignment = async (guestId) => {
+    if (!assignRoomId) return;
+    setAssigning(true);
+    setAssignError(null);
     try {
-      const res = await updateServiceStatus(id, newStatus);
+      const res = await assignGuestToRoom(assignRoomId, guestId);
       if (res.success) {
-        showToast(`Status updated to ${newStatus}`);
-        loadData();
+        showToast("Guest assigned successfully", "success");
+        closeAssignModal();
+        fetchRooms();
       } else {
-        showToast(res.message || 'Failed to update status', 'error');
+        setAssignError(res.message || "Failed to assign");
       }
     } catch (err) {
-      showToast('Network error', 'error');
+      console.error(err);
+      setAssignError(err.message || "Failed to assign");
+    } finally {
+      setAssigning(false);
     }
   };
 
-  const getUrgencyBadge = (urgency) => {
-    switch (urgency) {
-      case 'emergency': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900/50 uppercase">Emergency</span>;
-      case 'high': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-900/50 uppercase">High</span>;
-      case 'low': return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-900/50 uppercase">Low</span>;
-      default: return null; // medium is default, don't clutter UI
+  const handleEditRoom = (roomId) => {
+    setSearchParams({ action: "editRoom", id: roomId });
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!deleteRoomId) return;
+
+    setDeleteLoading(true);
+    try {
+      const res = await deleteRoom(deleteRoomId);
+      if (res.success) {
+        showToast("Room deleted successfully", "success");
+        setDeleteRoomId(null);
+        fetchRooms();
+      } else {
+        showToast(res.message || "Failed to delete room", "error");
+      }
+    } catch (err) {
+      console.error("Error deleting room:", err);
+      showToast("Error deleting room", "error");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
-  const getTypeDisplay = (type) => {
-    switch(type) {
-      case 'housekeeping': return { icon: 'clean_hands', label: 'Housekeeping', color: 'text-blue-500' };
-      case 'maintenance': return { icon: 'build', label: 'Maintenance', color: 'text-amber-600' };
-      case 'fb': return { icon: 'restaurant', label: 'In-Room Dining', color: 'text-rose-500' };
-      case 'valet': return { icon: 'directions_car', label: 'Valet', color: 'text-indigo-500' };
-      default: return { icon: 'concierge', label: 'Concierge/Other', color: 'text-emerald-500' };
-    }
+  const onFormDone = () => {
+    setSearchParams({});
+    fetchRooms();
   };
 
-  const getStatusBadge = (status) => {
-    switch(status) {
-      case 'open':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/50">Open</span>;
-      case 'in_progress':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-primary dark:text-blue-400 border border-blue-200 dark:border-blue-900/50">In Progress</span>;
-      case 'completed':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50">Resolved</span>;
-      case 'cancelled':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-900/50 line-through">Cancelled</span>;
-      default:
-        return <span>{status}</span>;
-    }
+  const onFormCancel = () => {
+    setSearchParams({});
   };
 
+  const filteredGuests = availableGuests.filter((guest) => {
+    const query = guestSearchQuery.trim().toLowerCase();
+    if (!query) return true;
 
-  // If URL action param is active, render the form overlay instead of the list
-  if (action === 'addService' || action === 'editService') {
     return (
-      <div className="w-full max-w-4xl mx-auto py-6">
-        <NewServiceRequest 
-          eventId={eventId} 
-          memberId={requestId} 
-          onCancel={() => setSearchParams({})} 
-          onDone={() => {
-            setSearchParams({});
-            showToast(requestId ? 'Request updated' : 'Request created');
-            loadData();
-          }} 
-        />
-      </div>
+      guest.fullName?.toLowerCase().includes(query) ||
+      guest.email?.toLowerCase().includes(query) ||
+      guest.phone?.toLowerCase().includes(query) ||
+      guest.ticketType?.toLowerCase().includes(query)
+    );
+  });
+
+  if (action === "addRoom" || action === "editRoom") {
+    return (
+      <RoomconfigurationForm
+        eventId={eventId}
+        roomId={editingId}
+        onDone={onFormDone}
+        onCancel={onFormCancel}
+      />
     );
   }
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-slate-950 group/design-root overflow-x-hidden">
-      
+    <div className="relative flex min-h-screen flex-col">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">
+        {/* <!-- Breadcrumbs --> */}
+        
+        {/* <!-- Header Section --> */}
+        <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
+              Room Inventory Management
+            </h1>
+            <p className="mt-1 text-slate-600 dark:text-slate-400">
+              Monitor and manage guest assignments for physical space inventory.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                /* export logic placeholder */
+              }}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              <span className="material-symbols-outlined text-lg">
+                file_download
+              </span>
+              Export PDF
+            </button>
+            <button
+              onClick={() => setSearchParams({ action: "addRoom" })}
+              className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-600"
+            >
+              <span className="material-symbols-outlined text-lg">add</span>
+              Add Room
+            </button>
+          </div>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg flex items-start gap-3">
+            <span className="material-symbols-outlined text-red-500 dark:text-red-400">
+              error
+            </span>
+            <p className="text-sm text-red-700 dark:text-red-200">{error}</p>
+          </div>
+        )}
+
+        {/* Stats Grid --> */}
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Rooms</p>
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
+                bed
+              </span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {rooms.length}
+              </h3>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Total Capacity
+              </p>
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
+                groups
+              </span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {rooms.reduce((a, r) => a + (r.capacity || 0), 0)}
+              </h3>
+              <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
+                Guests max
+              </span>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Current Occupancy
+              </p>
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
+                check_circle
+              </span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {rooms.reduce((a, r) => a + (r.occupancy || 0), 0)}
+              </h3>
+              <span className="text-xs font-semibold text-primary">
+                {rooms.length &&
+                rooms.reduce((a, r) => a + (r.capacity || 0), 0)
+                  ? Math.round(
+                      (rooms.reduce((a, r) => a + (r.occupancy || 0), 0) /
+                        rooms.reduce((a, r) => a + (r.capacity || 0), 0)) *
+                        100,
+                    )
+                  : 0}
+                % Full
+              </span>
+            </div>
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900/50">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Available</p>
+              <span className="material-symbols-outlined text-slate-400 dark:text-slate-600">
+                door_open
+              </span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                {rooms.filter((r) => (r.occupancy || 0) < r.capacity).length}
+              </h3>
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                rooms available
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Filter Bar --> */}
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search by room number, type..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-500 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
+          />
+          <button
+            onClick={() => setFilterStatus("all")}
+            className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+              filterStatus === "all"
+                ? "bg-primary text-white"
+                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            }`}
+          >
+            All Rooms ({rooms.length})
+          </button>
+          <button
+            onClick={() => setFilterStatus("available")}
+            className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+              filterStatus === "available"
+                ? "bg-emerald-500 text-white"
+                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            }`}
+          >
+            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+            Available (
+            {rooms.filter((r) => (r.occupancy || 0) < r.capacity).length})
+          </button>
+          <button
+            onClick={() => setFilterStatus("occupied")}
+            className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
+              filterStatus === "occupied"
+                ? "bg-primary text-white"
+                : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            }`}
+          >
+            <span className="h-2 w-2 rounded-full bg-primary"></span>
+            Occupied ({rooms.filter((r) => (r.occupancy || 0) > 0).length})
+          </button>
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <span className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-600 animate-spin">
+                hourglass_top
+              </span>
+              <p className="mt-2 text-slate-600 dark:text-slate-400">Loading rooms...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Room Grid --> */}
+        {!loading && filteredRooms.length > 0 && (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredRooms.map((room) => {
+              const badge = getStatusBadge(room);
+              const occupancy = room.occupancy || 0;
+              const capacity = room.capacity || 1;
+              const occupancyPercent = (occupancy / capacity) * 100;
+
+              return (
+                <div
+                  key={room._id}
+                  className="group relative rounded-xl border border-slate-200 bg-white p-5 transition-all hover:shadow-lg dark:border-slate-800 dark:bg-slate-900/40"
+                >
+                  <div className="mb-4 flex items-start justify-between">
+                    <div>
+                      <h4 className="text-lg font-bold text-slate-900 dark:text-white">{room.number}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        {room.type || "Standard"}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${badge.bgColor} ${badge.textColor} ${badge.darkBg} ${badge.darkText}`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${badge.dotColor}`}
+                      ></span>
+                      {badge.label}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500 dark:text-slate-400">Capacity</span>
+                      <span className="font-semibold text-slate-900 dark:text-white">{capacity} Guests</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500 dark:text-slate-400">Occupancy</span>
+                        <span className="font-bold text-slate-900 dark:text-white">
+                          {occupancy} / {capacity}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                        <div
+                          className={`h-full bg-primary transition-all`}
+                          style={{
+                            width: `${Math.min(occupancyPercent, 100)}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                  {room.notes && (
+                    <div className="mt-3 text-xs text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-2 rounded">
+                      {room.notes}
+                    </div>
+                  )}
+                  <div className="mt-6 flex gap-2">
+                    {occupancy < capacity && (
+                      <button
+                        onClick={() => openAssignModal(room._id)}
+                        className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+                      >
+                        Assign Guest
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleEditRoom(room._id)}
+                      className="flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        edit
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setDeleteRoomId(room._id)}
+                      className="flex items-center justify-center rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-red-600 transition-colors hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        delete
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && filteredRooms.length === 0 && rooms.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">
+              meeting_room
+            </span>
+            <p className="mt-4 text-lg font-semibold text-slate-700 dark:text-slate-300">
+              No rooms yet
+            </p>
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
+              Create your first room to get started
+            </p>
+          </div>
+        )}
+
+        {/* Empty Search State */}
+        {!loading && filteredRooms.length === 0 && rooms.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12">
+            <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">
+              search_off
+            </span>
+            <p className="mt-4 text-lg font-semibold text-slate-700 dark:text-slate-300">
+              No rooms found
+            </p>
+            <p className="mt-2 text-slate-500 dark:text-slate-400">
+              Try adjusting your search or filters
+            </p>
+          </div>
+        )}
+      </main>
+
       {/* Toast Notification */}
-      {toast && (
-        <div className={`fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 text-white transition-opacity duration-300 ${toast.type === 'error' ? 'bg-red-500' : 'bg-emerald-600'}`}>
-          <span className="material-symbols-outlined shrink-0">{toast.type === 'error' ? 'error' : 'check_circle'}</span>
-          <p className="text-sm font-medium">{toast.message}</p>
+      {toast.show && (
+        <div
+          className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 ${
+            toast.type === "success"
+              ? "bg-emerald-500 text-white"
+              : toast.type === "error"
+                ? "bg-red-500 text-white"
+                : "bg-slate-900 text-white"
+          }`}
+        >
+          <span className="material-symbols-outlined">
+            {toast.type === "success"
+              ? "check_circle"
+              : toast.type === "error"
+                ? "error"
+                : "info"}
+          </span>
+          <p>{toast.message}</p>
+        </div>
+      )}
+
+      {/* Assignment Modal */}
+      {assignRoomId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">Assign Guest to Room</h3>
+              <button
+                onClick={closeAssignModal}
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            {assignError && (
+              <div className="mx-4 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded text-sm text-red-700 dark:text-red-200">
+                {assignError}
+              </div>
+            )}
+
+            <div className="px-6 pt-4">
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Search Guest
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={guestSearchQuery}
+                  onChange={(e) => setGuestSearchQuery(e.target.value)}
+                  placeholder="Search by name, email, phone..."
+                  className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-10 pr-3 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {assignLoading ? (
+                <div className="flex flex-col items-center justify-center py-10 text-center">
+                  <div className="relative mb-4 h-10 w-10">
+                    <div className="absolute inset-0 rounded-full border-2 border-slate-200 dark:border-slate-700"></div>
+                    <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                  </div>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Loading guests...</p>
+                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">Fetching available guests from the server.</p>
+                </div>
+              ) : filteredGuests.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-slate-500 dark:text-slate-400">
+                    {availableGuests.length === 0
+                      ? "No unassigned guests available"
+                      : "No guests match your search"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredGuests.map((guest) => (
+                    <button
+                      key={guest._id}
+                      onClick={() => handleAssignment(guest._id)}
+                      disabled={assigning}
+                      className="w-full p-4 text-left border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-primary transition-all disabled:opacity-50 dark:border-slate-700 dark:hover:bg-slate-800"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold dark:text-white">{guest.fullName}</p>
+                          <p className="text-sm text-slate-500">
+                            {guest.email}
+                          </p>
+                        </div>
+                        {assigning ? (
+                          <span className="material-symbols-outlined animate-spin text-slate-400">
+                            hourglass_top
+                          </span>
+                        ) : (
+                          <span className="material-symbols-outlined text-slate-400">
+                            person_add
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-slate-200 dark:border-slate-800 flex gap-3">
+              <button
+                onClick={closeAssignModal}
+                disabled={assigning}
+                className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-6 max-w-md w-full">
-            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white mb-2">Delete Request?</h3>
-            <p className="text-slate-500 text-body mb-6">
-              Are you sure you want to permanently delete this {requestToDelete?.requestType} request for {requestToDelete?.guest?.name || 'this guest'}? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors"
+      {deleteRoomId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                  <span className="material-symbols-outlined text-red-600 dark:text-red-400">
+                    warning
+                  </span>
+                </div>
+                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">Delete Room?</h3>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
+                Are you sure you want to delete this room? This action cannot be
+                undone.
+              </p>
+            </div>
+            <div className="flex gap-3 border-t border-slate-200 dark:border-slate-800 p-6">
+              <button
+                onClick={() => setDeleteRoomId(null)}
+                disabled={deleteLoading}
+                className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
               >
                 Cancel
               </button>
-              <button 
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors shadow-lg"
+              <button
+                onClick={handleDeleteRoom}
+                disabled={deleteLoading}
+                className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                Yes, Delete
+                {deleteLoading ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin">
+                      hourglass_top
+                    </span>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined">delete</span>
+                    Delete
+                  </>
+                )}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      <div className="layout-container flex h-full grow flex-col">
-        <main className="flex flex-1 flex-col overflow-y-auto w-full">
-          
-          {/* Header Section */}
-          <div className="flex flex-wrap items-center justify-between gap-4 p-6 lg:px-0">
-            <div className="flex flex-col gap-1">
-              <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">Service Request Logs</h1>
-              <p className="text-slate-500 dark:text-slate-400 text-body font-normal leading-normal">Manage and monitor guest hospitality requests in real-time.</p>
-            </div>
-            <div className="flex gap-3 text-center items-center">
-              <div className="px-4 py-2 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg mr-2">
-                <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase whitespace-nowrap">Open / Progress</p>
-                <p className="text-slate-900 dark:text-white text-lg font-black">{summary.open} <span className="text-slate-500 dark:text-slate-400 font-normal mx-0.5">/</span> <span className="text-primary">{summary.inProgress}</span></p>
-              </div>
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg text-sm font-bold hover:bg-neutral-soft dark:hover:bg-slate-800 transition-colors"
-                title="Export to CSV"
-              >
-                <span className="material-symbols-outlined text-lg">download</span>
-                Export
-              </button>
-              <button
-                onClick={() => setSearchParams({ action: 'addService' })}
-                className="flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-              >
-                <span className="material-symbols-outlined text-lg">add</span>
-                Create Request
-              </button>
-            </div>
-          </div>
-
-          {/* Filters & Search */}
-          <div className="pb-6">
-            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-wrap items-center gap-4 shadow-sm">
-              <div className="flex-1 min-w-[300px]">
-                <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">search</span>
-                  <input
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm text-slate-900 dark:text-white placeholder-slate-400"
-                    placeholder="Search by guest, room, or ID..." 
-                    type="text" 
-                  />
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-slate-500 dark:text-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer"
-                >
-                  <option value="">All Services</option>
-                  <option value="housekeeping">Housekeeping</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="fb">Food & Beverage</option>
-                  <option value="valet">Valet</option>
-                  <option value="other">Other</option>
-                </select>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-slate-500 dark:text-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer"
-                >
-                  <option value="">Any Status</option>
-                  <option value="open">Open (Pending)</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Resolved</option>
-                </select>
-                {/* Clear Filters Button */}
-                {(searchTerm || typeFilter || statusFilter) && (
-                  <button 
-                    onClick={() => { setSearchTerm(''); setTypeFilter(''); setStatusFilter(''); }}
-                    className="p-2 text-red-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center"
-                    title="Clear Filters"
-                  >
-                    <span className="material-symbols-outlined text-lg">close</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Loading / Error States */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 rounded-lg flex items-center gap-2">
-              <span className="material-symbols-outlined">error</span>
-              <p className="text-sm font-semibold">{error}</p>
-            </div>
-          )}
-
-          {/* Data Table */}
-          <div className="pb-10 flex-1 w-full relative">
-            {loading && (
-              <div className="absolute inset-0 z-10 bg-white/50 dark:bg-[#151a26]/50 backdrop-blur-[1px] flex items-center justify-center">
-                <div className="flex flex-col items-center">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-3"></div>
-                  <p className="text-slate-500 font-medium text-sm">Syncing requests...</p>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-visible shadow-sm">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-100 dark:bg-slate-900/50 text-[11px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="px-6 py-4">Guest / Room</th>
-                    <th className="px-6 py-4">Request Type</th>
-                    <th className="px-6 py-4">Status & Urgency</th>
-                    <th className="px-6 py-4">Notes</th>
-                    <th className="px-6 py-4 text-right">Created Time</th>
-                    <th className="px-6 py-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-light dark:bg-slate-900/50">
-                  {requests.length === 0 && !loading ? (
-                    <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
-                        <span className="material-symbols-outlined text-4xl opacity-50 mb-3 block">receipt_long</span>
-                        <p className="text-lg font-bold text-slate-900 dark:text-white">No requests found</p>
-                        <p className="text-sm mt-1">Try adjusting your filters or create a new ticket.</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    requests.map((req) => {
-                      const typeConfig = getTypeDisplay(req.requestType);
-                      const isRowResolved = req.status === 'completed' || req.status === 'cancelled';
-                      
-                      return (
-                        <tr key={req._id} className={`hover:bg-neutral-soft/30 dark:hover:bg-slate-800/30 transition-colors ${isRowResolved ? 'opacity-60 saturate-50' : ''}`}>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-slate-900 dark:text-white">{req.guest ? req.guest.name : 'No Guest Linked'}</span>
-                              <span className="text-xs text-slate-500 dark:text-slate-400">
-                                {req.room ? `Room ${req.room.number}` : 'No Room Info'} • ID #{req._id.slice(-6).toUpperCase()}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <span className={`material-symbols-outlined text-lg ${typeConfig.color}`}>{typeConfig.icon}</span>
-                              <span className="text-sm font-bold text-slate-900 dark:text-white">{typeConfig.label}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col items-start gap-1.5">
-                              {getStatusBadge(req.status)}
-                              {getUrgencyBadge(req.urgency)}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 max-w-[200px]" title={req.notes}>
-                              {req.notes || "—"}
-                            </p>
-                            {req.permissionToEnter && (
-                              <p className="text-[10px] text-primary dark:text-blue-400 flex items-center gap-1 mt-1 font-bold tracking-wider">
-                                <span className="material-symbols-outlined text-[10px]">key</span> P.T.E. Granted
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">
-                            {new Date(req.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">{new Date(req.createdAt).toLocaleDateString()}</span>
-                          </td>
-                          <td className="px-6 py-4 text-right relative">
-                            <button 
-                              onClick={() => setActiveMenuId(activeMenuId === req._id ? null : req._id)}
-                              className={`p-1.5 rounded-lg transition-colors ${activeMenuId === req._id ? 'bg-neutral-soft dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800'}`}
-                            >
-                              <span className="material-symbols-outlined">more_vert</span>
-                            </button>
-                            
-                            {/* Actions Dropdown */}
-                            {activeMenuId === req._id && (
-                              <div ref={menuRef} className="z-40 absolute right-8 top-12 w-48 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl  py-1 origin-top-right animate-in fade-in zoom-in-95 duration-100">
-                                
-                                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Update Status</span>
-                                </div>
-                                <button onClick={() => handleStatusChange(req._id, 'open')} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-amber-50 dark:hover:bg-amber-900/10 hover:text-amber-700 dark:hover:text-amber-400 transition-colors flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[18px]">fiber_new</span> Mark Open
-                                </button>
-                                <button onClick={() => handleStatusChange(req._id, 'in_progress')} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-primary dark:hover:text-blue-400 transition-colors flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[18px]">run_circle</span> In Progress
-                                </button>
-                                <button onClick={() => handleStatusChange(req._id, 'completed')} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[18px]">check_circle</span> Resolved
-                                </button>
-
-                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
-                                
-                                <button onClick={() => handleEdit(req._id)} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-neutral-soft dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[18px]">edit</span> Edit Details
-                                </button>
-                                <button onClick={() => handleDeleteClick(req)} className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[18px]">delete</span> Delete
-                                </button>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-
-              {/* Status Footer */}
-              {!loading && requests.length > 0 && (
-                <div className="px-6 py-4 bg-background-light dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total active list length: {requests.length}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </main>
-      </div>
+      {totalPages > 1 && (
+  <div className="flex items-center justify-between mt-6">
+    <p className="text-sm text-slate-500">
+      Showing {(currentPage - 1) * LIMIT + 1}–{Math.min(currentPage * LIMIT, totalCount)} of {totalCount} rooms
+    </p>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+        disabled={currentPage === 1}
+        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+      >
+        Previous
+      </button>
+      <span className="text-sm font-bold">Page {currentPage} of {totalPages}</span>
+      <button
+        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+        disabled={currentPage === totalPages}
+        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+      >
+        Next
+      </button>
     </div>
-  )
+  </div>
+)}
+
+    </div>
+  );
 }
 
-export default ServiceRequestLogs
+export default RoomInventoryManagement;
