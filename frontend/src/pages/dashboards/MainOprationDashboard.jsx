@@ -33,7 +33,7 @@ const STATUS_CONFIG = {
   in_progress: {
     label: "In Progress",
     bg: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    dot: "bg-blue-500",
+    dot: "bg-primary-500",
     pulse: true,
   },
   upcoming: {
@@ -602,7 +602,7 @@ function MainOprationDashboard() {
           {/* ── Page title ── */}
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+              <h1 className="font-display text-page-h1 text-gray-900 dark:text-white">
                 Operations Dashboard
               </h1>
               <p className="text-sm text-neutral-muted mt-1">
@@ -674,7 +674,7 @@ function MainOprationDashboard() {
           {/* ── Active Events Live Panel ── */}
           {activeEventStats.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-sm font-bold text-neutral-muted uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h2 className="text-caption font-bold text-neutral-muted uppercase tracking-wider mb-3 flex items-center gap-2">
                 <span className="size-2 bg-green-500 rounded-full animate-pulse" />
                 Live Events
               </h2>
@@ -781,7 +781,7 @@ function MainOprationDashboard() {
             <div className="bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
               <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <h2 className="font-bold text-base dark:text-white">Recent Activity</h2>
+                  <h2 className="font-display text-card-h3 text-gray-900 dark:text-white">Recent Activity</h2>
                   <span className="size-2 bg-red-500 rounded-full animate-pulse" />
                 </div>
                 <button
@@ -842,7 +842,7 @@ function MainOprationDashboard() {
             {/* ── Events Table ── */}
             <div className="xl:col-span-2 bg-white dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col">
               <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-bold text-base dark:text-white">Events</h2>
+                <h2 className="font-display text-card-h3 text-gray-900 dark:text-white">Events</h2>
                 <div className="flex items-center gap-2">
                   {/* Status filter tabs */}
                   {["all", "in_progress", "upcoming", "completed"].map((s) => (

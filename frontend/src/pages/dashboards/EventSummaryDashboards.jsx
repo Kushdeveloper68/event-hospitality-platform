@@ -54,7 +54,7 @@ function SectionHeader({ icon, title, subtitle, action }) {
       <div className="flex items-center gap-3">
         <span className="material-symbols-outlined text-primary text-xl">{icon}</span>
         <div>
-          <h3 className="font-bold text-slate-900 dark:text-white">{title}</h3>
+          <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">{title}</h3>
           {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
       </div>
@@ -404,7 +404,7 @@ function EventSummaryDashboards() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
                 {event?.name || "Event Summary"}
               </h1>
               {statusBadge[status]}

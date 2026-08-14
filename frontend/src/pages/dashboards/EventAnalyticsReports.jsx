@@ -74,7 +74,7 @@ export function KPICard({
   trend,
 }) {
   const accentMap = {
-    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    blue: "bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400",
     green:
       "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400",
     amber:
@@ -146,14 +146,14 @@ export function Section({
       <div className="flex items-start justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-3">
           {icon && (
-            <div className="size-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-base text-blue-600 dark:text-blue-400">
+            <div className="size-8 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center">
+              <span className="material-symbols-outlined text-base text-primary-600 dark:text-primary-400">
                 {icon}
               </span>
             </div>
           )}
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
               {title}
             </h3>
             {subtitle && (
@@ -176,7 +176,7 @@ export function ProgressRow({
   value,
   pct,
   max,
-  colorClass = "bg-blue-500",
+  colorClass = "bg-primary-500",
   badge,
 }) {
   const width = max ? Math.round((value / max) * 100) : pct;
@@ -214,7 +214,7 @@ export function ProgressRow({
 export function BarChart({
   data = [],
   height = 160,
-  colorClass = "fill-blue-500",
+  colorClass = "fill-primary-500",
   labelKey = "label",
   valueKey = "count",
   showLabels = true,
@@ -284,7 +284,7 @@ export function BarChart({
 export function LineChart({
   data = [],
   height = 160,
-  colorClass = "stroke-blue-500",
+  colorClass = "stroke-primary-500",
   labelKey = "label",
   valueKey = "count",
 }) {
@@ -326,7 +326,7 @@ export function LineChart({
             strokeWidth="1"
           />
         ))}
-        <path d={areaD} fill="#3b82f610" />
+        <path d={areaD} fill="#2463eb10" />
         <path
           d={pathD}
           className={colorClass}
@@ -344,7 +344,7 @@ export function LineChart({
             fill="white"
             className={`${colorClass.replace("stroke-", "stroke-")}`}
             strokeWidth="2"
-            stroke="#3b82f6"
+            stroke="#2463eb"
           />
         ))}
         {data.map((d, i) => {
@@ -372,7 +372,7 @@ export function DonutChart({
   value,
   max,
   size = 120,
-  colorClass = "stroke-blue-500",
+  colorClass = "stroke-primary-500",
   label,
   subLabel,
 }) {
@@ -426,7 +426,7 @@ export function DonutChart({
 }
 
 // ─── Hour heatmap bar ─────────────────────────────────────────────────────────
-export function HourBars({ data = [], colorClass = "bg-blue-500" }) {
+export function HourBars({ data = [], colorClass = "bg-primary-500" }) {
   if (!data.length) return <EmptyChart />;
   const maxVal = Math.max(...data.map((d) => d.count), 1);
   const peak = data.reduce((a, b) => (a.count > b.count ? a : b), data[0]);
@@ -485,7 +485,7 @@ function ExportBtn({ onClick, label, loading }) {
     <button
       onClick={onClick}
       disabled={loading}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-primary-600 dark:hover:text-primary-400 transition-colors disabled:opacity-50"
     >
       <span className="material-symbols-outlined text-sm">
         {loading ? "hourglass_empty" : "download"}
@@ -505,7 +505,7 @@ function Badge({ label, variant = "default" }) {
     warning:
       "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
     danger: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    info: "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
     purple:
       "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   };
@@ -625,7 +625,7 @@ export default function EventAnalyticsReports() {
     return (
       <div className="p-6 max-w-[1400px] mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <div className="animate-spin size-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+          <div className="animate-spin size-5 border-2 border-primary-500 border-t-transparent rounded-full" />
           <span className="text-slate-500 text-sm font-medium">
             Loading analytics…
           </span>
@@ -700,7 +700,7 @@ export default function EventAnalyticsReports() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">
+              <span className="text-xs font-bold text-primary-600 uppercase tracking-widest">
                 Analytics & Reports
               </span>
               <span className="text-slate-300 dark:text-slate-700">·</span>
@@ -708,7 +708,7 @@ export default function EventAnalyticsReports() {
                 {fmtDate(event?.startDate)} → {fmtDate(event?.endDate)}
               </span>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
               {event?.name}
             </h1>
             <p className="text-sm text-slate-400 mt-1 flex items-center gap-3">
@@ -751,7 +751,7 @@ export default function EventAnalyticsReports() {
             <button
               onClick={() => fetchData(true)}
               disabled={refreshing}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-50"
             >
               <span
                 className={`material-symbols-outlined text-sm ${refreshing ? "animate-spin" : ""}`}
@@ -772,7 +772,7 @@ export default function EventAnalyticsReports() {
             onClick={() => setActiveTab(t.key)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
               activeTab === t.key
-                ? "bg-white dark:bg-slate-900 text-blue-600 shadow-sm"
+                ? "bg-white dark:bg-slate-900 text-primary-600 shadow-sm"
                 : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
@@ -864,7 +864,7 @@ export default function EventAnalyticsReports() {
             >
               <HourBars
                 data={G?.checkInByHour || []}
-                colorClass="bg-blue-500"
+                colorClass="bg-primary-500"
               />
             </Section>
             <Section
@@ -880,7 +880,7 @@ export default function EventAnalyticsReports() {
                       label={item.label}
                       value={item.count}
                       pct={item.percentage}
-                      colorClass="bg-blue-500"
+                      colorClass="bg-primary-500"
                     />
                   ))}
                 </div>
@@ -902,7 +902,7 @@ export default function EventAnalyticsReports() {
                 <DonutChart
                   value={R?.summary?.occupiedRooms || 0}
                   max={R?.summary?.totalRooms || 1}
-                  colorClass="stroke-blue-500"
+                  colorClass="stroke-primary-500"
                   label="Rooms Occupied"
                   subLabel={`${fmtNum(R?.summary?.occupiedRooms)} of ${fmtNum(R?.summary?.totalRooms)}`}
                 />
@@ -934,7 +934,7 @@ export default function EventAnalyticsReports() {
                   {
                     label: "Scheduled",
                     val: T?.summary?.scheduled,
-                    color: "bg-blue-400",
+                    color: "bg-primary-400",
                   },
                   {
                     label: "In Transit",
@@ -1102,7 +1102,7 @@ export default function EventAnalyticsReports() {
             >
               <HourBars
                 data={G?.checkInByHour || []}
-                colorClass="bg-blue-500"
+                colorClass="bg-primary-500"
               />
             </Section>
           </div>
@@ -1182,7 +1182,7 @@ export default function EventAnalyticsReports() {
                       className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="size-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-xs font-black text-blue-600">
+                        <span className="size-7 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-xs font-black text-primary-600">
                           {i + 1}
                         </span>
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -1249,14 +1249,14 @@ export default function EventAnalyticsReports() {
                   value={R?.summary?.occupiedRooms || 0}
                   max={R?.summary?.totalRooms || 1}
                   size={140}
-                  colorClass="stroke-blue-500"
+                  colorClass="stroke-primary-500"
                   label="Rooms Occupied"
                 />
                 <div className="flex-1 space-y-2 w-full">
                   <StatRow
                     label="Occupancy Rate"
                     value={fmtPct(R?.summary?.occupancyRate)}
-                    valueClass="text-blue-600"
+                    valueClass="text-primary-600"
                   />
                   <StatRow
                     label="Capacity Utilization"
@@ -1351,7 +1351,7 @@ export default function EventAnalyticsReports() {
                           <div className="flex items-center gap-2">
                             <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-blue-500 rounded-full"
+                                className="h-full bg-primary-500 rounded-full"
                                 style={{ width: `${room.utilizationRate}%` }}
                               />
                             </div>
@@ -1430,7 +1430,7 @@ export default function EventAnalyticsReports() {
                       label={item.label}
                       value={item.count}
                       pct={item.percentage}
-                      colorClass="bg-blue-500"
+                      colorClass="bg-primary-500"
                     />
                   ))}
                 </div>
@@ -1615,7 +1615,7 @@ export default function EventAnalyticsReports() {
                   {
                     label: "Scheduled",
                     val: T?.summary?.scheduled,
-                    color: "bg-blue-400",
+                    color: "bg-primary-400",
                   },
                   {
                     label: "In Transit",
@@ -1698,7 +1698,7 @@ export default function EventAnalyticsReports() {
                       key={i}
                       className="flex items-start gap-3 py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0"
                     >
-                      <span className="size-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-xs font-black text-blue-600 flex-shrink-0 mt-0.5">
+                      <span className="size-7 rounded-lg bg-primary-50 dark:bg-primary-900/30 flex items-center justify-center text-xs font-black text-primary-600 flex-shrink-0 mt-0.5">
                         {i + 1}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -1852,7 +1852,7 @@ export default function EventAnalyticsReports() {
                 <div className="space-y-3">
                   {SC.byWorkstream.map((item) => {
                     const colorMap = {
-                      "Main Sessions": "bg-blue-500",
+                      "Main Sessions": "bg-primary-500",
                       Transport: "bg-amber-400",
                       Catering: "bg-emerald-400",
                       Staffing: "bg-purple-400",
@@ -1890,7 +1890,7 @@ export default function EventAnalyticsReports() {
                   {
                     label: "Active",
                     val: SC?.summary?.active,
-                    color: "bg-blue-400",
+                    color: "bg-primary-400",
                   },
                   {
                     label: "Pending",
@@ -1930,7 +1930,7 @@ export default function EventAnalyticsReports() {
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {SC.upcomingActivities.map((act) => {
                   const workstreamColors = {
-                    "Main Sessions": "border-l-blue-500",
+                    "Main Sessions": "border-l-primary-500",
                     Transport: "border-l-amber-500",
                     Catering: "border-l-emerald-500",
                     Staffing: "border-l-purple-500",
@@ -2014,7 +2014,7 @@ export default function EventAnalyticsReports() {
                   data={A.dailyTrend}
                   labelKey="date"
                   valueKey="count"
-                  colorClass="fill-blue-400"
+                  colorClass="fill-primary-400"
                   height={150}
                 />
               ) : (
@@ -2038,7 +2038,7 @@ export default function EventAnalyticsReports() {
                         label={item.type.replace(/-/g, " ")}
                         value={item.count}
                         pct={Math.round((item.count / total) * 100)}
-                        colorClass="bg-blue-400"
+                        colorClass="bg-primary-400"
                       />
                     );
                   })}
@@ -2059,7 +2059,7 @@ export default function EventAnalyticsReports() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {A.byPriority.map((item) => {
                   const colorMap = {
-                    normal: "bg-blue-400",
+                    normal: "bg-primary-400",
                     high: "bg-amber-400",
                     critical: "bg-red-500",
                   };

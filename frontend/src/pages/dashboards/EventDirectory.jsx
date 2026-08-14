@@ -113,7 +113,7 @@ function EventDirectory() {
           {/* <!-- Page Header --> */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
             <div className="flex flex-col gap-1">
-              <h1 className="text-gray-900 dark:text-white text-3xl font-black leading-tight tracking-tight">Events Directory
+              <h1 className="font-display text-page-h1 text-gray-900 dark:text-white">Events Directory
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-base">Track and manage high-level hospitality operations
                 across all venues.</p>

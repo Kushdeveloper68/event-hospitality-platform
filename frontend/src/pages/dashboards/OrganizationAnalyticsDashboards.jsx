@@ -111,7 +111,7 @@ function SectionCard({ title, subtitle, icon, children, action }) {
             </span>
           )}
           <div>
-            <h3 className="font-bold text-slate-900 dark:text-white">{title}</h3>
+            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">{title}</h3>
             {subtitle && (
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {subtitle}
@@ -512,7 +512,7 @@ export default function OrganizationAnalyticsDashboards() {
             <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
               Performance Overview
             </p>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
               Organization Analytics
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
@@ -572,7 +572,7 @@ export default function OrganizationAnalyticsDashboards() {
             <div className="flex">
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-l-lg text-sm font-bold hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-l-lg text-sm font-bold hover:bg-primary-600 transition-colors"
               >
                 <span className="material-symbols-outlined text-lg">
                   download
@@ -1143,7 +1143,7 @@ export default function OrganizationAnalyticsDashboards() {
           <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
             <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-slate-900 dark:text-white">
+                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
                   Top Performing Events
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
