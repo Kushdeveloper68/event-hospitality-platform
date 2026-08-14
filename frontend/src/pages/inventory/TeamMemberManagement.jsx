@@ -116,7 +116,7 @@ function TeamMemberManagement({ eventId }) {
   const getRoleBadgeColor = (role) => {
     switch (role) {
       case "Admin":
-        return "bg-blue-50 dark:bg-blue-900/30 text-primary";
+        return "bg-primary-50 dark:bg-primary-900/30 text-primary";
       case "Event Lead":
         return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
       case "Logistics":
@@ -187,7 +187,7 @@ function TeamMemberManagement({ eventId }) {
                     warning
                   </span>
                 </div>
-                <h3 className="text-xl font-bold dark:text-white">
+                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
                   Remove Member
                 </h3>
               </div>
@@ -220,9 +220,9 @@ function TeamMemberManagement({ eventId }) {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
-              <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
                 Team Members
-              </h2>
+              </h1>
               <p className="text-slate-500 mt-1">
                 Manage and assign roles for your hospitality operations team.
               </p>
@@ -241,7 +241,7 @@ function TeamMemberManagement({ eventId }) {
               </button>
               <button
                 onClick={() => setSearchParams({ action: "addTeam" })}
-                className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all text-sm"
+                className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-600 transition-all text-sm"
               >
                 <span className="material-symbols-outlined text-lg">add</span>
                 Add Member

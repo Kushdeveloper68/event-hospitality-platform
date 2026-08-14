@@ -43,7 +43,7 @@ const PRIORITY_CONFIG = {
 const TYPE_CONFIG = {
   'check-in': { icon: 'how_to_reg', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', label: 'Check-in' },
   'check-out': { icon: 'logout', color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800', label: 'Check-out' },
-  'registration': { icon: 'person_add', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', label: 'Registration' },
+  'registration': { icon: 'person_add', color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-50 dark:bg-primary-900/20', label: 'Registration' },
   'service': { icon: 'room_service', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', label: 'Service' },
   'transport': { icon: 'local_shipping', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20', label: 'Transport' },
   'room-assignment': { icon: 'meeting_room', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20', label: 'Room Assign' },
@@ -77,7 +77,7 @@ function StatPill({ icon, label, value, accent = 'slate', pulse = false }) {
   const accentMap = {
     red: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30',
     orange: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
-    blue: 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/30',
+    blue: 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-900/30',
     slate: 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-slate-700',
     green: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
   };
@@ -128,7 +128,7 @@ function LogRow({ log, isNew = false }) {
 
             {/* Guest pill */}
             {log.relatedGuest?.fullName && (
-              <span className={`inline-flex items-center gap-1 mt-1 ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${log.relatedGuest.vipStatus ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'}`}>
+              <span className={`inline-flex items-center gap-1 mt-1 ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${log.relatedGuest.vipStatus ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'}`}>
                 <span className="material-symbols-outlined text-[10px]">{log.relatedGuest.vipStatus ? 'star' : 'person'}</span>
                 {log.relatedGuest.fullName}
                 {log.relatedGuest.vipStatus && <span className="text-[8px] uppercase tracking-wider">VIP</span>}
@@ -364,7 +364,7 @@ function ActivityAndNotificationLogs() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Operations Center</p>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
               Activity & Notification Logs
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
@@ -388,7 +388,7 @@ function ActivityAndNotificationLogs() {
             <button
               onClick={handleExport}
               disabled={!logs.length}
-              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-40 shadow-lg shadow-primary/20"
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-600 transition-colors disabled:opacity-40 shadow-lg shadow-primary/20"
             >
               <span className="material-symbols-outlined text-lg">download</span>
               Export CSV
@@ -499,7 +499,7 @@ function ActivityAndNotificationLogs() {
                 </span>
               )}
               {typeFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded-full">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-2.5 py-1 rounded-full">
                   {getTypeConfig(typeFilter).label}
                   <button onClick={() => setTypeFilter('all')} className="ml-1 hover:text-red-500">✕</button>
                 </span>
@@ -537,7 +537,7 @@ function ActivityAndNotificationLogs() {
           {/* List header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3">
-              <h2 className="font-bold text-slate-900 dark:text-white">
+              <h2 className="font-display text-card-h3 text-slate-900 dark:text-white">
                 Activity Feed
               </h2>
               <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider">

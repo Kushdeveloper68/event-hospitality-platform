@@ -229,7 +229,7 @@ const setFilterTabAndReset = (tab) => {
                     warning
                   </span>
                 </div>
-                <h3 className="text-xl font-bold dark:text-white">
+                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
                   Delete Transport?
                 </h3>
               </div>
@@ -272,7 +272,7 @@ const setFilterTabAndReset = (tab) => {
                     Live Monitoring
                   </span>
                 </div>
-                <h1 className="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-tight">
+                <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
                   Transport Coordination Log
                 </h1>
                 <p className="text-slate-500 text-base font-normal">
@@ -290,7 +290,7 @@ const setFilterTabAndReset = (tab) => {
                 </button>
                 <button
                   onClick={() => setSearchParams({ action: "addTransport" })}
-                  className="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-blue-700 transition-all"
+                  className="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-600 transition-all"
                 >
                   <span className="material-symbols-outlined">add</span>
                   <span>Add Transport</span>

@@ -191,7 +191,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
           toast.type === 'success' ? 'bg-green-500' :
           toast.type === 'error' ? 'bg-red-500' :
           toast.type === 'warning' ? 'bg-yellow-500' :
-          'bg-blue-500'
+          'bg-primary-500'
         }`}>
           <div className="flex items-center gap-2">
             {toast.type === 'success' && <span className="material-symbols-outlined">check_circle</span>}
@@ -232,7 +232,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
             <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">schedule</span>
-                <h2 className="font-bold text-slate-800 dark:text-slate-100">Arriving Today</h2>
+                <h2 className="font-display text-card-h3 text-slate-800 dark:text-slate-100">Arriving Today</h2>
               </div>
               <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2.5 py-1 rounded-full">
                 {summary.arrivingToday}
@@ -249,7 +249,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
                   <div key={g._id} className="group p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 text-primary font-bold rounded-full size-9 flex items-center justify-center text-xs">
+                        <div className="bg-primary-100 text-primary font-bold rounded-full size-9 flex items-center justify-center text-xs">
                           {getInitials(g.fullName)}
                         </div>
                         <div>
@@ -277,7 +277,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
                     <button
                       onClick={() => handleCheckIn(g._id, g.fullName)}
                       disabled={actionLoadingId === g._id}
-                      className="w-full bg-primary hover:bg-blue-700 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                      className="w-full bg-primary hover:bg-primary-600 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
                     >
                       {actionLoadingId === g._id ? (
                         <>
@@ -302,7 +302,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
             <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-emerald-50/30 dark:bg-emerald-900/10">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-emerald-500">check_circle</span>
-                <h2 className="font-bold text-slate-800 dark:text-slate-100">Checked-in</h2>
+                <h2 className="font-display text-card-h3 text-slate-800 dark:text-slate-100">Checked-in</h2>
               </div>
               <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full">
                 {summary.checkedIn}
@@ -378,7 +378,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
             <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-amber-50/30 dark:bg-amber-900/10">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-amber-500">warning</span>
-                <h2 className="font-bold text-slate-800 dark:text-slate-100">Pending Arrivals</h2>
+                <h2 className="font-display text-card-h3 text-slate-800 dark:text-slate-100">Pending Arrivals</h2>
               </div>
               <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full">
                 {summary.pending}
@@ -435,7 +435,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
                       <button
                         onClick={() => handleCheckIn(g._id, g.fullName)}
                         disabled={actionLoadingId === g._id}
-                        className="w-full bg-primary hover:bg-blue-700 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                        className="w-full bg-primary hover:bg-primary-600 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
                       >
                         {actionLoadingId === g._id ? (
                           <>

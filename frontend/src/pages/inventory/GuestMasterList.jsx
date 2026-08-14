@@ -254,7 +254,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
           toast.type === 'success' ? 'bg-green-500' : 
           toast.type === 'error' ? 'bg-red-500' : 
           toast.type === 'warning' ? 'bg-yellow-500' : 
-          'bg-blue-500'
+          'bg-primary-500'
         }`}>
           <div className="flex items-center gap-2">
             {toast.type === 'success' && <span className="material-symbols-outlined">check_circle</span>}
@@ -271,7 +271,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
           <div className="layout-content-container flex flex-col max-w-[1200px] flex-1 px-4">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Guest Master List</h1>
+                <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">Guest Master List</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Manage arrivals, room assignments and VIP status for attendees.</p>
               </div>
               <button
@@ -453,7 +453,7 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                         <tr key={g._id} className="hover:bg-slate-50/80 transition-colors group">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="bg-blue-100  text-primary font-bold rounded-full size-8 flex items-center justify-center text-xs">
+                              <div className="bg-primary-100  text-primary font-bold rounded-full size-8 flex items-center justify-center text-xs">
                                 {g.fullName ? g.fullName.split(' ').map((w) => w[0]).join('').toUpperCase() : '?'}
                               </div>
                               <div>
@@ -554,5 +554,3 @@ const fetchGuests = async ({ quiet = false } = {}) => {
 }
 
 export default GuestMasterList
-
-

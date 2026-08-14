@@ -224,14 +224,14 @@ function ServiceRequestLogs({ eventId }) {
       {showDeleteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-[#111318] dark:text-white mb-2">Delete Request?</h3>
-            <p className="text-[#616e89] text-sm mb-6">
+            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white mb-2">Delete Request?</h3>
+            <p className="text-slate-500 text-body mb-6">
               Are you sure you want to permanently delete this {requestToDelete?.requestType} request for {requestToDelete?.guest?.name || 'this guest'}? This action cannot be undone.
             </p>
             <div className="flex justify-end gap-3">
               <button 
                 onClick={() => setShowDeleteModal(false)}
-                className="px-4 py-2 text-sm font-bold text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors"
               >
                 Cancel
               </button>
@@ -252,17 +252,17 @@ function ServiceRequestLogs({ eventId }) {
           {/* Header Section */}
           <div className="flex flex-wrap items-center justify-between gap-4 p-6 lg:px-0">
             <div className="flex flex-col gap-1">
-              <h1 className="text-[#111318] dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">Service Request Logs</h1>
-              <p className="text-[#616e89] dark:text-slate-400 text-base font-normal leading-normal">Manage and monitor guest hospitality requests in real-time.</p>
+              <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">Service Request Logs</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-body font-normal leading-normal">Manage and monitor guest hospitality requests in real-time.</p>
             </div>
             <div className="flex gap-3 text-center items-center">
               <div className="px-4 py-2 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg mr-2">
-                <p className="text-[#616e89] dark:text-slate-400 text-[10px] font-bold uppercase whitespace-nowrap">Open / Progress</p>
-                <p className="text-[#111318] dark:text-white text-lg font-black">{summary.open} <span className="text-[#616e89] dark:text-slate-400 font-normal mx-0.5">/</span> <span className="text-primary">{summary.inProgress}</span></p>
+                <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase whitespace-nowrap">Open / Progress</p>
+                <p className="text-slate-900 dark:text-white text-lg font-black">{summary.open} <span className="text-slate-500 dark:text-slate-400 font-normal mx-0.5">/</span> <span className="text-primary">{summary.inProgress}</span></p>
               </div>
               <button
                 onClick={handleExportCSV}
-                className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-[#111318] dark:text-white rounded-lg text-sm font-bold hover:bg-neutral-soft dark:hover:bg-[#2d364a] transition-colors"
+                className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white rounded-lg text-sm font-bold hover:bg-neutral-soft dark:hover:bg-slate-800 transition-colors"
                 title="Export to CSV"
               >
                 <span className="material-symbols-outlined text-lg">download</span>
@@ -283,11 +283,11 @@ function ServiceRequestLogs({ eventId }) {
             <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-wrap items-center gap-4 shadow-sm">
               <div className="flex-1 min-w-[300px]">
                 <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#616e89] group-focus-within:text-primary transition-colors">search</span>
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">search</span>
                   <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm text-[#111318] dark:text-white placeholder-[#616e89]"
+                    className="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/20 text-sm text-slate-900 dark:text-white placeholder-slate-400"
                     placeholder="Search by guest, room, or ID..." 
                     type="text" 
                   />
@@ -297,7 +297,7 @@ function ServiceRequestLogs({ eventId }) {
                 <select
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
-                  className="bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg text-sm font-bold text-[#616e89] dark:text-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer"
+                  className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-slate-500 dark:text-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer"
                 >
                   <option value="">All Services</option>
                   <option value="housekeeping">Housekeeping</option>
@@ -309,7 +309,7 @@ function ServiceRequestLogs({ eventId }) {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="bg-[#f0f1f4] dark:bg-[#2d364a] border-none rounded-lg text-sm font-bold text-[#616e89] dark:text-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer"
+                  className="bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm font-bold text-slate-500 dark:text-gray-300 px-4 py-2 focus:ring-2 focus:ring-primary/20 appearance-none pr-8 cursor-pointer"
                 >
                   <option value="">Any Status</option>
                   <option value="open">Open (Pending)</option>
@@ -320,7 +320,7 @@ function ServiceRequestLogs({ eventId }) {
                 {(searchTerm || typeFilter || statusFilter) && (
                   <button 
                     onClick={() => { setSearchTerm(''); setTypeFilter(''); setStatusFilter(''); }}
-                    className="p-2 text-red-500 hover:bg-neutral-soft dark:hover:bg-[#2d364a] rounded-lg transition-colors flex items-center"
+                    className="p-2 text-red-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center"
                     title="Clear Filters"
                   >
                     <span className="material-symbols-outlined text-lg">close</span>
@@ -344,14 +344,14 @@ function ServiceRequestLogs({ eventId }) {
               <div className="absolute inset-0 z-10 bg-white/50 dark:bg-[#151a26]/50 backdrop-blur-[1px] flex items-center justify-center">
                 <div className="flex flex-col items-center">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-3"></div>
-                  <p className="text-[#616e89] font-medium text-sm">Syncing requests...</p>
+                  <p className="text-slate-500 font-medium text-sm">Syncing requests...</p>
                 </div>
               </div>
             )}
 
             <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-visible shadow-sm">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-[#f0f1f4] dark:bg-slate-900/50 text-[11px] font-bold text-[#616e89] uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-100 dark:bg-slate-900/50 text-[11px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-4">Guest / Room</th>
                     <th className="px-6 py-4">Request Type</th>
@@ -361,12 +361,12 @@ function ServiceRequestLogs({ eventId }) {
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#dbdee6] dark:bg-slate-900/50">
+                <tbody className="divide-y divide-border-light dark:bg-slate-900/50">
                   {requests.length === 0 && !loading ? (
                     <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center text-[#616e89]">
+                      <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
                         <span className="material-symbols-outlined text-4xl opacity-50 mb-3 block">receipt_long</span>
-                        <p className="text-lg font-bold text-[#111318] dark:text-white">No requests found</p>
+                        <p className="text-lg font-bold text-slate-900 dark:text-white">No requests found</p>
                         <p className="text-sm mt-1">Try adjusting your filters or create a new ticket.</p>
                       </td>
                     </tr>
@@ -376,11 +376,11 @@ function ServiceRequestLogs({ eventId }) {
                       const isRowResolved = req.status === 'completed' || req.status === 'cancelled';
                       
                       return (
-                        <tr key={req._id} className={`hover:bg-neutral-soft/30 dark:hover:bg-[#2d364a]/30 transition-colors ${isRowResolved ? 'opacity-60 saturate-50' : ''}`}>
+                        <tr key={req._id} className={`hover:bg-neutral-soft/30 dark:hover:bg-slate-800/30 transition-colors ${isRowResolved ? 'opacity-60 saturate-50' : ''}`}>
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
-                              <span className="text-sm font-bold text-[#111318] dark:text-white">{req.guest ? req.guest.name : 'No Guest Linked'}</span>
-                              <span className="text-xs text-[#616e89] dark:text-slate-400">
+                              <span className="text-sm font-bold text-slate-900 dark:text-white">{req.guest ? req.guest.name : 'No Guest Linked'}</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
                                 {req.room ? `Room ${req.room.number}` : 'No Room Info'} • ID #{req._id.slice(-6).toUpperCase()}
                               </span>
                             </div>
@@ -388,7 +388,7 @@ function ServiceRequestLogs({ eventId }) {
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-2">
                               <span className={`material-symbols-outlined text-lg ${typeConfig.color}`}>{typeConfig.icon}</span>
-                              <span className="text-sm font-bold text-[#111318] dark:text-white">{typeConfig.label}</span>
+                              <span className="text-sm font-bold text-slate-900 dark:text-white">{typeConfig.label}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4">
@@ -398,7 +398,7 @@ function ServiceRequestLogs({ eventId }) {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <p className="text-xs text-[#616e89] dark:text-slate-400 line-clamp-2 max-w-[200px]" title={req.notes}>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 max-w-[200px]" title={req.notes}>
                               {req.notes || "—"}
                             </p>
                             {req.permissionToEnter && (
@@ -407,14 +407,14 @@ function ServiceRequestLogs({ eventId }) {
                               </p>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-right text-xs font-semibold text-[#616e89] dark:text-slate-400">
+                          <td className="px-6 py-4 text-right text-xs font-semibold text-slate-500 dark:text-slate-400">
                             {new Date(req.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            <span className="block text-[10px] font-normal text-[#616e89] dark:text-slate-400">{new Date(req.createdAt).toLocaleDateString()}</span>
+                            <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">{new Date(req.createdAt).toLocaleDateString()}</span>
                           </td>
                           <td className="px-6 py-4 text-right relative">
                             <button 
                               onClick={() => setActiveMenuId(activeMenuId === req._id ? null : req._id)}
-                              className={`p-1.5 rounded-lg transition-colors ${activeMenuId === req._id ? 'bg-neutral-soft dark:bg-[#2d364a] text-[#111318] dark:text-white' : 'text-[#616e89] hover:bg-neutral-soft dark:hover:bg-[#2d364a]'}`}
+                              className={`p-1.5 rounded-lg transition-colors ${activeMenuId === req._id ? 'bg-neutral-soft dark:bg-slate-800 text-slate-900 dark:text-white' : 'text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800'}`}
                             >
                               <span className="material-symbols-outlined">more_vert</span>
                             </button>
@@ -423,22 +423,22 @@ function ServiceRequestLogs({ eventId }) {
                             {activeMenuId === req._id && (
                               <div ref={menuRef} className="z-40 absolute right-8 top-12 w-48 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-lg shadow-xl  py-1 origin-top-right animate-in fade-in zoom-in-95 duration-100">
                                 
-                                <div className="px-3 py-2 border-b border-[#f0f1f4] dark:border-[#2d364a]">
-                                  <span className="text-[10px] font-bold text-[#616e89] dark:text-slate-400 uppercase tracking-wider">Update Status</span>
+                                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+                                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Update Status</span>
                                 </div>
-                                <button onClick={() => handleStatusChange(req._id, 'open')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-amber-50 dark:hover:bg-amber-900/10 hover:text-amber-700 dark:hover:text-amber-400 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleStatusChange(req._id, 'open')} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-amber-50 dark:hover:bg-amber-900/10 hover:text-amber-700 dark:hover:text-amber-400 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">fiber_new</span> Mark Open
                                 </button>
-                                <button onClick={() => handleStatusChange(req._id, 'in_progress')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-primary dark:hover:text-blue-400 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleStatusChange(req._id, 'in_progress')} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:text-primary dark:hover:text-blue-400 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">run_circle</span> In Progress
                                 </button>
-                                <button onClick={() => handleStatusChange(req._id, 'completed')} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-2">
+                                <button onClick={() => handleStatusChange(req._id, 'completed')} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">check_circle</span> Resolved
                                 </button>
 
-                                <div className="h-px bg-[#f0f1f4] dark:bg-[#2d364a] my-1"></div>
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1"></div>
                                 
-                                <button onClick={() => handleEdit(req._id)} className="w-full px-4 py-2 text-left text-sm text-[#111318] dark:text-white hover:bg-neutral-soft dark:hover:bg-[#2d364a] transition-colors flex items-center gap-2">
+                                <button onClick={() => handleEdit(req._id)} className="w-full px-4 py-2 text-left text-sm text-slate-900 dark:text-white hover:bg-neutral-soft dark:hover:bg-slate-800 transition-colors flex items-center gap-2">
                                   <span className="material-symbols-outlined text-[18px]">edit</span> Edit Details
                                 </button>
                                 <button onClick={() => handleDeleteClick(req)} className="w-full px-4 py-2 text-left text-sm font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2">
@@ -457,7 +457,7 @@ function ServiceRequestLogs({ eventId }) {
               {/* Status Footer */}
               {!loading && requests.length > 0 && (
                 <div className="px-6 py-4 bg-background-light dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <p className="text-xs font-medium text-[#616e89] dark:text-slate-400">Total active list length: {requests.length}</p>
+                  <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total active list length: {requests.length}</p>
                 </div>
               )}
             </div>
