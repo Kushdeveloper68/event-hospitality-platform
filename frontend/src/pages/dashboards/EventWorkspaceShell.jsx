@@ -233,24 +233,20 @@ function EventWorkspaceShell() {
                 <span className="material-symbols-outlined">help_outline</span>
               </button>
               <div className="h-8 w-px bg-border-light dark:bg-slate-800 mx-2"></div>
-              <div className="flex items-center gap-3 pl-2 cursor-pointer group">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-none">
-                    {user?.name || "Guest"}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-1 leading-none">
-                    Event Managed
-                  </p>
-                </div>
-                <div
-                  className="size-10 rounded-full bg-cover bg-center border-2 border-white dark:border-slate-800 shadow-sm"
-                  data-alt="Portrait of a female event director"
-                  style={{
-                    backgroundImage:
-                      'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAPZz9Jhq6VgvPEEsKPZyJgHQLZvsSS7qdfl68sBsGbc9sdeMycQ4VsXkJzR0T-t1WHyh6mBo3JEFurzCpEbF6xFDUDU-57_586Zbccl_kxTABtVYP5kqXDad9HBbuQOEwasxYiYQu6dq567llVy8Vm2e9pvS5CSLvYifCUykweUmrFXSlEICrh4Ris2QnQCR7H_1SP6vvK6otoDNcMBTZkbBSfklQP-yYiXpRbhdpqdjUo34m9oL3uf7UbK3eV5IfrqhzTZEhJWcxc")',
-                  }}
-                ></div>
+             {/* User */}
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-bold leading-none dark:text-white">
+                  {user?.name || "Operator"}
+                </p>
+                <p className="text-[10px] text-neutral-muted mt-1 uppercase font-bold tracking-tight">
+                  {user?.organizationName || "Operations"}
+                </p>
               </div>
+              <div className="size-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
+                {(user?.name || "O").charAt(0).toUpperCase()}
+              </div>
+            </div>
             </div>
           </div>
           {/* <!-- Event Context Header --> */}

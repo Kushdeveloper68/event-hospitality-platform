@@ -517,18 +517,20 @@ function MainOprationDashboard() {
         <header className="h-16 bg-white dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-6 flex-1 max-w-2xl">
             {/* Search */}
-            <div className="relative flex-1">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-neutral-muted text-xl">
-                search
-              </span>
-              <input
-                className="w-full bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border-none rounded-lg py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                placeholder="Search events, guests, or tasks..."
-                type="text"
-                value={eventSearch}
-                onChange={(e) => setEventSearch(e.target.value)}
-              />
-            </div>
+            <div className="flex items-center gap-6 flex-1">
+                          <div className="flex items-center gap-2 text-primary-500">
+                            <Link to="/">
+                                        <div className="size-8 rounded-lg flex items-center justify-center">
+                                          <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
+                                        </div>
+                                      </Link>
+                            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden lg:block">
+                              EventCure
+                            </span>
+                          </div>
+                          {/* <!-- Global Search --> */}
+                          
+                        </div>
           </div>
           <div className="flex items-center gap-4">
             {/* Last updated */}
