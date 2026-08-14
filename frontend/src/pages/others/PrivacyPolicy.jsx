@@ -114,8 +114,8 @@ function Highlight({ children, type = "warning" }) {
 
 function DataTable({ rows }) {
   return (
-    <div className="my-4 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
-      <table className="w-full text-sm">
+    <div className="my-4 overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+      <table className="w-full min-w-[480px] text-sm">
         <thead className="bg-slate-50 dark:bg-slate-800/60">
           <tr>
             {Object.keys(rows[0]).map((key) => (

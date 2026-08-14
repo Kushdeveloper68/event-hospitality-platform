@@ -349,8 +349,8 @@ function ServiceRequestLogs({ eventId }) {
               </div>
             )}
 
-            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-visible shadow-sm">
-              <table className="w-full text-left border-collapse">
+            <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-x-auto shadow-sm">
+              <table className="w-full min-w-[720px] text-left border-collapse">
                 <thead className="bg-slate-100 dark:bg-slate-900/50 text-[11px] font-bold text-slate-500 uppercase tracking-widest border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="px-6 py-4">Guest / Room</th>
