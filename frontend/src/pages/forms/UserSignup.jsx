@@ -118,13 +118,13 @@ function UserSignup() {
   return (
     <>
       {/* Top Navigation Bar */}
-      <header className="w-full border-b border-slate-200 bg-slate-50/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
+      <header className="w-full border-b border-slate-200 bg-surface-soft/90 px-6 py-4 backdrop-blur dark:border-slate-800 dark:bg-surface-dark-soft/90">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-2 text-primary transition-opacity hover:opacity-90"
+            className="flex items-center gap-2 transition-opacity hover:opacity-90"
           >
-            <div className="size-8 rounded-lg flex items-center justify-center">
+            <div className="size-8 rounded-lg flex items-center justify-center shrink-0">
               <img
                 src="/event-logo-with-icon-dark-bg-removebg-preview.png"
                 alt="EventCure Logo"
@@ -132,21 +132,21 @@ function UserSignup() {
               />
             </div>
             <div>
-              <p className="text-[13px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">
+              <p className="font-display text-card-h3 text-slate-900 dark:text-white tracking-tight leading-none">
                 EventCure
               </p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5 tracking-wider uppercase">
+              <p className="text-micro text-slate-400 dark:text-slate-500 tracking-wider uppercase mt-0.5">
                 Hospitality
               </p>
             </div>
           </Link>
           <div className="hidden md:flex items-center gap-4">
-            <span className="text-sm text-slate-600 dark:text-slate-400">
+            <span className="text-body text-slate-500 dark:text-slate-400">
               Already have an account?
             </span>
             <Link
               to="/login"
-              className="text-sm font-semibold text-primary hover:underline"
+              className="text-body font-semibold text-primary-500 dark:text-primary-400 hover:text-primary-600 hover:underline"
             >
               Log in
             </Link>
@@ -155,27 +155,27 @@ function UserSignup() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center bg-slate-50 px-6 py-10 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:p-12">
+      <main className="flex-1 flex items-center justify-center bg-surface-soft px-6 py-10 text-slate-900 dark:bg-surface-dark-soft dark:text-slate-100 sm:p-12">
         <div className="w-full max-w-120">
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-xl shadow-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-slate-950/30">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/95 shadow-card backdrop-blur dark:border-slate-800 dark:bg-surface-dark/95 dark:shadow-card-dark">
             <div className="p-8 sm:p-10">
               {/* Header */}
               <div className="mb-8 text-center sm:text-left">
                 {step === 1 ? (
                   <>
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                    <h1 className="font-display text-page-h1 mb-2 text-slate-900 dark:text-slate-100">
                       Create your account
                     </h1>
-                    <p className="text-base text-slate-600 dark:text-slate-400">
+                    <p className="text-body text-slate-500 dark:text-slate-400">
                       Join your operations team on the hospitality platform.
                     </p>
                   </>
                 ) : (
                   <>
-                    <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                    <h1 className="font-display text-page-h1 mb-2 text-slate-900 dark:text-slate-100">
                       Verify your email
                     </h1>
-                    <p className="text-base text-slate-600 dark:text-slate-400">
+                    <p className="text-body text-slate-500 dark:text-slate-400">
                       We sent a verification code to <strong>{email}</strong>
                     </p>
                   </>
@@ -185,12 +185,12 @@ function UserSignup() {
               {/* Alert Messages */}
               {error && (
                 <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/40">
-                  <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+                  <p className="text-body text-red-700 dark:text-red-400">{error}</p>
                 </div>
               )}
               {success && (
                 <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-950/40">
-                  <p className="text-sm text-green-700 dark:text-green-400">
+                  <p className="text-body text-green-700 dark:text-green-400">
                     {success}
                   </p>
                 </div>
@@ -209,8 +209,8 @@ function UserSignup() {
                     <div className="absolute inset-0 flex items-center">
                       <div className="w-full border-t border-slate-200 dark:border-slate-700" />
                     </div>
-                    <div className="relative flex justify-center text-xs">
-                      <span className="bg-white px-3 text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+                    <div className="relative flex justify-center text-caption">
+                      <span className="bg-white px-3 text-slate-400 dark:bg-surface-dark dark:text-slate-500">
                         or sign up with email
                       </span>
                     </div>
@@ -219,11 +219,11 @@ function UserSignup() {
                   <form className="space-y-5" onSubmit={handleSignupSubmit}>
                     {/* Full Name */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <label className="block text-body font-semibold text-slate-900 dark:text-slate-100">
                         Full Name
                       </label>
                       <input
-                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-body text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                         placeholder="John Doe"
                         type="text"
                         value={name}
@@ -234,11 +234,11 @@ function UserSignup() {
 
                     {/* Business Email */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <label className="block text-body font-semibold text-slate-900 dark:text-slate-100">
                         Business Email
                       </label>
                       <input
-                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-body text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                         placeholder="name@company.com"
                         type="email"
                         value={email}
@@ -249,11 +249,11 @@ function UserSignup() {
 
                     {/* Organization Name */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <label className="block text-body font-semibold text-slate-900 dark:text-slate-100">
                         Organization Name
                       </label>
                       <input
-                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
+                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-body text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                         placeholder="Acme Events Corp"
                         type="text"
                         value={organizationName}
@@ -264,12 +264,12 @@ function UserSignup() {
 
                     {/* Password */}
                     <div className="space-y-2">
-                      <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      <label className="block text-body font-semibold text-slate-900 dark:text-slate-100">
                         Password
                       </label>
                       <div className="relative group">
                         <input
-                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 pr-12 text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
+                          className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 pr-12 text-body text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                           placeholder="••••••••"
                           type="password"
                           value={password}
@@ -277,7 +277,7 @@ function UserSignup() {
                           disabled={loading}
                         />
                       </div>
-                      <p className="mt-1 text-[12px] text-slate-600 dark:text-slate-400">
+                      <p className="mt-1 text-caption text-slate-500 dark:text-slate-400">
                         Must be at least 8 characters with a symbol.
                       </p>
                     </div>
@@ -285,7 +285,7 @@ function UserSignup() {
                     {/* Terms */}
                     <div className="flex items-start gap-3 py-2">
                       <input
-                        className="mt-1 size-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600"
+                        className="mt-1 size-4 rounded border-slate-300 text-primary-500 focus:ring-primary-500 dark:border-slate-600"
                         id="terms"
                         type="checkbox"
                         checked={termConditions}
@@ -293,19 +293,19 @@ function UserSignup() {
                         disabled={loading}
                       />
                       <label
-                        className="text-sm leading-tight text-slate-600 dark:text-slate-400"
+                        className="text-body leading-tight text-slate-600 dark:text-slate-400"
                         htmlFor="terms"
                       >
                         I agree to the{" "}
-                        <span className="text-primary">Terms of Service</span>{" "}
+                        <Link to="/terms" className="text-primary-500 dark:text-primary-400 hover:underline">Terms of Service</Link>{" "}
                         and{" "}
-                        <span className="text-primary">Privacy Policy</span>.
+                        <Link to="/privacy" className="text-primary-500 dark:text-primary-400 hover:underline">Privacy Policy</Link>.
                       </label>
                     </div>
 
                     {/* Submit */}
                     <button
-                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 font-bold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:bg-gray-400"
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-500 px-6 py-4 text-body font-bold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:bg-slate-400"
                       type="submit"
                       disabled={loading}
                     >
@@ -326,11 +326,11 @@ function UserSignup() {
               {step === 2 && (
                 <form className="space-y-6" onSubmit={handleOTPSubmit}>
                   <div className="space-y-3">
-                    <label className="block text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    <label className="block text-body font-semibold text-slate-900 dark:text-slate-100">
                       Verification Code
                     </label>
                     <input
-                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-4 text-center text-2xl font-bold tracking-widest text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-4 py-4 text-center text-2xl font-bold tracking-widest text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500"
                       placeholder="000000"
                       type="text"
                       maxLength="6"
@@ -342,14 +342,14 @@ function UserSignup() {
                       }}
                       disabled={loading}
                     />
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-body text-slate-500 dark:text-slate-400">
                       This code expires in:{" "}
                       <strong>{formatTime(otpTimer)}</strong>
                     </p>
                   </div>
 
                   <button
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 font-bold text-white shadow-sm transition-colors hover:bg-primary/90 disabled:bg-gray-400"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-500 px-6 py-4 text-body font-bold text-white shadow-sm transition-colors hover:bg-primary-600 disabled:bg-slate-400"
                     type="submit"
                     disabled={loading || otp.length !== 6}
                   >
@@ -362,11 +362,11 @@ function UserSignup() {
                   </button>
 
                   <div className="text-center">
-                    <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">
+                    <p className="mb-3 text-body text-slate-500 dark:text-slate-400">
                       Didn't receive the code?
                     </p>
                     <button
-                      className="text-primary font-semibold hover:underline disabled:text-gray-400 text-sm"
+                      className="text-primary-500 dark:text-primary-400 font-semibold hover:underline disabled:text-slate-400 text-body"
                       type="button"
                       onClick={handleResendOTP}
                       disabled={loading || otpTimer > 0}
@@ -379,7 +379,7 @@ function UserSignup() {
 
                   <div className="flex flex-col gap-3 sm:flex-row">
                     <button
-                      className="flex-1 rounded-lg bg-slate-200 px-6 py-3 font-semibold text-slate-900 transition-colors hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                      className="flex-1 rounded-lg bg-slate-200 px-6 py-3 text-body font-semibold text-slate-900 transition-colors hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                       type="button"
                       onClick={() => {
                         setStep(1);
@@ -392,7 +392,7 @@ function UserSignup() {
                     </button>
                     <Link
                       to="/login"
-                      className="flex flex-1 items-center justify-center rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition-colors hover:border-primary hover:text-primary dark:border-slate-700 dark:text-slate-300 dark:hover:border-primary dark:hover:text-primary"
+                      className="flex flex-1 items-center justify-center rounded-lg border border-slate-300 px-6 py-3 text-body font-semibold text-slate-700 transition-colors hover:border-primary-500 hover:text-primary-500 dark:border-slate-700 dark:text-slate-300 dark:hover:border-primary-400 dark:hover:text-primary-400"
                     >
                       Go to Login
                     </Link>
@@ -402,11 +402,11 @@ function UserSignup() {
             </div>
 
             {/* Mobile footer */}
-            <div className="bg-slate-50 px-8 py-4 text-center dark:bg-slate-900/60 md:hidden">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+            <div className="bg-surface-soft px-8 py-4 text-center dark:bg-surface-dark-soft/60 md:hidden">
+              <p className="text-body text-slate-500 dark:text-slate-400">
                 Already have an account?{" "}
                 <Link
-                  className="font-semibold text-primary hover:underline"
+                  className="font-semibold text-primary-500 dark:text-primary-400 hover:underline"
                   to="/login"
                 >
                   Log in

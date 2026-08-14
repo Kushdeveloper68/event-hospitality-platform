@@ -26,7 +26,7 @@ function PasswordStrength({ password }) {
           <div
             key={i}
             className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-              i < score ? barColors[score - 1] : 'bg-slate-200'
+              i < score ? barColors[score - 1] : 'bg-slate-200 dark:bg-slate-700'
             }`}
           />
         ))}
@@ -35,8 +35,8 @@ function PasswordStrength({ password }) {
         {checks.map(c => (
           <span
             key={c.label}
-            className={`text-[11px] flex items-center gap-1 font-medium ${
-              c.ok ? 'text-emerald-600' : 'text-slate-400'
+            className={`text-micro normal-case flex items-center gap-1 font-medium ${
+              c.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
             }`}
           >
             <span className="material-symbols-outlined text-[13px]">
@@ -46,7 +46,7 @@ function PasswordStrength({ password }) {
           </span>
         ))}
         {score > 0 && (
-          <span className={`text-[11px] font-bold ml-auto ${barColors[score - 1].replace('bg-', 'text-')}`}>
+          <span className={`text-micro normal-case font-bold ml-auto ${barColors[score - 1].replace('bg-', 'text-')}`}>
             {labels[score]}
           </span>
         )}
@@ -68,12 +68,12 @@ function StepIndicator({ currentStep }) {
           <React.Fragment key={label}>
             <div className="flex flex-col items-center gap-1">
               <div
-                className={`size-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                className={`size-8 rounded-full flex items-center justify-center text-body font-bold transition-all ${
                   done
                     ? 'bg-emerald-500 text-white'
                     : active
-                    ? 'bg-primary text-white ring-4 ring-primary/20'
-                    : 'bg-slate-100 text-slate-400'
+                    ? 'bg-primary-500 text-white ring-4 ring-primary-500/20'
+                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                 }`}
               >
                 {done ? (
@@ -83,8 +83,8 @@ function StepIndicator({ currentStep }) {
                 )}
               </div>
               <span
-                className={`text-[10px] font-bold uppercase tracking-wider ${
-                  active ? 'text-primary' : done ? 'text-emerald-600' : 'text-slate-400'
+                className={`text-micro normal-case tracking-wider ${
+                  active ? 'text-primary-500 dark:text-primary-400' : done ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
                 }`}
               >
                 {label}
@@ -93,7 +93,7 @@ function StepIndicator({ currentStep }) {
             {i < steps.length - 1 && (
               <div
                 className={`h-0.5 w-12 mb-5 rounded-full transition-all ${
-                  step < currentStep ? 'bg-emerald-400' : 'bg-slate-200'
+                  step < currentStep ? 'bg-emerald-400' : 'bg-slate-200 dark:bg-slate-700'
                 }`}
               />
             )}
@@ -264,43 +264,47 @@ function ResetPassword() {
   }
 
   // ── Shared input class ──────────────────────────────────────────────────────
-  const inputClass = `w-full h-11 px-4 rounded-xl border border-slate-200 bg-white text-slate-900 
-    placeholder-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none 
-    transition-all text-sm`
+  const inputClass = `w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100
+    placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none
+    transition-all text-body`
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-surface-soft dark:bg-surface-dark-soft flex items-center justify-center p-4">
       <div className="w-full max-w-md">
 
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="size-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-primary/20">
-            <span className="material-symbols-outlined text-2xl">event_seat</span>
+        <Link to="/" className="flex items-center justify-center gap-2 mb-8 transition-opacity hover:opacity-90">
+          <div className="size-10 rounded-xl flex items-center justify-center shrink-0">
+            <img
+              src="/event-logo-with-icon-dark-bg-removebg-preview.png"
+              alt="EventCure Logo"
+              loading="lazy"
+            />
           </div>
-          <span className="text-xl font-black text-slate-900 tracking-tight">EventOps</span>
-        </div>
+          <span className="font-display text-card-h3 text-slate-900 dark:text-white tracking-tight">EventCure</span>
+        </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+        <div className="bg-white dark:bg-surface-dark rounded-2xl shadow-card dark:shadow-card-dark border border-slate-200 dark:border-slate-800 p-8">
 
           {/* ── Step 4: Success ── */}
           {step === 4 ? (
             <div className="flex flex-col items-center text-center gap-5 py-4">
-              <div className="size-20 rounded-full bg-emerald-100 flex items-center justify-center">
-                <span className="material-symbols-outlined text-4xl text-emerald-600">
+              <div className="size-20 rounded-full bg-emerald-100 dark:bg-emerald-500/10 flex items-center justify-center">
+                <span className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400">
                   check_circle
                 </span>
               </div>
               <div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">
+                <h2 className="font-display text-section-h2 text-slate-900 dark:text-slate-100 mb-2">
                   Password Reset!
                 </h2>
-                <p className="text-slate-500 text-sm">
+                <p className="text-body text-slate-500 dark:text-slate-400">
                   Your password has been updated successfully. You can now sign in with your new password.
                 </p>
               </div>
               <button
                 onClick={() => navigate('/login')}
-                className="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+                className="w-full h-11 bg-primary-500 text-white font-bold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-xl">login</span>
                 Go to Login
@@ -313,11 +317,11 @@ function ResetPassword() {
 
               {/* Error message */}
               {error && (
-                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 border border-red-200 mb-5">
+                <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 mb-5">
                   <span className="material-symbols-outlined text-red-500 text-lg mt-0.5 shrink-0">
                     error
                   </span>
-                  <p className="text-sm text-red-700 font-medium">{error}</p>
+                  <p className="text-body text-red-700 dark:text-red-400 font-medium">{error}</p>
                 </div>
               )}
 
@@ -325,18 +329,18 @@ function ResetPassword() {
               {step === 1 && (
                 <form onSubmit={handleRequestOTP} className="space-y-5">
                   <div className="text-center mb-6">
-                    <h2 className="text-2xl font-black text-slate-900">Forgot Password?</h2>
-                    <p className="text-slate-500 text-sm mt-1">
+                    <h2 className="font-display text-section-h2 text-slate-900 dark:text-slate-100">Forgot Password?</h2>
+                    <p className="text-body text-slate-500 dark:text-slate-400 mt-1">
                       Enter your email and we'll send you a reset code.
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-body font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       Email Address
                     </label>
                     <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xl pointer-events-none">
                         mail
                       </span>
                       <input
@@ -354,7 +358,7 @@ function ResetPassword() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="w-full h-11 bg-primary-500 text-white font-bold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -369,9 +373,9 @@ function ResetPassword() {
                     )}
                   </button>
 
-                  <p className="text-center text-sm text-slate-500">
+                  <p className="text-center text-body text-slate-500 dark:text-slate-400">
                     Remember your password?{' '}
-                    <Link to="/login" className="text-primary font-bold hover:underline">
+                    <Link to="/login" className="text-primary-500 dark:text-primary-400 font-bold hover:underline">
                       Sign in
                     </Link>
                   </p>
@@ -382,10 +386,10 @@ function ResetPassword() {
               {step === 2 && (
                 <form onSubmit={handleVerifyOTP} className="space-y-6">
                   <div className="text-center mb-6">
-                    <h2 className="text-2xl font-black text-slate-900">Check Your Email</h2>
-                    <p className="text-slate-500 text-sm mt-1">
+                    <h2 className="font-display text-section-h2 text-slate-900 dark:text-slate-100">Check Your Email</h2>
+                    <p className="text-body text-slate-500 dark:text-slate-400 mt-1">
                       We sent a 6-digit code to{' '}
-                      <span className="font-bold text-slate-700">{email}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{email}</span>
                     </p>
                   </div>
 
@@ -404,10 +408,10 @@ function ResetPassword() {
                         onPaste={i === 0 ? handleOtpPaste : undefined}
                         className={`size-12 text-center text-xl font-black border-2 rounded-xl outline-none transition-all
                           ${digit
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-slate-200 bg-white text-slate-900'
+                            ? 'border-primary-500 bg-primary-500/5 text-primary-500 dark:text-primary-400'
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100'
                           }
-                          focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                          focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20`}
                       />
                     ))}
                   </div>
@@ -415,7 +419,7 @@ function ResetPassword() {
                   <button
                     type="submit"
                     disabled={loading || otpValue.length < 6}
-                    className="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="w-full h-11 bg-primary-500 text-white font-bold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -432,12 +436,12 @@ function ResetPassword() {
 
                   {/* Resend */}
                   <div className="text-center space-y-2">
-                    <p className="text-sm text-slate-500">Didn't receive the code?</p>
+                    <p className="text-body text-slate-500 dark:text-slate-400">Didn't receive the code?</p>
                     <button
                       type="button"
                       onClick={handleResend}
                       disabled={resendCooldown > 0 || loading}
-                      className="text-sm font-bold text-primary hover:underline disabled:text-slate-400 disabled:no-underline transition-colors"
+                      className="text-body font-bold text-primary-500 dark:text-primary-400 hover:underline disabled:text-slate-400 dark:disabled:text-slate-600 disabled:no-underline transition-colors"
                     >
                       {resendCooldown > 0
                         ? `Resend in ${resendCooldown}s`
@@ -448,7 +452,7 @@ function ResetPassword() {
                   <button
                     type="button"
                     onClick={() => { setStep(1); setError(''); setOtp(['', '', '', '', '', '']) }}
-                    className="flex items-center gap-1 text-sm text-slate-400 hover:text-slate-700 transition-colors mx-auto"
+                    className="flex items-center gap-1 text-body text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors mx-auto"
                   >
                     <span className="material-symbols-outlined text-base">arrow_back</span>
                     Change email
@@ -460,19 +464,19 @@ function ResetPassword() {
               {step === 3 && (
                 <form onSubmit={handleResetPassword} className="space-y-5">
                   <div className="text-center mb-6">
-                    <h2 className="text-2xl font-black text-slate-900">Set New Password</h2>
-                    <p className="text-slate-500 text-sm mt-1">
+                    <h2 className="font-display text-section-h2 text-slate-900 dark:text-slate-100">Set New Password</h2>
+                    <p className="text-body text-slate-500 dark:text-slate-400 mt-1">
                       Choose a strong password for your account.
                     </p>
                   </div>
 
                   {/* New password */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-body font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       New Password
                     </label>
                     <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xl pointer-events-none">
                         lock
                       </span>
                       <input
@@ -486,7 +490,7 @@ function ResetPassword() {
                       <button
                         type="button"
                         onClick={() => setShowNew(p => !p)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                       >
                         <span className="material-symbols-outlined text-xl">
                           {showNew ? 'visibility_off' : 'visibility'}
@@ -498,11 +502,11 @@ function ResetPassword() {
 
                   {/* Confirm password */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
+                    <label className="block text-body font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                       Confirm New Password
                     </label>
                     <div className="relative">
-                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl pointer-events-none">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xl pointer-events-none">
                         lock_reset
                       </span>
                       <input
@@ -512,16 +516,16 @@ function ResetPassword() {
                         placeholder="Repeat your password"
                         className={`${inputClass} pl-11 pr-11 ${
                           confirmPassword && confirmPassword !== newPassword
-                            ? 'border-red-400 focus:ring-red-200'
+                            ? 'border-red-400 focus:ring-red-200 dark:border-red-500'
                             : confirmPassword && confirmPassword === newPassword
-                            ? 'border-emerald-400 focus:ring-emerald-200'
+                            ? 'border-emerald-400 focus:ring-emerald-200 dark:border-emerald-500'
                             : ''
                         }`}
                       />
                       <button
                         type="button"
                         onClick={() => setShowConfirm(p => !p)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
                       >
                         <span className="material-symbols-outlined text-xl">
                           {showConfirm ? 'visibility_off' : 'visibility'}
@@ -529,13 +533,13 @@ function ResetPassword() {
                       </button>
                     </div>
                     {confirmPassword && confirmPassword !== newPassword && (
-                      <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                      <p className="text-caption text-red-500 dark:text-red-400 mt-1.5 flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">error</span>
                         Passwords do not match
                       </p>
                     )}
                     {confirmPassword && confirmPassword === newPassword && (
-                      <p className="text-xs text-emerald-600 mt-1.5 flex items-center gap-1">
+                      <p className="text-caption text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">check_circle</span>
                         Passwords match
                       </p>
@@ -545,7 +549,7 @@ function ResetPassword() {
                   <button
                     type="submit"
                     disabled={loading || newPassword !== confirmPassword || newPassword.length < 8}
-                    className="w-full h-11 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+                    className="w-full h-11 bg-primary-500 text-white font-bold rounded-xl hover:bg-primary-600 transition-all shadow-lg shadow-primary-500/20 disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
                   >
                     {loading ? (
                       <>

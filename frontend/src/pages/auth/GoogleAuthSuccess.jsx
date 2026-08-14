@@ -42,21 +42,21 @@ function GoogleAuthSuccess() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <div className="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-lg dark:border-red-900/40 dark:bg-slate-900">
+      <div className="flex min-h-screen items-center justify-center bg-surface-soft dark:bg-surface-dark-soft">
+        <div className="rounded-2xl border border-red-200 bg-white p-8 text-center shadow-card dark:border-red-900/40 dark:bg-surface-dark dark:shadow-card-dark">
           <span className="material-symbols-outlined text-4xl text-red-500">error</span>
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
-          <p className="mt-1 text-xs text-slate-400">Redirecting to login…</p>
+          <p className="mt-3 text-body text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-1 text-caption text-slate-400 dark:text-slate-500">Redirecting to login…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen items-center justify-center bg-surface-soft dark:bg-surface-dark-soft">
       <div className="flex flex-col items-center gap-4">
-        <span className="size-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary" />
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        <span className="size-10 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-700 border-t-primary-500" />
+        <p className="text-body font-medium text-slate-500 dark:text-slate-400">
           Signing you in…
         </p>
       </div>

@@ -18,7 +18,6 @@ function UserLogin() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Show error if redirected back from a failed Google OAuth attempt
   const oauthError = searchParams.get("error");
   const oauthErrorMessage =
     oauthError === "google_auth_failed"
@@ -58,21 +57,24 @@ function UserLogin() {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="flex min-h-screen flex-col bg-surface-soft text-slate-900 dark:bg-surface-dark-soft dark:text-slate-100">
         <div className="flex flex-1 items-center justify-center p-6 md:p-10">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/95 p-8 shadow-xl shadow-slate-200/60 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-slate-950/30 md:p-10">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white/95 p-8 shadow-card backdrop-blur dark:border-slate-800 dark:bg-surface-dark/95 dark:shadow-card-dark md:p-10">
             {/* Logo */}
             <div className="flex flex-col items-center mb-8">
-              <Link
-                to="/"
-                className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white transition-transform hover:scale-105"
-              >
-                <span className="material-symbols-outlined text-[28px]">layers</span>
+              <Link to="/" className="mb-4 flex items-center gap-2 transition-opacity hover:opacity-90">
+                <div className="size-10 rounded-xl flex items-center justify-center shrink-0">
+                  <img
+                    src="/event-logo-with-icon-dark-bg-removebg-preview.png"
+                    alt="EventCure Logo"
+                    loading="lazy"
+                  />
+                </div>
               </Link>
-              <h2 className="text-slate-900 dark:text-slate-100 text-2xl font-bold leading-tight tracking-tight">
+              <h2 className="font-display text-section-h2 text-slate-900 dark:text-slate-100">
                 Welcome back
               </h2>
-              <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm text-center">
+              <p className="mt-2 text-body text-slate-500 dark:text-slate-400 text-center">
                 Please enter your details to sign in.
               </p>
             </div>
@@ -80,7 +82,7 @@ function UserLogin() {
             {/* OAuth error from redirect */}
             {oauthErrorMessage && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/40">
-                <p className="text-sm text-red-700 dark:text-red-400">
+                <p className="text-body text-red-700 dark:text-red-400">
                   {oauthErrorMessage}
                 </p>
               </div>
@@ -89,12 +91,12 @@ function UserLogin() {
             {/* Alert messages */}
             {error && (
               <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-900/40 dark:bg-red-950/40">
-                <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+                <p className="text-body text-red-700 dark:text-red-400">{error}</p>
               </div>
             )}
             {success && (
               <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900/40 dark:bg-green-950/40">
-                <p className="text-sm text-green-700 dark:text-green-400">
+                <p className="text-body text-green-700 dark:text-green-400">
                   {success}
                 </p>
               </div>
@@ -110,8 +112,8 @@ function UserLogin() {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200 dark:border-slate-700" />
               </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-white px-3 text-slate-400 dark:bg-slate-900 dark:text-slate-500">
+              <div className="relative flex justify-center text-caption">
+                <span className="bg-white px-3 text-slate-400 dark:bg-surface-dark dark:text-slate-500">
                   or continue with email
                 </span>
               </div>
@@ -122,13 +124,13 @@ function UserLogin() {
               {/* Email */}
               <div>
                 <label
-                  className="mb-1.5 block text-sm font-medium text-slate-900 dark:text-slate-100"
+                  className="mb-1.5 block text-body font-medium text-slate-900 dark:text-slate-100"
                   htmlFor="email"
                 >
                   Email
                 </label>
                 <input
-                  className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-900"
+                  className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-body text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-900"
                   id="email"
                   placeholder="Enter your email"
                   required
@@ -143,21 +145,21 @@ function UserLogin() {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label
-                    className="block text-sm font-medium text-slate-900 dark:text-slate-100"
+                    className="block text-body font-medium text-slate-900 dark:text-slate-100"
                     htmlFor="password"
                   >
                     Password
                   </label>
                   <Link
                     to="/reset-password"
-                    className="text-sm font-semibold text-primary hover:underline"
+                    className="text-caption font-semibold text-primary-500 hover:text-primary-600 dark:text-primary-400 hover:underline"
                   >
                     Forgot password?
                   </Link>
                 </div>
                 <div className="relative">
                   <input
-                    className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-900"
+                    className="block w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-body text-slate-900 placeholder-slate-400 outline-none transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:disabled:bg-slate-900"
                     id="password"
                     placeholder="Enter your password"
                     required
@@ -182,7 +184,7 @@ function UserLogin() {
               {/* Remember me */}
               <div className="flex items-center">
                 <input
-                  className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary dark:border-slate-600"
+                  className="h-4 w-4 rounded border-slate-300 text-primary-500 focus:ring-primary-500 dark:border-slate-600"
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
@@ -191,7 +193,7 @@ function UserLogin() {
                   disabled={loading}
                 />
                 <label
-                  className="ml-2 block text-xs text-slate-600 dark:text-slate-400"
+                  className="ml-2 block text-caption text-slate-600 dark:text-slate-400"
                   htmlFor="remember-me"
                 >
                   Remember me for 30 days
@@ -200,7 +202,7 @@ function UserLogin() {
 
               {/* Submit */}
               <button
-                className="flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white shadow-sm transition-all hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:bg-gray-400"
+                className="flex w-full items-center justify-center rounded-lg bg-primary-500 px-4 py-3 text-body font-bold text-white shadow-sm transition-all hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:bg-slate-400"
                 type="submit"
                 disabled={loading}
               >
@@ -210,10 +212,10 @@ function UserLogin() {
 
             {/* Footer */}
             <div className="mt-8 border-t border-slate-200 pt-6 text-center dark:border-slate-800">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-body text-slate-500 dark:text-slate-400">
                 Don't have an account?{" "}
                 <Link
-                  className="font-semibold text-primary transition-colors hover:text-primary/80"
+                  className="font-semibold text-primary-500 dark:text-primary-400 transition-colors hover:text-primary-600"
                   to="/signup"
                 >
                   Create an account
