@@ -763,7 +763,7 @@ const setFilterTabAndReset = (tab) => {
       <button
         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
         disabled={currentPage === 1}
-        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+        className="px-4 py-2 text-sm dark:text-amber-50 font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
       >
         Previous
       </button>
@@ -777,7 +777,7 @@ const setFilterTabAndReset = (tab) => {
           setCurrentPage((p) => Math.min(totalPages, p + 1))
         }
         disabled={currentPage === totalPages}
-        className="px-4 py-2 text-sm font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+        className="px-4 py-2 text-sm font-bold border dark:text-amber-50 border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
       >
         Next
       </button>
