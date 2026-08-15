@@ -184,7 +184,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Toast Notification */}
       {toast.show && (
         <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-slide-in ${
@@ -223,7 +223,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
         </div>
       )}
 
-      <main className="max-w-[1600px] mx-auto p-6 h-[calc(100vh-64px)] overflow-hidden">
+      <main className="max-w-[1600px] w-full mx-auto p-6 h-[calc(100vh-64px)] overflow-y-auto">
         {/* Dashboard Operations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
 
@@ -460,8 +460,8 @@ function CheckInOprationDesk({ eventId: propEventId }) {
       </main>
 
       {/* Operational Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 py-2 px-6">
-        <div className="max-w-[1600px] mx-auto flex justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+      <footer className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 py-2 px-6">
+        <div className="max-w-[1600px] mx-auto flex flex-wrap gap-3 justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               Total: <span className="text-slate-600">{summary.totalGuests}</span>
@@ -504,7 +504,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
           animation: slide-in 0.3s ease-out;
         }
       `}</style>
-    </>
+    </div>
   )
 }
 
