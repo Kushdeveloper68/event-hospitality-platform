@@ -1,57 +1,47 @@
-const nodemailer = require('nodemailer');
+const { gmail } = require("../config/googleMailer");
 
-if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-  throw new Error("EMAIL_USER or EMAIL_PASSWORD missing");
-}
+// ── MIME builder ────────────────────────────────────────────────────────────
+// Gmail API doesn't take {to, subject, html} directly — it wants a full
+// RFC 2822 message, base64url-encoded. This builds that.
+const buildRawMessage = ({ to, from, subject, html }) => {
+  const messageParts = [
+    `From: ${from}`,
+    `To: ${to}`,
+    "Content-Type: text/html; charset=utf-8",
+    "MIME-Version: 1.0",
+    `Subject: =?utf-8?B?${Buffer.from(subject, "utf-8").toString("base64")}?=`,
+    "",
+    html,
+  ];
+  const message = messageParts.join("\n");
 
-const dns = require('dns');
-
-// Force this transporter to resolve smtp.gmail.com to an IPv4 address only.
-// Render doesn't support outbound IPv6, and Node's built-in "Happy Eyeballs"
-// (autoSelectFamily) can still race/prefer an IPv6 address even after
-// dns.setDefaultResultOrder('ipv4first') is set globally. Providing a custom
-// `lookup` here is the one option nodemailer actually forwards down to the
-// underlying tls.connect() call, so it reliably wins over both of those.
-const ipv4Lookup = (hostname, options, callback) => {
-  dns.lookup(hostname, { family: 4 }, callback);
+  return Buffer.from(message)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 };
 
-// Create reusable transporter
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  lookup: ipv4Lookup,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-});
+// Central send function — every helper below funnels through this.
+const sendMail = async ({ to, subject, html }) => {
+  const from = process.env.GOOGLE_SENDER_EMAIL;
+  const raw = buildRawMessage({ to, from, subject, html });
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP connection failed:", error);
-  } else {
-    console.log("SMTP server is ready");
-  }
-});
+  await gmail.users.messages.send({
+    userId: "me",
+    requestBody: { raw },
+  });
+};
 
 // Generate OTP
 const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 // Send OTP email
 const sendOTPEmail = async (email, otp, name) => {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'noreply@hospitality.com',
-            to: email,
-            subject: 'Email Verification - OTP Code',
-            html: `
+  try {
+    const html = `
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
                     <h2 style="color: #333;">Email Verification</h2>
                     <p>Hi <strong>${name}</strong>,</p>
@@ -69,24 +59,19 @@ const sendOTPEmail = async (email, otp, name) => {
                     <p style="color: #999; font-size: 12px;">If you didn't request this verification, please ignore this email.</p>
                     <p style="color: #999; font-size: 12px;">© 2026 Hospitality Platform. All rights reserved.</p>
                 </div>
-            `
-        };
+            `;
 
-        await transporter.sendMail(mailOptions);
-        return { success: true, message: 'OTP sent successfully' };
-    } catch (error) {
-        throw new Error('Error sending OTP email: ' + error.message);
-    }
+    await sendMail({ to: email, subject: "Email Verification - OTP Code", html });
+    return { success: true, message: "OTP sent successfully" };
+  } catch (error) {
+    throw new Error("Error sending OTP email: " + error.message);
+  }
 };
 
 // Send welcome greeting email (after successful signup)
 const sendWelcomeEmail = async (email, name) => {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'noreply@hospitality.com',
-            to: email,
-            subject: 'Welcome to Hospitality Platform',
-            html: `
+  try {
+    const html = `
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
                     <h2 style="color: #333;">Welcome, ${name}!</h2>
                     <p>Thank you for signing up for Hospitality Platform. We're excited to have you on board.</p>
@@ -95,24 +80,19 @@ const sendWelcomeEmail = async (email, name) => {
                     <p style="color: #999; font-size: 12px;">Need help? Reply to this email and we'll assist you.</p>
                     <p style="color: #999; font-size: 12px;">© 2026 Hospitality Platform. All rights reserved.</p>
                 </div>
-            `
-        };
+            `;
 
-        await transporter.sendMail(mailOptions);
-        return { success: true, message: 'Welcome email sent' };
-    } catch (error) {
-        throw new Error('Error sending welcome email: ' + error.message);
-    }
+    await sendMail({ to: email, subject: "Welcome to Hospitality Platform", html });
+    return { success: true, message: "Welcome email sent" };
+  } catch (error) {
+    throw new Error("Error sending welcome email: " + error.message);
+  }
 };
 
 // Send welcome-back email (after successful login)
 const sendWelcomeBackEmail = async (email, name) => {
-    try {
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'noreply@hospitality.com',
-            to: email,
-            subject: 'Welcome back to Hospitality Platform',
-            html: `
+  try {
+    const html = `
                 <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
                     <h2 style="color: #333;">Welcome back, ${name}!</h2>
                     <p>Glad to see you again. We hope you have a productive session.</p>
@@ -121,24 +101,19 @@ const sendWelcomeBackEmail = async (email, name) => {
                     <p style="color: #999; font-size: 12px;">If this wasn't you, please reset your password immediately.</p>
                     <p style="color: #999; font-size: 12px;">© 2026 Hospitality Platform. All rights reserved.</p>
                 </div>
-            `
-        };
+            `;
 
-        await transporter.sendMail(mailOptions);
-        return { success: true, message: 'Welcome back email sent' };
-    } catch (error) {
-        throw new Error('Error sending welcome-back email: ' + error.message);
-    }
+    await sendMail({ to: email, subject: "Welcome back to Hospitality Platform", html });
+    return { success: true, message: "Welcome back email sent" };
+  } catch (error) {
+    throw new Error("Error sending welcome-back email: " + error.message);
+  }
 };
 
 // Send password reset OTP email
 const sendPasswordResetEmail = async (email, otp, name) => {
   try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER || 'noreply@hospitality.com',
-      to: email,
-      subject: 'Password Reset - OTP Code',
-      html: `
+    const html = `
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
           <h2 style="color: #333;">Password Reset Request</h2>
           <p>Hi <strong>${name}</strong>,</p>
@@ -151,18 +126,19 @@ const sendPasswordResetEmail = async (email, otp, name) => {
           <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
           <p style="color: #999; font-size: 12px;">© 2026 Hospitality Platform. All rights reserved.</p>
         </div>
-      `
-    };
-    await transporter.sendMail(mailOptions);
-    return { success: true, message: 'Password reset email sent' };
+      `;
+
+    await sendMail({ to: email, subject: "Password Reset - OTP Code", html });
+    return { success: true, message: "Password reset email sent" };
   } catch (error) {
-    throw new Error('Error sending password reset email: ' + error.message);
+    throw new Error("Error sending password reset email: " + error.message);
   }
 };
+
 module.exports = {
   generateOTP,
   sendOTPEmail,
   sendWelcomeEmail,
   sendWelcomeBackEmail,
-  sendPasswordResetEmail,  
+  sendPasswordResetEmail,
 };
