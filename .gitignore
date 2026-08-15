@@ -7,3 +7,5 @@ node_modules
 .env
 # ignoring package-lock.json file 
 package-lock.json
+
+seedDemoData.js
