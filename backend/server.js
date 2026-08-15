@@ -1,4 +1,15 @@
 require("dotenv").config({ path: __dirname + "/.env" });
+
+// ── Force IPv4-first DNS resolution ────────────────────────────────────────
+// Render (and several other hosts) don't support outbound IPv6, but Node's
+// default DNS lookup order tries IPv6 first. This caused SMTP connections to
+// smtp.gmail.com to fail with ENETUNREACH on an IPv6 address in production,
+// even though the exact same code worked fine locally. Setting this here,
+// before anything else runs, fixes DNS lookups app-wide (SMTP, MongoDB, any
+// outbound HTTP calls) — not just email.
+const dns = require("dns");
+dns.setDefaultResultOrder("ipv4first");
+
 const express = require("express");
 const app = express();
 
