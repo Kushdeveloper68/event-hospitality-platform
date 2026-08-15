@@ -257,7 +257,54 @@ function TeamMemberManagement({ eventId }) {
               </button>
             </div>
           </div>
-
+  {/* <!-- Footer Summary --> */}
+          <div className="mt-8 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                Total Members
+              </p>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                {summary.total}
+              </h4>
+              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
+                <span className="material-symbols-outlined text-sm">
+                  groups
+                </span>
+                <span>Assigned to event</span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                Active Now
+              </p>
+              <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                {summary.active}
+              </h4>
+              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
+                <span className="material-symbols-outlined text-sm">bolt</span>
+                <span>
+                  {summary.total > 0
+                    ? Math.round((summary.active / summary.total) * 100)
+                    : 0}
+                  % of total team
+                </span>
+              </div>
+            </div>
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
+                Off Duty / Inactive
+              </p>
+              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
+                {summary.inactive}
+              </h4>
+              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
+                <span className="material-symbols-outlined text-sm">
+                  bedtime
+                </span>
+                <span>No live access right now</span>
+              </div>
+            </div>
+          </div>
           {error && (
             <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2 border border-red-200">
               <span className="material-symbols-outlined">error</span>
@@ -532,54 +579,7 @@ function TeamMemberManagement({ eventId }) {
 </div>
           </div>
 
-          {/* <!-- Footer Summary --> */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                Total Members
-              </p>
-              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
-                {summary.total}
-              </h4>
-              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">
-                  groups
-                </span>
-                <span>Assigned to event</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                Active Now
-              </p>
-              <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                {summary.active}
-              </h4>
-              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">bolt</span>
-                <span>
-                  {summary.total > 0
-                    ? Math.round((summary.active / summary.total) * 100)
-                    : 0}
-                  % of total team
-                </span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                Off Duty / Inactive
-              </p>
-              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
-                {summary.inactive}
-              </h4>
-              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">
-                  bedtime
-                </span>
-                <span>No live access right now</span>
-              </div>
-            </div>
-          </div>
+        
         </div>
       </main>
 
