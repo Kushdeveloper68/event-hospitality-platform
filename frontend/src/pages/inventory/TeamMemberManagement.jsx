@@ -117,10 +117,19 @@ function TeamMemberManagement({ eventId }) {
     switch (role) {
       case "Admin":
         return "bg-primary-50 dark:bg-primary-900/30 text-primary";
+      case "Event Director":
       case "Event Lead":
         return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
       case "Logistics":
+      case "Transport Manager":
         return "bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400";
+      case "Catering Head":
+        return "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
+      case "Security Lead":
+        return "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400";
+      case "Guest Relations":
+      case "Front Desk":
+        return "bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400";
       case "Floor Staff":
         return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
       default:
@@ -279,10 +288,20 @@ function TeamMemberManagement({ eventId }) {
                 <option>All Roles</option>
                 <option>Event Director</option>
                 <option>Event Lead</option>
-                <option>Floor Staff</option>
+                <option>Event Coordinator</option>
                 <option>Logistics</option>
+                <option>Floor Staff</option>
                 <option>Technical Support</option>
                 <option>Guest Relations</option>
+                <option>Catering Head</option>
+                <option>Transport Manager</option>
+                <option>Security Lead</option>
+                <option>Housekeeping Supervisor</option>
+                <option>Front Desk</option>
+                <option>Media/AV Lead</option>
+                <option>Operations Manager</option>
+                <option>Photographer</option>
+                <option>Decor & Setup</option>
                 <option>Admin</option>
               </select>
               <select

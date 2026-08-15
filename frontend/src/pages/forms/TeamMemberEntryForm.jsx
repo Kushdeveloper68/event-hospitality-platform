@@ -46,10 +46,20 @@ function TeamMemberEntryForm({ eventId, memberId, onDone, onCancel }) {
   const ROLES = [
     'Event Director',
     'Event Lead',
+    'Event Coordinator',
     'Logistics',
     'Floor Staff',
     'Technical Support',
     'Guest Relations',
+    'Catering Head',
+    'Transport Manager',
+    'Security Lead',
+    'Housekeeping Supervisor',
+    'Front Desk',
+    'Media/AV Lead',
+    'Operations Manager',
+    'Photographer',
+    'Decor & Setup',
     'Admin'
   ];
 
@@ -188,21 +198,25 @@ function TeamMemberEntryForm({ eventId, memberId, onDone, onCancel }) {
               </label>
               <div className="relative">
                 <span className="material-symbols-outlined absolute left-3 top-3 text-slate-400">badge</span>
-                <select
+                <input
+                  type="text"
                   name="role"
+                  list="event-role-options"
                   value={formData.role}
                   onChange={handleChange}
-                  className={`w-full h-12 rounded-lg border bg-white dark:bg-slate-800 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary transition-all dark:text-white appearance-none ${
+                  placeholder="Select a role or type your own..."
+                  autoComplete="off"
+                  className={`w-full h-12 rounded-lg border bg-white dark:bg-slate-800 pl-10 pr-4 focus:ring-1 focus:ring-primary focus:border-primary transition-all dark:text-white ${
                     errors.role ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                   }`}
-                >
-                  <option value="" disabled>Select primary role...</option>
+                />
+                <datalist id="event-role-options">
                   {ROLES.map(r => (
-                    <option key={r} value={r}>{r}</option>
+                    <option key={r} value={r} />
                   ))}
-                </select>
-                <span className="material-symbols-outlined absolute right-3 top-3 text-slate-400 pointer-events-none">expand_more</span>
+                </datalist>
               </div>
+              <p className="text-xs text-slate-400">Pick a suggestion or type a custom role — both work.</p>
               {errors.role && <p className="text-xs text-red-500">{errors.role}</p>}
             </div>
 
