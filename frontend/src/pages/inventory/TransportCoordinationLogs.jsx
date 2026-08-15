@@ -105,6 +105,41 @@ const setFilterTabAndReset = (tab) => {
     }
   };
 
+  const handleExportCSV = () => {
+    if (transports.length === 0) {
+      showToast("No transport logs to export", "error");
+      return;
+    }
+
+    const headers = ["Guest", "Group", "Pickup", "Dropoff", "Driver", "Vehicle", "Scheduled Time", "Status"];
+    const rows = transports.map((t) => [
+      t.guest?.fullName || "N/A",
+      t.guest?.groupName || "Individual",
+      t.pickupLocation || "",
+      t.dropoffLocation || "",
+      t.driverName || "Unassigned",
+      t.vehicleId || "Pending",
+      t.scheduledTime ? new Date(t.scheduledTime).toLocaleString() : "",
+      t.status || "",
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `transport-log-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Transport log exported successfully", "success");
+  };
+
   const handleStatusUpdate = async (id, newStatus) => {
     try {
       setStatusMenuId(null);
@@ -284,7 +319,10 @@ const setFilterTabAndReset = (tab) => {
                 </p>
               </div>
               <div className="flex gap-3">
-                <button className="flex items-center gap-2 rounded-lg h-11 px-6 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                <button
+                  onClick={handleExportCSV}
+                  className="flex items-center gap-2 rounded-lg h-11 px-6 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                >
                   <span className="material-symbols-outlined">download</span>
                   <span>Export</span>
                 </button>

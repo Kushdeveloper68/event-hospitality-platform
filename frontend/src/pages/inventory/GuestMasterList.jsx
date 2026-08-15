@@ -149,6 +149,42 @@ const fetchGuests = async ({ quiet = false } = {}) => {
     }
   }, [])
 
+  const handleExportCSV = () => {
+    if (guests.length === 0) {
+      showToast('No guests to export', 'error')
+      return
+    }
+
+    const headers = ['Name', 'Email', 'Phone', 'VIP', 'Checked In', 'Room #', 'Arrival', 'Departure']
+    const rows = guests.map(g => [
+      g.fullName || '',
+      g.email || '',
+      g.phoneNumber || '',
+      g.vipStatus ? 'Yes' : 'No',
+      g.checkedIn ? 'Yes' : 'No',
+      g.room?.number || 'N/A',
+      g.arrivalDatetime ? new Date(g.arrivalDatetime).toLocaleString() : '',
+      g.departureDatetime ? new Date(g.departureDatetime).toLocaleString() : '',
+    ])
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `guest-list-${new Date().toISOString().slice(0, 10)}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+    showToast('Guest list exported successfully', 'success')
+  }
+
+
   const handleDelete = async (id, guestName = '') => {
     // Confirmation dialog
     const confirmDelete = window.confirm(
@@ -510,19 +546,14 @@ const fetchGuests = async ({ quiet = false } = {}) => {
             <div className="flex items-center justify-between mt-6">
               <div className="flex gap-2">
                 <button 
+                  onClick={handleExportCSV}
                   disabled={loading || guests.length === 0}
                   className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-border-light rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   title="Export guest list as CSV"
                 >
                   <span className="material-symbols-outlined text-sm">download</span> Export CSV
                 </button>
-                <button 
-                  disabled={loading || guests.length === 0}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-border-light rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  title="Print guest list"
-                >
-                  <span className="material-symbols-outlined text-sm">print</span> Print List
-                </button>
+                
               </div>
               <nav className="flex items-center gap-1">
                 <button 

@@ -207,7 +207,18 @@ export default function OprationalEventSchedule() {
       return;
     }
 
-    const dataToSubmit = { ...formData, eventId };
+    const dataToSubmit = {
+      ...formData,
+      eventId,
+      // Convert the naive "wall-clock" datetime-local value into a real UTC
+      // instant before sending it to the backend. Without this, the backend
+      // Date cast interprets the naive string in the SERVER's local timezone
+      // (not the browser's), which silently shifts every stored time by the
+      // server/browser timezone offset — this was the root cause of times
+      // like "2:30–3:30" displaying incorrectly after being saved.
+      startTime: startDateTime.toISOString(),
+      endTime: endDateTime.toISOString(),
+    };
     
     if (modalMode === 'create') {
       const res = await createSchedule(dataToSubmit);

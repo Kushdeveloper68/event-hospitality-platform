@@ -54,6 +54,46 @@ function RoomInventoryManagement() {
     );
   };
 
+  const handleExportExcel = () => {
+    if (filteredRooms.length === 0) {
+      showToast("No rooms to export", "error");
+      return;
+    }
+
+    const headers = ["Room #", "Type", "Capacity", "Occupancy", "Status", "Notes"];
+    const rows = filteredRooms.map((room) => {
+      const capacity = room.capacity || 1;
+      const occupancy = room.occupancy || 0;
+      const badge = getStatusBadge(room);
+      return [
+        room.number || "",
+        room.type || "Standard",
+        capacity,
+        occupancy,
+        badge.label,
+        room.notes || "",
+      ];
+    });
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ].join("\n");
+
+    // Prefixing with a BOM keeps accented/special characters intact when the
+    // file is opened directly in Excel.
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `room-inventory-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast("Room inventory exported successfully", "success");
+  };
+
   const fetchRooms = async () => {
     if (!eventId) return;
     setLoading(true);
@@ -272,15 +312,14 @@ function RoomInventoryManagement() {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                /* export logic placeholder */
-              }}
+              onClick={handleExportExcel}
               className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              title="Export room inventory as Excel/CSV"
             >
               <span className="material-symbols-outlined text-lg">
                 file_download
               </span>
-              Export PDF
+              Export Excel
             </button>
             <button
               onClick={() => setSearchParams({ action: "addRoom" })}
