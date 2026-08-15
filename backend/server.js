@@ -10,6 +10,16 @@ require("dotenv").config({ path: __dirname + "/.env" });
 const dns = require("dns");
 dns.setDefaultResultOrder("ipv4first");
 
+// Belt-and-suspenders: Node's "Happy Eyeballs" (autoSelectFamily) can still
+// race/prefer an IPv6 address for outbound connections even with the DNS
+// order above set. Render has no outbound IPv6 route, so disable this
+// racing behavior entirely and always resolve+connect via a single address
+// in the order dns.setDefaultResultOrder specifies (IPv4 first).
+const net = require("net");
+if (typeof net.setDefaultAutoSelectFamily === "function") {
+  net.setDefaultAutoSelectFamily(false);
+}
+
 const express = require("express");
 const app = express();
 

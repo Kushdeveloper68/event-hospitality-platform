@@ -4,12 +4,24 @@ if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
   throw new Error("EMAIL_USER or EMAIL_PASSWORD missing");
 }
 
+const dns = require('dns');
+
+// Force this transporter to resolve smtp.gmail.com to an IPv4 address only.
+// Render doesn't support outbound IPv6, and Node's built-in "Happy Eyeballs"
+// (autoSelectFamily) can still race/prefer an IPv6 address even after
+// dns.setDefaultResultOrder('ipv4first') is set globally. Providing a custom
+// `lookup` here is the one option nodemailer actually forwards down to the
+// underlying tls.connect() call, so it reliably wins over both of those.
+const ipv4Lookup = (hostname, options, callback) => {
+  dns.lookup(hostname, { family: 4 }, callback);
+};
+
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true,
-  family: 4,
+  lookup: ipv4Lookup,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASSWORD
