@@ -402,7 +402,16 @@ export default function OprationalEventSchedule() {
         </div>
 
         {/* <!-- Timeline Scroll Area --> */}
-        <div className="relative flex-1 overflow-x-auto overflow-y-auto hide-scrollbar bg-slate-50/30 dark:bg-slate-950">
+        <div className="relative flex-1 overflow-x-auto overflow-y-auto bg-slate-50/30 dark:bg-slate-950
+  [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar]:w-2.5
+  [&::-webkit-scrollbar-track]:bg-transparent
+  [&::-webkit-scrollbar-thumb]:bg-slate-300 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-solid [&::-webkit-scrollbar-thumb]:border-transparent
+  [&::-webkit-scrollbar-thumb]:bg-clip-padding
+  hover:[&::-webkit-scrollbar-thumb]:bg-slate-400 dark:hover:[&::-webkit-scrollbar-thumb]:bg-slate-600
+  [scrollbar-width:thin] [scrollbar-color:theme(colors.slate.300)_transparent]
+  dark:[scrollbar-color:theme(colors.slate.700)_transparent]">
           {/* <!-- Timeline Header (Time Markers) --> */}
           <div className="sticky top-0 z-20 flex h-12 border-b border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900" style={{ width: `${timelineHours.length * PX_PER_HOUR}px` }}>
             {timelineHours.map(hour => (
