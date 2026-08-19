@@ -1,5 +1,5 @@
 ⚠️ This is proprietary software. All rights reserved. 
-See LICENSE for details. Unauthorized use or distribution is prohibited.
+See LICENSE for details. Unauthorized code copy and use or distribution is prohibited.
 <div align="center">
 
 <img src="./frontend/public/event-logo-with-icon-and-name-with-dark-bg.png" alt="EventCure Logo" width="300" />
