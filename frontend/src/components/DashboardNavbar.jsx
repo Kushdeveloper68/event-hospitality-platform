@@ -11,6 +11,8 @@ const NAV_ITEMS = [
   { path: '/settings', icon: 'tune', label: 'Settings' },
 ]
 
+const ADMIN_NAV_ITEM = { path: '/admin', icon: 'shield_person', label: 'Admin' }
+
 function DashboardNavbar() {
   const { user, logout } = useAuth()
   const { resolvedTheme, toggleTheme } = useTheme()
@@ -35,6 +37,8 @@ function DashboardNavbar() {
   const initials = user?.name
     ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
     : '??'
+
+  const navItems = user?.isAdmin ? [...NAV_ITEMS, ADMIN_NAV_ITEM] : NAV_ITEMS
 
   return (
     <>
@@ -67,7 +71,7 @@ function DashboardNavbar() {
 
         {/* Nav links */}
         <nav className="flex-1 px-2.5 lg:px-3 pt-3 lg:pt-1 pb-1 space-y-0.5 overflow-y-auto custom-scrollbar">
-          {NAV_ITEMS.map(item => {
+          {navItems.map(item => {
             const active = location.pathname === item.path ||
               (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
             return (
@@ -143,7 +147,7 @@ function DashboardNavbar() {
 
       {/* ── Mobile bottom tab bar ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-surface-dark border-t border-slate-100 dark:border-slate-800/60 flex items-stretch px-1 pb-[env(safe-area-inset-bottom)]">
-        {NAV_ITEMS.map(item => {
+        {navItems.map(item => {
           const active = location.pathname === item.path ||
             (item.path !== '/dashboard' && location.pathname.startsWith(item.path))
           return (

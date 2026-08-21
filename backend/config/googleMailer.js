@@ -1,5 +1,5 @@
 const { google } = require("googleapis");
-
+//goolemailer.js
 // ── Gmail API mailer client ────────────────────────────────────────────────
 // Replaces the old SMTP/nodemailer transporter. Uses OAuth2 with a
 // long-lived refresh token (minted once via scripts/getGmailRefreshToken.js)
@@ -28,7 +28,7 @@ const oAuth2Client = new google.auth.OAuth2(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
   process.env.GOOGLE_MAILER_REDIRECT_URI ||
-    "http://localhost:7000/oauth2callback"
+    "http://localhost:5000/oauth2callback"
 );
 
 oAuth2Client.setCredentials({

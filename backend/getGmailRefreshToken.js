@@ -14,13 +14,17 @@
  *      sign in with the Gmail account you want to send FROM
  *      (e.g. noreply@yourdomain or your Gmail address), approve the
  *      "Send email on your behalf" permission.
- *   5. Google redirects to localhost:7000/oauth2callback — this script
+ *   5. Google redirects to localhost:5000/oauth2callback — this script
  *      catches that, exchanges the code for tokens, and prints the
  *      refresh_token to your terminal.
  *   6. Copy that refresh_token into backend/.env as GOOGLE_MAILER_REFRESH_TOKEN.
  *   7. Set GOOGLE_SENDER_EMAIL in .env to the same account you signed in
  *      with in step 4 — that's who the mail will be sent "from".
  *   8. Delete/ignore this script's local server, it's not needed at runtime.
+ *
+ * NOTE: this temporary local server runs on port 5000, separate from the
+ * main app (which runs on PORT from .env, 7000 by default) — run this
+ * script on its own, it does not conflict with the main server.
  */
 
 require("dotenv").config({ path: __dirname + "/.env" });

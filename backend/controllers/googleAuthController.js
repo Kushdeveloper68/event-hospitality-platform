@@ -35,6 +35,7 @@ const handleGoogleCallback = async (req, res) => {
       email: user.email,
       name: user.name,
       organizationName: user.organizationName,
+      isAdmin: user.isAdmin,
     }));
 
     return res.redirect(redirectUrl.toString());

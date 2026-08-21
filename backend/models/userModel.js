@@ -29,6 +29,10 @@ const User = new Schema({
         type:Boolean,
         default:false
     },
+    isAdmin:{
+        type:Boolean,
+        default:false
+    },
     otp:{
         type:String,
         default:null

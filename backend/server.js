@@ -57,6 +57,7 @@ const eventAnalyticsReportsRoutes = require("./routes/eventAnalyticsReportsRoute
 const orgSettingsRoutes = require("./routes/organizationSettingRoutes");
 const passwordResetRoutes = require("./routes/passwordResetRoutes");
 const activityAndNotificationLogsRoutes = require("./routes/activityAndNotificationLogsRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 // ── Connect to MongoDB ─────────────────────────────────────────────────────
 if (!process.env.MONGO_URI) {
@@ -129,6 +130,7 @@ app.use("/api/event-analytics", eventAnalyticsReportsRoutes);
 app.use("/api/org-settings", orgSettingsRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
 app.use("/api/activity-logs", activityAndNotificationLogsRoutes);
+app.use("/api/admin", adminRoutes);
 
 // ── Start server ───────────────────────────────────────────────────────────
 const server = app.listen(port, () =>

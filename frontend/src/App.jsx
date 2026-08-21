@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./context/ProtectedRoute";
 import PageErrorBoundary from './components/PageErrorBoundary';
 import GoogleAuthSuccess from "./pages/auth/GoogleAuthSuccess";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // dashboard pages
 import {
@@ -48,6 +49,18 @@ function App() {
                   <DashboardLayout>
                     <PageErrorBoundary pageName="Dashboard">
                       <MainOprationDashboard />
+                    </PageErrorBoundary>
+                  </DashboardLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout>
+                    <PageErrorBoundary pageName="Admin Dashboard">
+                      <AdminDashboard />
                     </PageErrorBoundary>
                   </DashboardLayout>
                 </ProtectedRoute>

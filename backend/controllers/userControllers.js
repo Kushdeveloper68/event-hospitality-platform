@@ -114,6 +114,7 @@ async function VerifyOTP(req, res) {
         email: user.email,
         name: user.name,
         organizationName: user.organizationName,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (error) {
@@ -209,6 +210,7 @@ async function LoginUser(req, res) {
         email: user.email,
         name: user.name,
         organizationName: user.organizationName,
+        isAdmin: user.isAdmin,
       },
     });
   } catch (error) {
