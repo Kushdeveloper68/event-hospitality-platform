@@ -169,6 +169,9 @@ export default function Landingpage() {
           </div>
 
           <div className="ec-nav-actions">
+            <Link to="/dashboard" className="ec-btn ec-btn-ghost">
+              Dashboard
+            </Link>
             <Link to="/login" className="ec-signin">Sign in</Link>
             <Link to="/login" className="ec-btn ec-btn-dark ec-btn-small">
               Request Beta <span className="material-symbols-outlined">arrow_forward</span>
