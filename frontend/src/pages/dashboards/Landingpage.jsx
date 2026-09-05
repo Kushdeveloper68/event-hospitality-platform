@@ -119,6 +119,7 @@ export default function Landingpage() {
   const [openFaq, setOpenFaq] = useState(null);
   const [scrolled, setScrolled] = useState(false);
   const [dashboardTime, setDashboardTime] = useState("14:18");
+  const [userPresent , setUserPresent] = useState(false);
 
   const active = useMemo(
     () => productModules.find((item) => item.key === activeModule) || productModules[0],
@@ -144,6 +145,14 @@ export default function Landingpage() {
 
     return () => clearInterval(timer);
   }, []);
+ 
+  useEffect(() => {
+     let user = localStorage.getItem("user");
+     console.log("user", user);
+     if (user) {
+       setUserPresent(true);
+     } 
+  }, [userPresent]);
 
   useEffect(() => {
     if (!location.hash) return;
@@ -169,9 +178,11 @@ export default function Landingpage() {
           </div>
 
           <div className="ec-nav-actions">
-            <Link to="/dashboard" className="ec-btn ec-btn-ghost">
-              Dashboard
-            </Link>
+           {userPresent && (
+             <Link to="/dashboard" className="ec-btn ec-btn-ghost">
+               Dashboard
+             </Link>
+           )}
             <Link to="/login" className="ec-signin">Sign in</Link>
             <Link to="/login" className="ec-btn ec-btn-dark ec-btn-small">
               Request Beta <span className="material-symbols-outlined">arrow_forward</span>
