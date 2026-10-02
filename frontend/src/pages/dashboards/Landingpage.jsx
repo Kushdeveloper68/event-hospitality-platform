@@ -15,9 +15,17 @@ const textStyles = {
 const navItems = [
   ["Product", "/#product"],
   ["How it works", "/#how-it-works"],
+  ["Tutorial", "/#tutorial"],
   ["Use cases", "/#use-cases"],
   ["FAQ", "/#faq"],
 ];
+
+const tutorialVideo = {
+  id: "wuFRlV3kgww",
+  start: 405,
+  title: "Watch how EventCure runs an event, live.",
+  copy: "A short walkthrough of the operations workspace — arrivals, rooms, transport and service requests in one view.",
+};
 
 const liveEvents = [
   { type: "CHECK-IN", title: "Eleanor Vance checked in", meta: "VIP · Room 402", icon: "how_to_reg" },
@@ -120,6 +128,7 @@ export default function Landingpage() {
   const [scrolled, setScrolled] = useState(false);
   const [dashboardTime, setDashboardTime] = useState("14:18");
   const [userPresent , setUserPresent] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
 
   const active = useMemo(
     () => productModules.find((item) => item.key === activeModule) || productModules[0],
@@ -525,6 +534,51 @@ export default function Landingpage() {
                   {i < flow.length - 1 && <div className="ec-flow-line"><i /></div>}
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* TUTORIAL */}
+        <section className="ec-section ec-tutorial" id="tutorial">
+          <div className="ec-container">
+            <div className="ec-section-heading centered">
+              <span className="ec-eyebrow">SEE IT IN ACTION</span>
+              <h2 style={headlineStyle}>{tutorialVideo.title.replace(" live.", "")}<span> live.</span></h2>
+              <p>{tutorialVideo.copy}</p>
+            </div>
+
+            <div className="ec-video-frame">
+              {videoPlaying ? (
+                <iframe
+                  src={`https://www.youtube.com/embed/${tutorialVideo.id}?start=${tutorialVideo.start}&autoplay=1&rel=0`}
+                  title="EventCure product walkthrough"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              ) : (
+                <button
+                  type="button"
+                  className="ec-video-thumb"
+                  onClick={() => setVideoPlaying(true)}
+                  aria-label="Play the EventCure product walkthrough video"
+                >
+                  <img
+                    src={`https://i.ytimg.com/vi/${tutorialVideo.id}/maxresdefault.jpg`}
+                    alt="EventCure product walkthrough thumbnail"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://i.ytimg.com/vi/${tutorialVideo.id}/hqdefault.jpg`;
+                    }}
+                  />
+                  <span className="ec-video-play">
+                    <span className="material-symbols-outlined">play_arrow</span>
+                  </span>
+                  <span className="ec-video-badge">
+                    <span className="material-symbols-outlined">smart_display</span>
+                    Watch the walkthrough
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </section>
