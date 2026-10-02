@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+Allow: /signup
+Allow: /login
+Allow: /terms
+Allow: /privacy
+Allow: /manual
+
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /events
+Disallow: /reports
+Disallow: /analytics
+Disallow: /settings
+Disallow: /create-event
+Disallow: /notifications
+Disallow: /reset-password
+Disallow: /auth/
+
+Sitemap: https://eventcure.in/sitemap.xml
