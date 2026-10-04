@@ -7,11 +7,15 @@ const {
   handleUpdateRoom,
   handleDeleteRoom,
   handleAssignGuest,
+  handleBulkImportRooms,
 } = require("../controllers/roomControllers");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 // create new room
 router.post("/", authMiddleware, handleCreateRoom);
+
+// bulk import rooms from CSV (must be before /:roomId so "bulk-import" isn't treated as an id)
+router.post("/bulk-import", authMiddleware, handleBulkImportRooms);
 
 // list rooms with event filter
 router.get("/", authMiddleware, handleGetRooms);

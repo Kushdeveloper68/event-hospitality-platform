@@ -1,6 +1,31 @@
 const GuestModel = require("../models/guestModel");
 
 /**
+ * Parses a date/time string in the format the import template uses:
+ * "YYYY-MM-DD HH:mm" (24-hour) or just "YYYY-MM-DD".
+ * Returns a Date, or throws a clear error if the string doesn't match.
+ * (A plain `new Date(str)` is avoided here because its behaviour for
+ * non-ISO strings differs across Node/browser versions — this keeps
+ * import results deterministic.)
+ */
+const parseImportDate = (value, fieldLabel) => {
+  if (!value || !String(value).trim()) return undefined;
+  const raw = String(value).trim();
+  const match = raw.match(/^(\d{4}-\d{2}-\d{2})(?:[ T](\d{2}:\d{2}))?$/);
+  if (!match) {
+    throw new Error(
+      `${fieldLabel} must be in YYYY-MM-DD or YYYY-MM-DD HH:mm format, got "${raw}"`,
+    );
+  }
+  const isoString = match[2] ? `${match[1]}T${match[2]}` : `${match[1]}T00:00`;
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) {
+    throw new Error(`${fieldLabel} "${raw}" is not a valid date`);
+  }
+  return date;
+};
+
+/**
  * Create a guest record
  * @param {Object} guestData
  * @returns {Promise}
@@ -26,7 +51,14 @@ const createGuest = async (guestData) => {
  * @param {number} [options.limit]
  * @returns {Promise<{total:number,page:number,limit:number,guests:Array}>}
  */
-const getGuests = async ({ eventId, search, vip, status, page = 1, limit = 10 }) => {
+const getGuests = async ({
+  eventId,
+  search,
+  vip,
+  status,
+  page = 1,
+  limit = 10,
+}) => {
   try {
     const query = {};
     if (eventId) query.event = eventId;
@@ -57,7 +89,7 @@ const getGuests = async ({ eventId, search, vip, status, page = 1, limit = 10 })
     const skip = (page - 1) * limit;
     const total = await GuestModel.countDocuments(query);
     const guests = await GuestModel.find(query)
-      .populate('room')
+      .populate("room")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -116,10 +148,76 @@ const deleteGuest = async (guestId) => {
   }
 };
 
+/**
+ * Bulk create guests from a parsed CSV import.
+ * Each row is validated and saved independently so one bad row
+ * doesn't block the rest of the import.
+ * @param {string} eventId
+ * @param {Array<Object>} rows - each row: { fullName, email, phoneNumber, age, groupName, vipStatus, specialRequests }
+ * @returns {Promise<{createdCount:number, failed:Array<{row:number, reason:string}>}>}
+ */
+const bulkCreateGuests = async (eventId, rows) => {
+  let createdCount = 0;
+  const failed = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    try {
+      if (!row.fullName || !String(row.fullName).trim()) {
+        throw new Error("fullName is required");
+      }
+      if (!row.arrivalDatetime || !String(row.arrivalDatetime).trim()) {
+        throw new Error("arrivalDatetime is required");
+      }
+      const guestData = {
+        event: eventId,
+        fullName: String(row.fullName).trim(),
+        email: row.email ? String(row.email).trim() : undefined,
+        phoneNumber: row.phoneNumber
+          ? String(row.phoneNumber).trim()
+          : undefined,
+        age: row.age ? Number(row.age) : undefined,
+        groupName: row.groupName ? String(row.groupName).trim() : undefined,
+        vipStatus: ["true", "yes", "1", true].includes(
+          typeof row.vipStatus === "string"
+            ? row.vipStatus.toLowerCase()
+            : row.vipStatus,
+        ),
+        specialRequests: row.specialRequests
+          ? String(row.specialRequests).trim()
+          : undefined,
+        arrivalDatetime: parseImportDate(
+          row.arrivalDatetime,
+          "arrivalDatetime",
+        ),
+        departureDatetime: parseImportDate(
+          row.departureDatetime,
+          "departureDatetime",
+        ),
+      };
+      if (
+        guestData.arrivalDatetime &&
+        guestData.departureDatetime &&
+        guestData.departureDatetime <= guestData.arrivalDatetime
+      ) {
+        throw new Error("departureDatetime must be after arrivalDatetime");
+      }
+      const newGuest = new GuestModel(guestData);
+      await newGuest.save();
+      createdCount += 1;
+    } catch (error) {
+      failed.push({ row: i + 2, reason: error.message }); // +2: header row + 1-index
+    }
+  }
+
+  return { createdCount, failed };
+};
+
 module.exports = {
   createGuest,
   getGuests,
   getGuestById,
   updateGuest,
   deleteGuest,
+  bulkCreateGuests,
 };

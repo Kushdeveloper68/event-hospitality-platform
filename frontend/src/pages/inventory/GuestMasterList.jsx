@@ -1,7 +1,24 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
-import { getGuests, deleteGuest } from '../../api/guestApi'
+import { getGuests, deleteGuest, bulkImportGuests } from '../../api/guestApi'
 import GuestDataEntry from '../forms/GuestDataEntry'
+import { CsvImportModal } from '../../components'
+
+const GUEST_CSV_COLUMNS = [
+  { key: 'fullName', label: 'Full Name', required: true },
+  { key: 'email', label: 'Email', required: false },
+  { key: 'phoneNumber', label: 'Phone', required: false },
+  { key: 'age', label: 'Age', required: false },
+  { key: 'groupName', label: 'Group', required: false },
+  { key: 'vipStatus', label: 'VIP', required: false },
+  { key: 'arrivalDatetime', label: 'Arrival', required: true },
+  { key: 'departureDatetime', label: 'Departure', required: false },
+  { key: 'specialRequests', label: 'Special Requests', required: false },
+]
+const GUEST_CSV_SAMPLE_ROWS = [
+  { fullName: 'Rahul Mehta', email: 'rahul@example.com', phoneNumber: '9876543210', age: '34', groupName: 'Mehta Family', vipStatus: 'true', arrivalDatetime: '2026-11-20 14:00', departureDatetime: '2026-11-23 11:00', specialRequests: 'Vegetarian meal' },
+  { fullName: 'Priya Shah', email: 'priya@example.com', phoneNumber: '9876501234', age: '29', groupName: 'Mehta Family', vipStatus: 'false', arrivalDatetime: '2026-11-20 16:30', departureDatetime: '2026-11-22 10:00', specialRequests: '' },
+]
 
 function GuestMasterList({ extraPath = '', eventId: propEventId }) {
   const { eventId: paramEventId } = useParams()
@@ -30,6 +47,7 @@ function GuestMasterList({ extraPath = '', eventId: propEventId }) {
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' }) // 'info', 'success', 'error', 'warning'
   const [deletingId, setDeletingId] = useState(null) // Track which guest is being deleted
   const [retryCount, setRetryCount] = useState(0)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   // Toast notification helper
   const showToast = (message, type = 'info', duration = 4000) => {
@@ -310,15 +328,37 @@ const fetchGuests = async ({ quiet = false } = {}) => {
                 <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">Guest Master List</h1>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Manage arrivals, room assignments and VIP status for attendees.</p>
               </div>
-              <button
-                onClick={openAddForm}
-                disabled={loading}
-                className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-bold transition-all shadow-sm"
-              >
-                <span className="material-symbols-outlined text-[20px]">add</span>
-                Add Guest
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowImportModal(true)}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 dark:text-slate-300 px-4 py-2 rounded-lg font-bold transition-all"
+                >
+                  <span className="material-symbols-outlined text-[20px]">upload_file</span>
+                  Import CSV
+                </button>
+                <button
+                  onClick={openAddForm}
+                  disabled={loading}
+                  className="flex items-center gap-2 bg-primary hover:bg-primary/90 disabled:bg-slate-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-bold transition-all shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[20px]">add</span>
+                  Add Guest
+                </button>
+              </div>
             </div>
+
+            {showImportModal && (
+              <CsvImportModal
+                title="Import Guests"
+                columns={GUEST_CSV_COLUMNS}
+                sampleRows={GUEST_CSV_SAMPLE_ROWS}
+                importFn={bulkImportGuests}
+                eventId={eventId}
+                onClose={() => setShowImportModal(false)}
+                onSuccess={() => fetchGuests()}
+              />
+            )}
 
             {/* Error Alert with Retry */}
             {error && (

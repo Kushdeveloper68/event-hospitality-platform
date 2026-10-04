@@ -47,6 +47,20 @@ export const deleteRoom = async (id) => {
     }
 };
 
+/**
+ * Bulk import rooms from a parsed CSV
+ * @param {string} eventId
+ * @param {Array<Object>} rows
+ */
+export const bulkImportRooms = async (eventId, rows) => {
+    try {
+        const res = await api.post(`${API_BASE_PATH}/bulk-import`, { event: eventId, rows });
+        return res.data;
+    } catch (error) {
+        throw error.response?.data || { success: false, message: 'Failed to import rooms' };
+    }
+};
+
 export const assignGuestToRoom = async (roomId, guestId) => {
     try {
         const res = await api.post(`${API_BASE_PATH}/${roomId}/assign`, { guestId });

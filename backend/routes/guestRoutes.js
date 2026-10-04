@@ -6,11 +6,15 @@ const {
   handleGetGuestById,
   handleUpdateGuest,
   handleDeleteGuest,
+  handleBulkImportGuests,
 } = require("../controllers/guestControllers");
 const authMiddleware = require("../middlewares/authMiddleware");
 
 // create new guest
 router.post("/", authMiddleware, handleCreateGuest);
+
+// bulk import guests from CSV (must be before /:guestId so "bulk-import" isn't treated as an id)
+router.post("/bulk-import", authMiddleware, handleBulkImportGuests);
 
 // list guests with filters
 router.get("/", authMiddleware, handleGetGuests);

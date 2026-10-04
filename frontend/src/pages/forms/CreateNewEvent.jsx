@@ -44,10 +44,15 @@ function CreateNewEvent() {
       const response = await createEvent(eventData)
 
       if (response.success) {
-        setSuccess('Event created successfully! Redirecting...')
+        setSuccess('Event created successfully! Taking you to your new event...')
+        const newEventId = response.event?._id
         setTimeout(() => {
-          navigate('/events')
-        }, 1500)
+          if (newEventId) {
+            navigate(`/events/${newEventId}/overview`)
+          } else {
+            navigate('/events')
+          }
+        }, 1200)
       }
     } catch (err) {
       setError(err.message || 'Failed to create event')

@@ -15,6 +15,88 @@ import OprationalEventSchedule from "./OprationalEventSchedule";
 import EventSummaryDashboards from "./EventSummaryDashboards";
 import EventAdminstrativeSetting from "../settings/EventAdminstrativeSetting";
 import TeamMemberManagement from "../inventory/TeamMemberManagement";
+// Shown on the Overview tab when a newly created event still has rooms,
+// guests or team members missing — replaces the generic "live ops" welcome
+// text, which used to show even for a brand-new, empty event.
+function SetupChecklist({ eventId, metrics }) {
+  const items = [
+    {
+      key: "rooms",
+      label: "Add your rooms",
+      done: (metrics?.rooms?.total || 0) > 0,
+      desc: "Set up the room inventory you'll assign guests to.",
+      icon: "meeting_room",
+      path: `/events/${eventId}/rooms`,
+    },
+    {
+      key: "guests",
+      label: "Add your guests",
+      done: (metrics?.guests?.total || 0) > 0,
+      desc: "Add individually, or import a CSV for large lists.",
+      icon: "group",
+      path: `/events/${eventId}/guests`,
+    },
+    {
+      key: "team",
+      label: "Add your team",
+      done: (metrics?.staff?.active || 0) > 0,
+      desc: "Bring in the people who'll run this event with you.",
+      icon: "badge",
+      path: `/events/${eventId}/team`,
+    },
+  ];
+  const completedCount = items.filter((i) => i.done).length;
+
+  return (
+    <div className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-8 shadow-sm">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="font-display text-section-h2 text-slate-900 dark:text-white">
+          Let's get this event ready
+        </h2>
+        <span className="text-sm font-bold text-slate-500">
+          {completedCount} of {items.length} done
+        </span>
+      </div>
+      <p className="text-slate-500 mb-6">
+        Complete these steps so your team and guests can start using this event.
+      </p>
+      <div className="w-full bg-neutral-soft dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-6">
+        <div
+          className="bg-primary h-full rounded-full transition-all duration-500"
+          style={{ width: `${(completedCount / items.length) * 100}%` }}
+        ></div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {items.map((item) => (
+          <Link
+            key={item.key}
+            to={item.path}
+            className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${
+              item.done
+                ? "border-success/30 bg-success/5 dark:bg-success/10"
+                : "border-border-light dark:border-slate-700 hover:border-primary/40 hover:bg-primary/5"
+            }`}
+          >
+            <span
+              className={`material-symbols-outlined text-2xl ${item.done ? "text-success" : "text-primary-500"}`}
+            >
+              {item.done ? "check_circle" : item.icon}
+            </span>
+            <div>
+              <p className="font-bold text-sm text-slate-900 dark:text-white">
+                {item.label}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {item.done ? "Done — click to manage" : item.desc}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function EventWorkspaceShell() {
   const { user } = useAuth();
   const { eventId, tab, "*": rest } = useParams();
@@ -383,53 +465,57 @@ function EventWorkspaceShell() {
                 <div
                   className={`grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-opacity duration-300 ${overviewLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
                 >
-                  {/* <!-- Welcome Card --> */}
-                  <div className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                    <div className="flex-1 space-y-4 text-center md:text-left">
-                      <h2 className="font-display text-section-h2 text-slate-900 dark:text-white">
-                        Welcome back to Operations, {user?.name || "Director"}
-                      </h2>
-                      <p className="text-slate-500 max-w-2xl text-lg">
-                        The event is currently in full swing. We have{" "}
-                        <span className="text-slate-900 dark:text-white font-bold">
-                          {overviewData?.metrics?.guests?.checkedIn || 0} guests
-                        </span>{" "}
-                        checked in out of{" "}
-                        {overviewData?.metrics?.guests?.total || 0} expected.
-                        Room turnover is proceeding at{" "}
-                        {overviewData?.metrics?.rooms?.occupancyRate || 0}%
-                        efficiency.
-                      </p>
-                      <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
-                        <div className="bg-primary/5 dark:bg-primary/20 px-4 py-2 rounded-lg">
-                          <span className="block text-xs text-slate-500 font-semibold uppercase">
-                            Total Occupancy
-                          </span>
-                          <span className="text-xl font-bold text-primary-500">
-                            {overviewData?.metrics?.rooms?.occupancyRate || 0}%
-                          </span>
-                        </div>
-                        <div className="bg-success/5 dark:bg-success/20 px-4 py-2 rounded-lg">
-                          <span className="block text-xs text-slate-500 font-semibold uppercase">
-                            Active Staff
-                          </span>
-                          <span className="text-xl font-bold text-success">
-                            {overviewData?.metrics?.staff?.active || 0} On-Duty
-                          </span>
+                  {/* <!-- Welcome / Setup Card --> */}
+                  {(overviewData?.metrics?.rooms?.total || 0) === 0 ||
+                  (overviewData?.metrics?.guests?.total || 0) === 0 ||
+                  (overviewData?.metrics?.staff?.active || 0) === 0 ? (
+                    <SetupChecklist eventId={eventId} metrics={overviewData?.metrics} />
+                  ) : (
+                    <div className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
+                      <div className="flex-1 space-y-4 text-center md:text-left">
+                        <h2 className="font-display text-section-h2 text-slate-900 dark:text-white">
+                          Welcome back to Operations, {user?.name || "Director"}
+                        </h2>
+                        <p className="text-slate-500 max-w-2xl text-lg">
+                          You have{" "}
+                          <span className="text-slate-900 dark:text-white font-bold">
+                            {overviewData?.metrics?.guests?.checkedIn || 0} guests
+                          </span>{" "}
+                          checked in out of{" "}
+                          {overviewData?.metrics?.guests?.total || 0} expected.
+                          Room turnover is at{" "}
+                          {overviewData?.metrics?.rooms?.occupancyRate || 0}%
+                          occupancy.
+                        </p>
+                        <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
+                          <div className="bg-primary/5 dark:bg-primary/20 px-4 py-2 rounded-lg">
+                            <span className="block text-xs text-slate-500 font-semibold uppercase">
+                              Total Occupancy
+                            </span>
+                            <span className="text-xl font-bold text-primary-500">
+                              {overviewData?.metrics?.rooms?.occupancyRate || 0}%
+                            </span>
+                          </div>
+                          <div className="bg-success/5 dark:bg-success/20 px-4 py-2 rounded-lg">
+                            <span className="block text-xs text-slate-500 font-semibold uppercase">
+                              Active Staff
+                            </span>
+                            <span className="text-xl font-bold text-success">
+                              {overviewData?.metrics?.staff?.active || 0} On-Duty
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="w-full max-w-xs md:max-w-[300px] aspect-video rounded-lg overflow-hidden relative group">
-                      <img
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        data-alt="Conference hall stage with lighting and screens"
-                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDKbZxD21XGZETliznl2BY0ABjw2hTBOlpOCLB3sRRM9QbJO6CqvX5TQgUWjffQQLmFJmyHLRA-Y55VuSg-cYkp6TiNE4gvVedvsGDr6Pw1uN7UEsWTjmGuAjl6kS4MjbfadqG8ms-ta7VxqmIpKaAB4JZTkP-hTiUive76P_qOpVbfbrR0zaqtWi2_RJiUgLcbpjZUgwkCpDYZLce9q97y5u_VL95jS4rhgBao5iDZx212pAiSU_NUnMeGdMz7FtzA8TjhfCxLCFb"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                        
+                      <div className="w-full max-w-xs md:max-w-[300px] aspect-video rounded-lg overflow-hidden relative group">
+                        <img
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          data-alt="Conference hall stage with lighting and screens"
+                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDKbZxD21XGZETliznl2BY0ABjw2hTBOlpOCLB3sRRM9QbJO6CqvX5TQgUWjffQQLmFJmyHLRA-Y55VuSg-cYkp6TiNE4gvVedvsGDr6Pw1uN7UEsWTjmGuAjl6kS4MjbfadqG8ms-ta7VxqmIpKaAB4JZTkP-hTiUive76P_qOpVbfbrR0zaqtWi2_RJiUgLcbpjZUgwkCpDYZLce9q97y5u_VL95jS4rhgBao5iDZx212pAiSU_NUnMeGdMz7FtzA8TjhfCxLCFb"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4"></div>
                       </div>
                     </div>
-                  </div>
+                  )}
                   {/* <!-- Stats Widgets --> */}
                   <div className="bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-5 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
@@ -475,41 +561,20 @@ function EventWorkspaceShell() {
                         requests
                       </span>
                     </div>
-                    <div className="mt-4 flex -space-x-2">
-                      <div
-                        className="size-8 rounded-full border-2 border-white dark:border-slate-900 bg-cover bg-center"
-                        data-alt="Staff profile photo"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAh50bXx9WYztqp2R_yd1-0Oxn59mpvEGLlL3eJEL1-igPlzei14pP4gzZgfo97PFFCikX8qHHK5YWbSS_a7nZahrjExoCTXJ5CSDKjtQjucWAS7j24yWBN4fSug1Tr0kdU6DoiMdBclxszGYS9Qp0nSBlF62RbeJ331OYCH7jScsKAwhdts6ygbHPTdjFhbWMQuDe7eErm7fTRLyxw563qxe0YKYM8bqRpvftLuUclOBR0kG0d_eqHPHauSUK_9qBKWA5nfiIvnqa9")',
-                        }}
-                      ></div>
-                      <div
-                        className="size-8 rounded-full border-2 border-white dark:border-slate-900 bg-cover bg-center"
-                        data-alt="Staff profile photo"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD5tJ4HKbBqZG2H_lfRaZSgBD6PAB0WKYgAXaFLAnNxISd3no3Eq2VmyaVfLsftIWcxbEthCQfRlHOrNCrAJRzLB9R_DNitDSN1SBsb7LA5D4U1jzeBOgwo0A2WVY8qh0rg-jnFRQVb8sjiFYPuLNcd-BJkSRhUrwrwk4PpnFvX_hg3hYkR_qAIjF923n0fl5PtbtMk2foiMlbd0dKzdA2TRf6QoY8aHQj9lZZ2KOOsFLcyqA8eBiEPiIjpWlGcSqwex52icczBdSqW")',
-                        }}
-                      ></div>
-                      <div
-                        className="size-8 rounded-full border-2 border-white dark:border-slate-900 bg-cover bg-center"
-                        data-alt="Staff profile photo"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCHMBVaVpTe9Wnv_boeC-qcJPJLOlIzKZFpYfbLC8rArnUA5y7BqOrG1syEa8tTjNxQTKODadwkyxiWwzMngoy9owWmq11qyluEeH1-wQlS85wCoU6pH7b3S-YDAI9zXmpIeYzFqmGxLbawsDqGl2Xp6kQinAaL2cxYhRXIhZSkhfo1SidjRSH8XrFmnszyojFMGEZ35nF3kASh5gXRDK224iFm9HkrraLt5q6rTXlHmPk9x3dWuoV8DenNieFSaR4vBbHumbQgx4n8")',
-                        }}
-                      ></div>
-                      <div className="size-8 rounded-full border-2 border-white dark:border-slate-900 bg-neutral-soft dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                        +21
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-3">
-                      Priority:{" "}
-                      <span className="text-orange-600 font-bold uppercase">
-                        High
-                      </span>
-                      • Median wait 4m
+                    <p className="text-xs text-slate-500 mt-4">
+                      {overviewData?.metrics?.services?.pending > 0 ? (
+                        <>
+                          Awaiting response —{" "}
+                          <Link
+                            to={`/events/${eventId}/service`}
+                            className="text-primary-500 font-bold hover:underline"
+                          >
+                            view requests
+                          </Link>
+                        </>
+                      ) : (
+                        "No pending service requests"
+                      )}
                     </p>
                   </div>
                   <div className="bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-5 shadow-sm">

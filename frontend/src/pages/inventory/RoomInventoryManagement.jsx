@@ -6,9 +6,22 @@ import {
   updateRoom,
   deleteRoom,
   assignGuestToRoom,
+  bulkImportRooms,
 } from "../../api/roomApi";
 import { getGuests } from "../../api/guestApi";
 import RoomconfigurationForm from "../forms/RoomconfigurationForm";
+import { CsvImportModal } from "../../components";
+
+const ROOM_CSV_COLUMNS = [
+  { key: "number", label: "Room Number", required: true },
+  { key: "capacity", label: "Capacity", required: false },
+  { key: "type", label: "Type", required: false },
+  { key: "notes", label: "Notes", required: false },
+];
+const ROOM_CSV_SAMPLE_ROWS = [
+  { number: "101", capacity: "2", type: "double", notes: "Near elevator" },
+  { number: "301", capacity: "4", type: "suite", notes: "Top floor, sea view" },
+];
 
 function RoomInventoryManagement() {
   const { eventId: paramEventId } = useParams();
@@ -26,6 +39,7 @@ function RoomInventoryManagement() {
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -322,6 +336,13 @@ function RoomInventoryManagement() {
               Export Excel
             </button>
             <button
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            >
+              <span className="material-symbols-outlined text-lg">upload_file</span>
+              Import CSV
+            </button>
+            <button
               onClick={() => setSearchParams({ action: "addRoom" })}
               className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-white hover:bg-primary-600"
             >
@@ -330,6 +351,18 @@ function RoomInventoryManagement() {
             </button>
           </div>
         </div>
+
+        {showImportModal && (
+          <CsvImportModal
+            title="Import Rooms"
+            columns={ROOM_CSV_COLUMNS}
+            sampleRows={ROOM_CSV_SAMPLE_ROWS}
+            importFn={bulkImportRooms}
+            eventId={eventId}
+            onClose={() => setShowImportModal(false)}
+            onSuccess={() => fetchRooms()}
+          />
+        )}
 
         {/* Error Alert */}
         {error && (

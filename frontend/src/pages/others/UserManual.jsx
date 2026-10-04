@@ -2316,7 +2316,7 @@ export default function UserManual() {
                 {[
                   {
                     q: "I didn't receive the OTP email during sign-up. What do I do?",
-                    a: "Check your spam or junk folder first. If it's not there, wait 60 seconds and click Resend Code on the verification screen. Make sure the email address you entered is correct and the inbox is active. If the issue persists, contact support@eventcure.io.",
+                    a: "Check your spam or junk folder first. If it's not there, wait 60 seconds and click Resend Code on the verification screen. Make sure the email address you entered is correct and the inbox is active. If the issue persists, contact hello.eventcure@gmail.com.",
                   },
                   {
                     q: "Can I import guests from a CSV file?",
@@ -2356,7 +2356,7 @@ export default function UserManual() {
                   },
                   {
                     q: "How do I contact support?",
-                    a: "Email support@eventcure.io for general queries. For urgent operational issues during a live event, use the subject line URGENT. Our team aims to respond within 2 business hours for Operations and Enterprise customers.",
+                    a: "Email hello.eventcure@gmail.com for general queries. For urgent operational issues during a live event, use the subject line URGENT. Our team aims to respond within 2 business hours for Operations and Enterprise customers.",
                   },
                 ].map(({ q, a }) => (
                   <div
@@ -2401,8 +2401,8 @@ export default function UserManual() {
                     </p>
                     <p className="text-sm text-primary-700 dark:text-primary-400 leading-relaxed">
                       Our support team is available at{" "}
-                      <strong>support@eventcure.io</strong>. For legal queries,
-                      contact <strong>legal@eventcure.io</strong>. For API and
+                      <strong>hello.eventcure@gmail.com</strong>. For legal queries,
+                      contact <strong>hello.eventcure@gmail.com</strong>. For API and
                       developer support, visit{" "}
                       <strong>docs.eventcure.io</strong>.
                     </p>

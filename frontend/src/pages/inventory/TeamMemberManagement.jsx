@@ -6,7 +6,19 @@ import {
   deleteTeamMember,
   getTeamSummary,
   updateTeamMemberStatus,
+  bulkImportTeamMembers,
 } from "../../api/teamMemberApi";
+import { CsvImportModal } from "../../components";
+
+const TEAM_CSV_COLUMNS = [
+  { key: "name", label: "Name", required: true },
+  { key: "email", label: "Email", required: true },
+  { key: "role", label: "Role", required: false },
+];
+const TEAM_CSV_SAMPLE_ROWS = [
+  { name: "Aarav Singh", email: "aarav@eventcure.in", role: "Coordinator" },
+  { name: "Diya Kapoor", email: "diya@eventcure.in", role: "Housekeeping" },
+];
 
 function TeamMemberManagement({ eventId }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -27,6 +39,7 @@ function TeamMemberManagement({ eventId }) {
   const [statusFilter, setStatusFilter] = useState("All");
 
   // Toast and Modals
+  const [showImportModal, setShowImportModal] = useState(false);
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -249,6 +262,13 @@ function TeamMemberManagement({ eventId }) {
                 Refresh
               </button>
               <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg">upload_file</span>
+                Import CSV
+              </button>
+              <button
                 onClick={() => setSearchParams({ action: "addTeam" })}
                 className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-600 transition-all text-sm"
               >
@@ -257,6 +277,18 @@ function TeamMemberManagement({ eventId }) {
               </button>
             </div>
           </div>
+
+          {showImportModal && (
+            <CsvImportModal
+              title="Import Team Members"
+              columns={TEAM_CSV_COLUMNS}
+              sampleRows={TEAM_CSV_SAMPLE_ROWS}
+              importFn={bulkImportTeamMembers}
+              eventId={eventId}
+              onClose={() => setShowImportModal(false)}
+              onSuccess={() => loadData()}
+            />
+          )}
   {/* <!-- Footer Summary --> */}
           <div className="mt-8 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">

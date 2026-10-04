@@ -106,11 +106,52 @@ const getTeamSummary = async (eventId) => {
   }
 };
 
+/**
+ * Bulk create team members from a parsed CSV import.
+ * @param {string} eventId
+ * @param {Array<Object>} rows - each row: { name, email, role }
+ * @returns {Promise<{createdCount:number, failed:Array<{row:number, reason:string}>}>}
+ */
+const bulkCreateTeamMembers = async (eventId, rows) => {
+  let createdCount = 0;
+  const failed = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    try {
+      if (!row.name || !String(row.name).trim()) {
+        throw new Error("name is required");
+      }
+      if (!row.email || !String(row.email).trim()) {
+        throw new Error("email is required");
+      }
+      const memberData = {
+        event: eventId,
+        name: String(row.name).trim(),
+        email: String(row.email).trim().toLowerCase(),
+        role: row.role ? String(row.role).trim() : undefined,
+        status: "active",
+        lastActive: new Date(),
+      };
+      const newMember = new TeamMemberModel(memberData);
+      await newMember.save();
+      createdCount += 1;
+    } catch (error) {
+      // duplicate (event + email) unique index throws a Mongo error — give a clear reason
+      const reason = error.code === 11000 ? "a team member with this email already exists" : error.message;
+      failed.push({ row: i + 2, reason });
+    }
+  }
+
+  return { createdCount, failed };
+};
+
 module.exports = {
   createTeamMember,
   getTeamMembers,
   getTeamMemberById,
   updateTeamMember,
   deleteTeamMember,
-  getTeamSummary
+  getTeamSummary,
+  bulkCreateTeamMembers
 };

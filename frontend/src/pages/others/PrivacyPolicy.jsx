@@ -601,7 +601,7 @@ export default function PrivacyPolicy() {
                   },
                   {
                     title: "Optional marketing (with consent)",
-                    desc: "If you opt in, we may send newsletters, product update emails, and event management tips. You can unsubscribe from these at any time via the unsubscribe link or by emailing privacy@eventcure.io.",
+                    desc: "If you opt in, we may send newsletters, product update emails, and event management tips. You can unsubscribe from these at any time via the unsubscribe link or by emailing hello.eventcure@gmail.com.",
                     basis: "Consent",
                     icon: "mail",
                   },
@@ -826,7 +826,7 @@ export default function PrivacyPolicy() {
                 required to honor that request. You can use EventCure's guest
                 management tools to locate and update or delete their records.
                 We can assist with bulk operations — contact
-                privacy@eventcure.io.
+                hello.eventcure@gmail.com.
               </Highlight>
             </Section>
 
@@ -910,7 +910,7 @@ export default function PrivacyPolicy() {
                 While we implement strong security measures, no method of
                 transmission over the Internet or electronic storage is 100%
                 secure. If you discover a security vulnerability in EventCure,
-                please report it responsibly to security@eventcure.io rather
+                please report it responsibly to hello.eventcure@gmail.com rather
                 than disclosing it publicly.
               </Highlight>
 
@@ -1013,7 +1013,7 @@ export default function PrivacyPolicy() {
                   {
                     right: "Right of Access",
                     desc: "You have the right to request a copy of all personal data we hold about you and information about how it is processed.",
-                    how: "Email privacy@eventcure.io with subject 'Data Access Request'. We will respond within 30 days.",
+                    how: "Email hello.eventcure@gmail.com with subject 'Data Access Request'. We will respond within 30 days.",
                     icon: "visibility",
                     color: "blue",
                   },
@@ -1027,14 +1027,14 @@ export default function PrivacyPolicy() {
                   {
                     right: "Right to Erasure ('Right to be Forgotten')",
                     desc: "You have the right to request deletion of your personal data, subject to certain legal retention obligations.",
-                    how: "Delete individual events in Event Settings → Danger Zone. Delete your account in Organization Settings. Or email privacy@eventcure.io.",
+                    how: "Delete individual events in Event Settings → Danger Zone. Delete your account in Organization Settings. Or email hello.eventcure@gmail.com.",
                     icon: "delete_forever",
                     color: "amber",
                   },
                   {
                     right: "Right to Restrict Processing",
                     desc: "You have the right to request that we limit how we process your personal data while a dispute or objection is pending.",
-                    how: "Contact privacy@eventcure.io. We will acknowledge within 72 hours and implement restrictions within 30 days.",
+                    how: "Contact hello.eventcure@gmail.com. We will acknowledge within 72 hours and implement restrictions within 30 days.",
                     icon: "pause_circle",
                     color: "purple",
                   },
@@ -1048,14 +1048,14 @@ export default function PrivacyPolicy() {
                   {
                     right: "Right to Object",
                     desc: "You have the right to object to processing of your data based on legitimate interests or for direct marketing purposes.",
-                    how: "Use the unsubscribe link in any marketing email, or contact privacy@eventcure.io with the processing you object to.",
+                    how: "Use the unsubscribe link in any marketing email, or contact hello.eventcure@gmail.com with the processing you object to.",
                     icon: "do_not_disturb",
                     color: "amber",
                   },
                   {
                     right: "Right to Withdraw Consent",
                     desc: "Where processing is based on consent, you may withdraw that consent at any time without affecting lawfulness of prior processing.",
-                    how: "Adjust notification preferences in Settings, or contact privacy@eventcure.io for consent-based processing.",
+                    how: "Adjust notification preferences in Settings, or contact hello.eventcure@gmail.com for consent-based processing.",
                     icon: "cancel",
                     color: "purple",
                   },
@@ -1234,7 +1234,7 @@ export default function PrivacyPolicy() {
               </ul>
               <p>
                 You may request a copy of the applicable transfer mechanisms we
-                use by contacting privacy@eventcure.io.
+                use by contacting hello.eventcure@gmail.com.
               </p>
             </Section>
 
@@ -1250,7 +1250,7 @@ export default function PrivacyPolicy() {
               <p>
                 If you are a parent or guardian and believe that your child
                 under 18 has provided us with personal information, please
-                contact us immediately at privacy@eventcure.io. Upon
+                contact us immediately at hello.eventcure@gmail.com. Upon
                 verification, we will take prompt steps to delete that
                 information from our systems.
               </p>
@@ -1334,7 +1334,7 @@ export default function PrivacyPolicy() {
               </p>
               <p>
                 All previous versions of our Privacy Policy are available upon
-                request by contacting privacy@eventcure.io.
+                request by contacting hello.eventcure@gmail.com.
               </p>
             </Section>
 
@@ -1357,21 +1357,21 @@ export default function PrivacyPolicy() {
                   {
                     icon: "privacy_tip",
                     label: "Privacy Inquiries",
-                    value: "privacy@eventcure.io",
+                    value: "hello.eventcure@gmail.com",
                     sub: "General privacy questions & rights requests",
                     color: "blue",
                   },
                   {
                     icon: "security",
                     label: "Security Reports",
-                    value: "security@eventcure.io",
+                    value: "hello.eventcure@gmail.com",
                     sub: "Vulnerability disclosures & breach reports",
                     color: "amber",
                   },
                   {
                     icon: "gavel",
                     label: "Legal / DPO",
-                    value: "legal@eventcure.io",
+                    value: "hello.eventcure@gmail.com",
                     sub: "Data processing agreements & legal requests",
                     color: "purple",
                   },

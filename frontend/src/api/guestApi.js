@@ -55,4 +55,18 @@ export const deleteGuest = async (id) => {
     }
 };
 
+/**
+ * Bulk import guests from a parsed CSV
+ * @param {string} eventId
+ * @param {Array<Object>} rows
+ */
+export const bulkImportGuests = async (eventId, rows) => {
+    try {
+        const res = await api.post(`${API_BASE_PATH}/bulk-import`, { event: eventId, rows });
+        return res.data;
+    } catch (error) {
+        throw error.response?.data || { success: false, message: 'Failed to import guests' };
+    }
+};
+
 

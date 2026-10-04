@@ -63,6 +63,16 @@ export const deleteTeamMember = async (memberId) => {
   }
 };
 
+// Bulk import team members from a parsed CSV
+export const bulkImportTeamMembers = async (eventId, rows) => {
+  try {
+    const response = await api.post(`${API_BASE_PATH}/bulk-import`, { event: eventId, rows });
+    return response.data;
+  } catch (error) {
+    return error.response ? error.response.data : { success: false, message: 'Server error' };
+  }
+};
+
 // Quick status toggle
 export const updateTeamMemberStatus = async (memberId, status) => {
   try {

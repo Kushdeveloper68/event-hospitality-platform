@@ -132,6 +132,46 @@ const assignGuestToRoom = async (roomId, guestId) => {
   }
 };
 
+/**
+ * Bulk create rooms from a parsed CSV import.
+ * @param {string} eventId
+ * @param {Array<Object>} rows - each row: { number, capacity, type, notes }
+ * @returns {Promise<{createdCount:number, failed:Array<{row:number, reason:string}>}>}
+ */
+const VALID_ROOM_TYPES = ["standard", "double", "suite", "meeting", "accessible"];
+
+const bulkCreateRooms = async (eventId, rows) => {
+  let createdCount = 0;
+  const failed = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    try {
+      if (!row.number || !String(row.number).trim()) {
+        throw new Error("number is required");
+      }
+      const type = row.type ? String(row.type).trim().toLowerCase() : undefined;
+      if (type && !VALID_ROOM_TYPES.includes(type)) {
+        throw new Error(`type must be one of: ${VALID_ROOM_TYPES.join(", ")}`);
+      }
+      const roomData = {
+        event: eventId,
+        number: String(row.number).trim(),
+        capacity: row.capacity ? Number(row.capacity) : 1,
+        type,
+        notes: row.notes ? String(row.notes).trim() : undefined,
+      };
+      const newRoom = new RoomModel(roomData);
+      await newRoom.save();
+      createdCount += 1;
+    } catch (error) {
+      failed.push({ row: i + 2, reason: error.message });
+    }
+  }
+
+  return { createdCount, failed };
+};
+
 module.exports = {
   createRoom,
   getRooms,
@@ -139,4 +179,5 @@ module.exports = {
   updateRoom,
   deleteRoom,
   assignGuestToRoom,
+  bulkCreateRooms,
 };

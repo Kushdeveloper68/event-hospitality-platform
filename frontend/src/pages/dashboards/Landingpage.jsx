@@ -205,10 +205,18 @@ export default function Landingpage() {
         <section className="ec-hero">
           <div className="ec-container ec-hero-grid">
             <div className="ec-hero-copy">
-              <div className="ec-live-badge">
-                <span className="ec-live-dot" />
-                <span>Event operations platform</span>
-                <b>Beta</b>
+              <div className="ec-hero-badge-row">
+                <div className="ec-live-badge">
+                  <span className="ec-live-dot" />
+                  <span>Event operations platform</span>
+                  <b>Beta</b>
+                </div>
+
+                <Link to="/import-guide" className="ec-new-feature-badge">
+                  <span className="ec-new-feature-tag">NEW</span>
+                  <span>Bulk CSV import for guests, rooms &amp; team</span>
+                  <span className="material-symbols-outlined">arrow_forward</span>
+                </Link>
               </div>
 
               <h1 style={headlineStyle}>

@@ -4,6 +4,7 @@ const {
   getGuestById,
   updateGuest,
   deleteGuest,
+  bulkCreateGuests,
 } = require("../services/guestServices");
 const { getEventById, getAllEvents } = require("../services/eventServices");
 const { createActivityLog } = require("../services/activityLogServices");
@@ -147,10 +148,56 @@ const handleDeleteGuest = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/guests/bulk-import
+ * body: { event: eventId, rows: [{ fullName, email, phoneNumber, age, groupName, vipStatus, specialRequests }] }
+ */
+const handleBulkImportGuests = async (req, res) => {
+  try {
+    const { event, rows } = req.body;
+    if (!event) {
+      return res.status(400).json({ success: false, message: "event id required" });
+    }
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ success: false, message: "No rows to import" });
+    }
+    if (rows.length > 1000) {
+      return res.status(400).json({ success: false, message: "Import is limited to 1000 rows at a time" });
+    }
+
+    const userId = req.user?.id;
+    const ev = await getEventById(event);
+    const ownerId = ev.createdBy?._id || ev.createdBy;
+    if (userId && String(ownerId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: "Forbidden: you do not own this event" });
+    }
+
+    const { createdCount, failed } = await bulkCreateGuests(event, rows);
+
+    createActivityLog({
+      event,
+      type: "registration",
+      message: `Bulk import: ${createdCount} guest(s) added via CSV`,
+      priority: "normal",
+    });
+
+    return res.status(200).json({
+      success: true,
+      createdCount,
+      failedCount: failed.length,
+      failed,
+    });
+  } catch (error) {
+    console.error("Error bulk importing guests", error);
+    return res.status(500).json({ success: false, message: error.message || "Failed to import guests" });
+  }
+};
+
 module.exports = {
   handleCreateGuest,
   handleGetGuests,
   handleGetGuestById,
   handleUpdateGuest,
   handleDeleteGuest,
+  handleBulkImportGuests,
 };

@@ -625,6 +625,30 @@ function MainOprationDashboard() {
             </Link>
           </div>
 
+          {/* ── First-time empty state ── */}
+          {!loading && data && metrics.totalEvents === 0 && (
+            <div className="mb-8 bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl p-10 text-center">
+              <span className="material-symbols-outlined text-6xl text-primary/40 block mb-4">
+                calendar_add_on
+              </span>
+              <h2 className="font-display text-section-h2 text-gray-900 dark:text-white mb-2">
+                Create your first event
+              </h2>
+              <p className="text-neutral-muted max-w-md mx-auto mb-6">
+                This is where you'll track guests, rooms, team and service
+                requests once you set up an event. It only takes a minute.
+              </p>
+              <Link to="/create-event">
+                <button className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-bold text-sm hover:bg-primary/90 shadow-sm transition-all">
+                  <span className="material-symbols-outlined text-[20px]">
+                    add
+                  </span>
+                  Create New Event
+                </button>
+              </Link>
+            </div>
+          )}
+
           {/* ── Metric Cards ── */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
             <MetricCard

@@ -604,7 +604,7 @@ export default function TermsAndConditions() {
                 We offer refunds within 7 days of purchase if the Service has
                 not been substantially used. After this period, fees are
                 non-refundable. To request a refund, contact
-                support@eventcure.io.
+                hello.eventcure@gmail.com.
               </p>
               <p>
                 <strong className="text-slate-800 dark:text-slate-200">
@@ -765,7 +765,7 @@ export default function TermsAndConditions() {
                 </strong>{" "}
                 Before initiating formal legal proceedings, you agree to first
                 attempt to resolve any dispute informally by contacting us at
-                legal@eventcure.io. We will attempt to resolve disputes within
+                hello.eventcure@gmail.com. We will attempt to resolve disputes within
                 30 days of receipt.
               </p>
               <p>
@@ -820,13 +820,13 @@ export default function TermsAndConditions() {
                   {
                     icon: "mail",
                     label: "Email",
-                    value: "legal@eventcure.io",
+                    value: "hello.eventcure@gmail.com",
                     sub: "For legal inquiries",
                   },
                   {
                     icon: "support_agent",
                     label: "Support",
-                    value: "support@eventcure.io",
+                    value: "hello.eventcure@gmail.com",
                     sub: "For general support",
                   },
                   {

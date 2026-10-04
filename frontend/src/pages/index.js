@@ -40,6 +40,7 @@ import UnauthorizedAccessWarning from "./others/UnauthorizedAccessWarning";
 import TermsAndConditions from './others/Termsandconditions';
 import PrivacyPolicy from './others/PrivacyPolicy';
 import UserManual from './others/UserManual';
+import ImportGuide from './others/ImportGuide';
 
 export {
   //dashboards/
@@ -83,5 +84,6 @@ export {
   UnauthorizedAccessWarning,
   TermsAndConditions,
   PrivacyPolicy,
-  UserManual
+  UserManual,
+  ImportGuide
 };

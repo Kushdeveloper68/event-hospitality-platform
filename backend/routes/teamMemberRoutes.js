@@ -8,7 +8,8 @@ const {
   handleGetTeamMemberById,
   handleUpdateTeamMember,
   handleDeleteTeamMember,
-  handleGetTeamSummary
+  handleGetTeamSummary,
+  handleBulkImportTeamMembers
 } = require("../controllers/teamMemberControllers");
 
 // Protect all transport routes with JWT auth
@@ -16,6 +17,10 @@ router.use(authMiddleware);
 
 // Create a new team member
 router.post("/", handleCreateTeamMember);
+
+// Bulk import team members from CSV
+// MUST be before /:memberId so "bulk-import" isn't treated as a memberId
+router.post("/bulk-import", handleBulkImportTeamMembers);
 
 // Get all team members for an event (via ?eventId=)
 router.get("/", handleGetTeamMembers);

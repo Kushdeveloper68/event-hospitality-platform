@@ -178,11 +178,49 @@ const handleGetTeamSummary = async (req, res) => {
   }
 };
 
+/**
+ * POST /api/team/bulk-import
+ * body: { event: eventId, rows: [{ name, email, role }] }
+ */
+const handleBulkImportTeamMembers = async (req, res) => {
+  try {
+    const { event, rows } = req.body;
+    if (!event) {
+      return res.status(400).json({ success: false, message: "event id required" });
+    }
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(400).json({ success: false, message: "No rows to import" });
+    }
+    if (rows.length > 1000) {
+      return res.status(400).json({ success: false, message: "Import is limited to 1000 rows at a time" });
+    }
+
+    try {
+      await verifyEventOwnership(event, req.user?.id || req.user?._id);
+    } catch (err) {
+      return res.status(err.message === "Event not found" ? 404 : 403).json({ success: false, message: err.message });
+    }
+
+    const { createdCount, failed } = await teamMemberServices.bulkCreateTeamMembers(event, rows);
+
+    return res.status(200).json({
+      success: true,
+      createdCount,
+      failedCount: failed.length,
+      failed,
+    });
+  } catch (error) {
+    console.error("Error bulk importing team members:", error);
+    res.status(500).json({ success: false, message: "Server Error", error: error.message });
+  }
+};
+
 module.exports = {
   handleCreateTeamMember,
   handleGetTeamMembers,
   handleGetTeamMemberById,
   handleUpdateTeamMember,
   handleDeleteTeamMember,
-  handleGetTeamSummary
+  handleGetTeamSummary,
+  handleBulkImportTeamMembers
 };
