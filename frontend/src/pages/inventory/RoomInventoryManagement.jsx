@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import {
   getRooms,
+  exportAllRooms,
   createRoom,
   updateRoom,
   deleteRoom,
@@ -36,8 +37,18 @@ function RoomInventoryManagement() {
   const [totalCount, setTotalCount] = useState(0);
   const LIMIT = 20;
   const [rooms, setRooms] = useState([]);
-  const [filteredRooms, setFilteredRooms] = useState([]);
+  // Event-wide totals from the server — NOT derived from `rooms` (which is
+  // only the current page), so these stay correct no matter which page is
+  // loaded or what's currently searched.
+  const [stats, setStats] = useState({
+    total: 0,
+    available: 0,
+    occupied: 0,
+    totalCapacity: 0,
+    totalOccupancy: 0,
+  });
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [toast, setToast] = useState({
@@ -46,6 +57,7 @@ function RoomInventoryManagement() {
     type: "info",
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all"); // all, available, occupied
 
   // assignment modal state
@@ -68,44 +80,55 @@ function RoomInventoryManagement() {
     );
   };
 
-  const handleExportExcel = () => {
-    if (filteredRooms.length === 0) {
-      showToast("No rooms to export", "error");
-      return;
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      // Fetches EVERY room matching the current search/status filter from
+      // the server — not just whatever page happens to be on screen.
+      const res = await exportAllRooms({ eventId, search: debouncedSearch, status: filterStatus });
+      if (!res.success || !res.rooms?.length) {
+        showToast("No rooms to export", "error");
+        return;
+      }
+
+      const headers = ["Room #", "Type", "Capacity", "Occupancy", "Status", "Notes"];
+      const rows = res.rooms.map((room) => {
+        const capacity = room.capacity || 1;
+        const occupancy = room.occupancy || 0;
+        const badge = getStatusBadge(room);
+        return [
+          room.number || "",
+          room.type || "Standard",
+          capacity,
+          occupancy,
+          badge.label,
+          room.notes || "",
+        ];
+      });
+
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n");
+
+      // Prefixing with a BOM keeps accented/special characters intact when the
+      // file is opened directly in Excel.
+      const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `room-inventory-${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast(`${res.rooms.length} room(s) exported successfully`, "success");
+    } catch (err) {
+      console.error("handleExportExcel", err);
+      showToast("Failed to export rooms", "error");
+    } finally {
+      setExporting(false);
     }
-
-    const headers = ["Room #", "Type", "Capacity", "Occupancy", "Status", "Notes"];
-    const rows = filteredRooms.map((room) => {
-      const capacity = room.capacity || 1;
-      const occupancy = room.occupancy || 0;
-      const badge = getStatusBadge(room);
-      return [
-        room.number || "",
-        room.type || "Standard",
-        capacity,
-        occupancy,
-        badge.label,
-        room.notes || "",
-      ];
-    });
-
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
-    ].join("\n");
-
-    // Prefixing with a BOM keeps accented/special characters intact when the
-    // file is opened directly in Excel.
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `room-inventory-${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast("Room inventory exported successfully", "success");
   };
 
   const fetchRooms = async () => {
@@ -113,11 +136,18 @@ function RoomInventoryManagement() {
     setLoading(true);
     setError(null);
     try {
-      const res = await getRooms({ eventId, page: currentPage, limit: LIMIT });
+      const res = await getRooms({
+        eventId,
+        page: currentPage,
+        limit: LIMIT,
+        search: debouncedSearch || undefined,
+        status: filterStatus === "all" ? undefined : filterStatus,
+      });
       if (res.success) {
         setRooms(res.rooms);
         setTotalPages(res.totalPages || 1);
         setTotalCount(res.total || 0);
+        if (res.stats) setStats(res.stats);
       } else {
         setError(res.message || "Failed to load rooms");
         showToast(res.message || "Failed to load rooms", "error");
@@ -131,33 +161,22 @@ function RoomInventoryManagement() {
     }
   };
 
-  // Filter rooms based on search and status
+  // Debounce the search box so every keystroke doesn't fire a request —
+  // waits 400ms after typing stops, then updates debouncedSearch.
   useEffect(() => {
-    let filtered = rooms;
+    const handle = setTimeout(() => setDebouncedSearch(searchQuery.trim()), 400);
+    return () => clearTimeout(handle);
+  }, [searchQuery]);
 
-    // Search filter
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (r) =>
-          r.number.toString().includes(searchQuery) ||
-          r.type?.includes(searchQuery) ||
-          r.notes?.includes(searchQuery),
-      );
-    }
-
-    // Status filter
-    if (filterStatus === "available") {
-      filtered = filtered.filter((r) => (r.occupancy || 0) < r.capacity);
-    } else if (filterStatus === "occupied") {
-      filtered = filtered.filter((r) => (r.occupancy || 0) > 0);
-    }
-
-    setFilteredRooms(filtered);
-  }, [searchQuery, filterStatus, rooms]);
+  // Searching or switching the status tab should jump back to page 1 —
+  // staying on page 3 of a new, smaller filtered result would show nothing.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filterStatus]);
 
   useEffect(() => {
     fetchRooms();
-  }, [eventId, currentPage]);
+  }, [eventId, currentPage, debouncedSearch, filterStatus]);
 
   const getRoomStatus = (room) => {
     const occupancy = room.occupancy || 0;
@@ -327,13 +346,14 @@ function RoomInventoryManagement() {
           <div className="flex gap-3">
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-              title="Export room inventory as Excel/CSV"
+              disabled={exporting}
+              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              title="Export all rooms matching the current search/filter as CSV"
             >
               <span className="material-symbols-outlined text-lg">
                 file_download
               </span>
-              Export Excel
+              {exporting ? "Exporting…" : "Export Excel"}
             </button>
             <button
               onClick={() => setShowImportModal(true)}
@@ -385,7 +405,7 @@ function RoomInventoryManagement() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {rooms.length}
+                {stats.total}
               </h3>
             </div>
           </div>
@@ -400,7 +420,7 @@ function RoomInventoryManagement() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {rooms.reduce((a, r) => a + (r.capacity || 0), 0)}
+                {stats.totalCapacity}
               </h3>
               <span className="text-xs font-semibold text-slate-400 dark:text-slate-500">
                 Guests max
@@ -418,16 +438,11 @@ function RoomInventoryManagement() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {rooms.reduce((a, r) => a + (r.occupancy || 0), 0)}
+                {stats.totalOccupancy}
               </h3>
               <span className="text-xs font-semibold text-primary">
-                {rooms.length &&
-                rooms.reduce((a, r) => a + (r.capacity || 0), 0)
-                  ? Math.round(
-                      (rooms.reduce((a, r) => a + (r.occupancy || 0), 0) /
-                        rooms.reduce((a, r) => a + (r.capacity || 0), 0)) *
-                        100,
-                    )
+                {stats.totalCapacity
+                  ? Math.round((stats.totalOccupancy / stats.totalCapacity) * 100)
                   : 0}
                 % Full
               </span>
@@ -442,7 +457,7 @@ function RoomInventoryManagement() {
             </div>
             <div className="mt-3 flex items-baseline gap-2">
               <h3 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                {rooms.filter((r) => (r.occupancy || 0) < r.capacity).length}
+                {stats.available}
               </h3>
               <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                 rooms available
@@ -453,13 +468,20 @@ function RoomInventoryManagement() {
 
         {/* Filter Bar --> */}
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search by room number, type..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-500 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
-          />
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by room number, type..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-sm placeholder-slate-500 text-slate-900 dark:text-white dark:placeholder-slate-500 focus:border-primary focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-800"
+            />
+            {searchQuery && searchQuery !== debouncedSearch && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
+                searching…
+              </span>
+            )}
+          </div>
           <button
             onClick={() => setFilterStatus("all")}
             className={`flex h-10 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition-colors ${
@@ -468,7 +490,7 @@ function RoomInventoryManagement() {
                 : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
             }`}
           >
-            All Rooms ({rooms.length})
+            All Rooms ({stats.total})
           </button>
           <button
             onClick={() => setFilterStatus("available")}
@@ -479,8 +501,7 @@ function RoomInventoryManagement() {
             }`}
           >
             <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            Available (
-            {rooms.filter((r) => (r.occupancy || 0) < r.capacity).length})
+            Available ({stats.available})
           </button>
           <button
             onClick={() => setFilterStatus("occupied")}
@@ -491,7 +512,7 @@ function RoomInventoryManagement() {
             }`}
           >
             <span className="h-2 w-2 rounded-full bg-primary"></span>
-            Occupied ({rooms.filter((r) => (r.occupancy || 0) > 0).length})
+            Occupied ({stats.occupied})
           </button>
         </div>
 
@@ -508,9 +529,9 @@ function RoomInventoryManagement() {
         )}
 
         {/* Room Grid --> */}
-        {!loading && filteredRooms.length > 0 && (
+        {!loading && rooms.length > 0 && (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredRooms.map((room) => {
+            {rooms.map((room) => {
               const badge = getStatusBadge(room);
               const occupancy = room.occupancy || 0;
               const capacity = room.capacity || 1;
@@ -596,8 +617,8 @@ function RoomInventoryManagement() {
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && filteredRooms.length === 0 && rooms.length === 0 && (
+        {/* Empty State — the event truly has zero rooms */}
+        {!loading && rooms.length === 0 && stats.total === 0 && (
           <div className="flex flex-col items-center justify-center py-12">
             <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">
               meeting_room
@@ -611,8 +632,8 @@ function RoomInventoryManagement() {
           </div>
         )}
 
-        {/* Empty Search State */}
-        {!loading && filteredRooms.length === 0 && rooms.length > 0 && (
+        {/* Empty Search State — rooms exist, but none match this search/filter/page */}
+        {!loading && rooms.length === 0 && stats.total > 0 && (
           <div className="flex flex-col items-center justify-center py-12">
             <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">
               search_off

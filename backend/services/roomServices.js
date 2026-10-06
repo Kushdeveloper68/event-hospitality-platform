@@ -1,5 +1,10 @@
+const mongoose = require("mongoose");
 const RoomModel = require("../models/roomModel");
 const GuestModel = require("../models/guestModel");
+
+// Escapes regex special characters so free-text search can't be used to
+// build an unintended (or catastrophically slow) regular expression.
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
  * Create a new room
@@ -23,46 +28,103 @@ const createRoom = async (roomData) => {
  * @param {string} [options.status] // available, occupied, maintenance
  * @returns {Promise<Array>}
  */
-const getRooms = async ({ eventId, status, page = 1, limit = 20 } = {}) => {
+/**
+ * Fetch a page of rooms for an event, with optional free-text search and
+ * availability-status filtering applied server-side (across *all* of the
+ * event's rooms, not just the page being returned) — plus a `stats` object
+ * with event-wide totals (total / available / occupied) so summary cards
+ * and filter-tab badges stay correct regardless of which page is loaded
+ * or what's currently searched.
+ */
+const getRooms = async ({ eventId, search, status, page = 1, limit = 20 } = {}) => {
   try {
-    const query = {};
-    if (eventId) query.event = eventId;
+    const matchStage = {};
+    if (eventId) matchStage.event = new mongoose.Types.ObjectId(eventId);
 
-    const skip = (page - 1) * limit;
-    const total = await RoomModel.countDocuments(query);
-    const rooms = await RoomModel.find(query)
-      .sort({ number: 1 })
-      .skip(skip)
-      .limit(limit);
+    // Base pipeline: scope to the event, then compute live occupancy per room.
+    const basePipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: GuestModel.collection.name,
+          localField: "_id",
+          foreignField: "room",
+          as: "occupants",
+        },
+      },
+      { $addFields: { occupancy: { $size: "$occupants" } } },
+      { $project: { occupants: 0 } },
+    ];
 
-    // add occupancy count
-    if (rooms.length) {
-      const roomIds = rooms.map(r => r._id);
-      const counts = await GuestModel.aggregate([
-        { $match: { room: { $in: roomIds } } },
-        { $group: { _id: '$room', count: { $sum: 1 } } }
-      ]);
-      const countMap = counts.reduce((acc, cur) => {
-        acc[cur._id.toString()] = cur.count;
-        return acc;
-      }, {});
-      rooms.forEach((r, idx) => {
-        const obj = r.toObject ? r.toObject() : { ...r };
-        obj.occupancy = countMap[r._id.toString()] || 0;
-        rooms[idx] = obj;
-      });
+    // ---- Event-wide stats: ignore search/status so cards & tab badges
+    // always reflect every room, not just the current filter/page ----
+    const statsAgg = await RoomModel.aggregate([
+      ...basePipeline,
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          available: { $sum: { $cond: [{ $lt: ["$occupancy", "$capacity"] }, 1, 0] } },
+          occupied: { $sum: { $cond: [{ $gt: ["$occupancy", 0] }, 1, 0] } },
+          totalCapacity: { $sum: { $ifNull: ["$capacity", 0] } },
+          totalOccupancy: { $sum: "$occupancy" },
+        },
+      },
+    ]);
+    const stats = statsAgg[0]
+      ? {
+          total: statsAgg[0].total,
+          available: statsAgg[0].available,
+          occupied: statsAgg[0].occupied,
+          totalCapacity: statsAgg[0].totalCapacity,
+          totalOccupancy: statsAgg[0].totalOccupancy,
+        }
+      : { total: 0, available: 0, occupied: 0, totalCapacity: 0, totalOccupancy: 0 };
+
+    // ---- Filtered pipeline for the actual list (search + status) ----
+    const listPipeline = [...basePipeline];
+
+    if (search && search.trim()) {
+      const regex = new RegExp(escapeRegex(search.trim()), "i");
+      listPipeline.push({ $match: { $or: [{ number: regex }, { type: regex }, { notes: regex }] } });
+    }
+    if (status === "available") {
+      listPipeline.push({ $match: { $expr: { $lt: ["$occupancy", "$capacity"] } } });
+    } else if (status === "occupied") {
+      listPipeline.push({ $match: { $expr: { $gt: ["$occupancy", 0] } } });
     }
 
+    const countResult = await RoomModel.aggregate([...listPipeline, { $count: "count" }]);
+    const filteredTotal = countResult[0]?.count || 0;
+
+    const skip = (Math.max(page, 1) - 1) * limit;
+    const rooms = await RoomModel.aggregate([
+      ...listPipeline,
+      { $sort: { number: 1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+
     return {
-      total,
+      total: filteredTotal,
       page,
       limit,
-      totalPages: Math.ceil(total / limit),
+      totalPages: Math.max(Math.ceil(filteredTotal / limit), 1),
       rooms,
+      stats,
     };
   } catch (error) {
     throw new Error('Failed to fetch rooms: ' + error.message);
   }
+};
+
+/**
+ * Fetch every room for an event matching the current search/status filter,
+ * unpaginated — used for "export all" so the CSV isn't limited to one page.
+ */
+const getAllRoomsForExport = async ({ eventId, search, status } = {}) => {
+  const { rooms } = await getRooms({ eventId, search, status, page: 1, limit: 100000 });
+  return rooms;
 };
 
 /**
@@ -175,6 +237,7 @@ const bulkCreateRooms = async (eventId, rows) => {
 module.exports = {
   createRoom,
   getRooms,
+  getAllRoomsForExport,
   getRoomById,
   updateRoom,
   deleteRoom,

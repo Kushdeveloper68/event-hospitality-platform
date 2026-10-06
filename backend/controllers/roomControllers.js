@@ -1,6 +1,7 @@
 const {
   createRoom,
   getRooms,
+  getAllRoomsForExport,
   getRoomById,
   updateRoom,
   deleteRoom,
@@ -39,20 +40,25 @@ const handleCreateRoom = async (req, res) => {
 // list
 const handleGetRooms = async (req, res) => {
   try {
-    const { eventId, page, limit } = req.query;
+    const { eventId, page, limit, search, status } = req.query;
     const userId = req.user?.id;
 
     if (!eventId) {
       return res.status(400).json({ success: false, message: 'eventId query parameter required' });
     }
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
     const ev = await getEventById(eventId);
     const ownerId = ev.createdBy?._id || ev.createdBy;
-    if (userId && String(ownerId) !== String(userId)) {
+    if (String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
     }
 
     const result = await getRooms({
       eventId,
+      search,
+      status,
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
     });
@@ -61,6 +67,36 @@ const handleGetRooms = async (req, res) => {
   } catch (error) {
     console.error('Error fetching rooms', error);
     return res.status(500).json({ success: false, message: error.message || 'Failed to fetch rooms' });
+  }
+};
+
+/**
+ * GET /api/rooms/export
+ * Returns every room matching the event (and current search/status filter),
+ * unpaginated — so "Export CSV" isn't limited to whatever page is loaded.
+ */
+const handleExportRooms = async (req, res) => {
+  try {
+    const { eventId, search, status } = req.query;
+    const userId = req.user?.id;
+
+    if (!eventId) {
+      return res.status(400).json({ success: false, message: 'eventId query parameter required' });
+    }
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required' });
+    }
+    const ev = await getEventById(eventId);
+    const ownerId = ev.createdBy?._id || ev.createdBy;
+    if (String(ownerId) !== String(userId)) {
+      return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
+    }
+
+    const rooms = await getAllRoomsForExport({ eventId, search, status });
+    return res.status(200).json({ success: true, rooms });
+  } catch (error) {
+    console.error('Error exporting rooms', error);
+    return res.status(500).json({ success: false, message: error.message || 'Failed to export rooms' });
   }
 };
 // single
@@ -198,6 +234,7 @@ const handleBulkImportRooms = async (req, res) => {
 module.exports = {
   handleCreateRoom,
   handleGetRooms,
+  handleExportRooms,
   handleGetRoomById,
   handleUpdateRoom,
   handleDeleteRoom,

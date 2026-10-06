@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   handleCreateRoom,
   handleGetRooms,
+  handleExportRooms,
   handleGetRoomById,
   handleUpdateRoom,
   handleDeleteRoom,
@@ -16,6 +17,10 @@ router.post("/", authMiddleware, handleCreateRoom);
 
 // bulk import rooms from CSV (must be before /:roomId so "bulk-import" isn't treated as an id)
 router.post("/bulk-import", authMiddleware, handleBulkImportRooms);
+
+// export ALL rooms matching the current filter, unpaginated
+// (must be before /:roomId so "export" isn't treated as an id)
+router.get("/export", authMiddleware, handleExportRooms);
 
 // list rooms with event filter
 router.get("/", authMiddleware, handleGetRooms);

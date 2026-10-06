@@ -20,6 +20,19 @@ export const getRooms = async (options = {}) => {
     }
 };
 
+/**
+ * Fetch every room matching the current search/status filter, unpaginated —
+ * used by "Export CSV" so it isn't limited to whatever page is on screen.
+ */
+export const exportAllRooms = async (options = {}) => {
+    try {
+        const res = await api.get(`${API_BASE_PATH}/export`, { params: options });
+        return res.data;
+    } catch (error) {
+        throw error.response?.data || { success: false, message: 'Failed to export rooms' };
+    }
+};
+
 export const getRoomById = async (id) => {
     try {
         const res = await api.get(`${API_BASE_PATH}/${id}`);
