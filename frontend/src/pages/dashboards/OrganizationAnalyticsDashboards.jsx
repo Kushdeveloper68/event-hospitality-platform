@@ -2,342 +2,523 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { getFullAnalytics, getKPISummary } from "../../api/organizationAnalyticsDashboardsApi";
 
-// ─── Utility helpers ──────────────────────────────────────────────────────────
-
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (d) =>
   d
-    ? new Date(d).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      })
+    ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     : "N/A";
 
-const fmtNum = (n) =>
-  n == null ? "—" : Number(n).toLocaleString();
+const fmtNum = (n) => (n == null ? "—" : Number(n).toLocaleString());
 
-const statusColors = {
+const fmtCompact = (n) =>
+  new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+
+const toISO = (d) =>
+  new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+
+const daysAgoISO = (n) => {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return toISO(d);
+};
+
+const csvCell = (v) => {
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+};
+
+const niceScale = (v) => {
+  if (v <= 4) return { step: 1, max: 4 };
+  const raw = v / 4;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const n = raw / p;
+  const m = [1, 2, 3, 4, 5, 6, 8, 10].find((x) => x >= n);
+  return { step: m * p, max: m * p * 4 };
+};
+
+const PRESETS = [
+  { key: "all", label: "All time", days: null },
+  { key: "7", label: "7D", days: 7 },
+  { key: "30", label: "30D", days: 30 },
+  { key: "90", label: "90D", days: 90 },
+];
+
+const STATUS = {
   in_progress: {
-    bg: "bg-emerald-100 dark:bg-emerald-900/30",
-    text: "text-emerald-700 dark:text-emerald-400",
-    dot: "bg-emerald-500",
     label: "Live",
+    cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+    dot: "bg-emerald-500",
   },
   upcoming: {
-    bg: "bg-primary/10",
-    text: "text-primary",
-    dot: "bg-primary",
     label: "Upcoming",
+    cls: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+    dot: "bg-blue-500",
   },
   completed: {
-    bg: "bg-slate-100 dark:bg-slate-800",
-    text: "text-slate-500",
-    dot: "bg-slate-400",
     label: "Completed",
+    cls: "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    dot: "bg-slate-400",
   },
 };
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+const TONE_CHIP = {
+  blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  violet: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  indigo: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+  red: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  slate: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+};
 
+const TONE_BAR = {
+  blue: "bg-blue-600 dark:bg-blue-500",
+  emerald: "bg-emerald-500",
+  amber: "bg-amber-500",
+  violet: "bg-violet-500",
+  indigo: "bg-indigo-500",
+  red: "bg-red-500",
+  orange: "bg-orange-500",
+  slate: "bg-slate-300 dark:bg-slate-600",
+};
+
+const TONE_TEXT = {
+  blue: "text-blue-700 dark:text-blue-300",
+  emerald: "text-emerald-700 dark:text-emerald-300",
+  amber: "text-amber-700 dark:text-amber-300",
+  violet: "text-violet-700 dark:text-violet-300",
+};
+
+const CHART_TONE = {
+  blue: {
+    line: "stroke-blue-600 dark:stroke-blue-400",
+    area: "fill-blue-600/10 dark:fill-blue-400/10",
+    dot: "fill-white stroke-blue-600 dark:fill-slate-900 dark:stroke-blue-400",
+    bar: "fill-blue-600 dark:fill-blue-500",
+  },
+  indigo: {
+    line: "stroke-indigo-500 dark:stroke-indigo-400",
+    area: "fill-indigo-500/10 dark:fill-indigo-400/10",
+    dot: "fill-white stroke-indigo-500 dark:fill-slate-900 dark:stroke-indigo-400",
+    bar: "fill-indigo-500 dark:fill-indigo-400",
+  },
+};
+
+const CARD =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none";
+
+// ─── Layout primitives ────────────────────────────────────────────────────────
 function Skeleton({ className = "" }) {
-  return (
-    <div
-      className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${className}`}
-    />
-  );
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />;
 }
 
-function KPICard({ icon, label, value, sub, accent = "primary", trend, pulse = false }) {
-  const accentMap = {
-    primary: "bg-primary/10 text-primary",
-    green: "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30",
-    amber: "bg-amber-100 text-amber-600 dark:bg-amber-900/30",
-    red: "bg-red-100 text-red-600 dark:bg-red-900/30",
-    purple: "bg-purple-100 text-purple-600 dark:bg-purple-900/30",
-    indigo: "bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30",
-    slate: "bg-slate-100 text-slate-600 dark:bg-slate-800",
-  };
-
+function PageShell({ children }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col gap-3 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between">
-        <div
-          className={`size-10 rounded-lg flex items-center justify-center ${accentMap[accent]}`}
-        >
-          <span className="material-symbols-outlined text-xl">{icon}</span>
-        </div>
-        {pulse && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase">
-            <span className="size-2 bg-emerald-500 rounded-full animate-pulse" />
-            Live
-          </span>
-        )}
-        {trend != null && !pulse && (
-          <span
-            className={`flex items-center gap-0.5 text-xs font-bold ${
-              trend >= 0 ? "text-emerald-600" : "text-red-500"
-            }`}
-          >
-            <span className="material-symbols-outlined text-sm">
-              {trend >= 0 ? "trending_up" : "trending_down"}
-            </span>
-            {Math.abs(trend)}%
-          </span>
-        )}
-      </div>
-      <div>
-        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-          {label}
-        </p>
-        <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
-          {value}
-        </p>
-        {sub && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{sub}</p>
-        )}
-      </div>
+    <div className="min-h-screen w-full bg-[#f7f8fa] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</div>
     </div>
   );
 }
 
-function SectionCard({ title, subtitle, icon, children, action }) {
+function Card({ title, subtitle, icon, action, children, className = "" }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-      <div className="flex items-start justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-3">
+    <section className={`flex min-w-0 flex-col ${CARD} ${className}`}>
+      <div className="flex items-start justify-between gap-3 px-5 pt-5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           {icon && (
-            <span className="material-symbols-outlined text-primary text-xl">
-              {icon}
-            </span>
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="material-symbols-outlined text-[19px]">{icon}</span>
+            </div>
           )}
-          <div>
-            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">{title}</h3>
+          <div className="min-w-0">
+            <h3 className="truncate text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              {title}
+            </h3>
             {subtitle && (
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {subtitle}
-              </p>
+              <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>
             )}
           </div>
         </div>
         {action}
       </div>
-      <div className="p-6">{children}</div>
-    </div>
+      <div className="flex-1 p-5 pt-4 sm:p-6 sm:pt-5">{children}</div>
+    </section>
   );
 }
 
-// ── Mini bar chart (pure CSS/SVG, no lib) ─────────────────────────────────────
-function BarChart({ data, colorClass = "fill-primary", height = 180 }) {
-  if (!data || !data.length)
-    return (
-      <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
-        No data
-      </div>
-    );
-
-  const maxVal = Math.max(...data.map((d) => d.count), 1);
-  const barW = Math.max(8, Math.floor(600 / data.length) - 4);
-
+function StatCard({ icon, label, value, sub, tone = "blue", live }) {
   return (
-    <div className="w-full overflow-x-auto">
-      <svg
-        width="100%"
-        height={height + 30}
-        viewBox={`0 0 ${data.length * (barW + 4)} ${height + 30}`}
-        preserveAspectRatio="none"
-      >
-        {data.map((d, i) => {
-          const barH = Math.max(3, Math.round((d.count / maxVal) * height));
-          return (
-            <g key={i}>
-              <rect
-                x={i * (barW + 4)}
-                y={height - barH}
-                width={barW}
-                height={barH}
-                rx={3}
-                className={colorClass}
-                opacity={0.85}
-              />
-              {data.length <= 14 && (
-                <text
-                  x={i * (barW + 4) + barW / 2}
-                  y={height + 18}
-                  textAnchor="middle"
-                  fontSize="9"
-                  fill="#94a3b8"
-                >
-                  {d.label?.split(" ")[0]}
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-// ── Line chart (pure SVG) ─────────────────────────────────────────────────────
-function LineChart({ data, colorClass = "stroke-primary", height = 160 }) {
-  if (!data || !data.length)
-    return (
-      <div className="flex items-center justify-center h-40 text-slate-400 text-sm">
-        No data
+    <div className={`p-5 ${CARD}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            {label}
+          </p>
+        </div>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${TONE_CHIP[tone]}`}>
+          <span className="material-symbols-outlined text-[19px]">{icon}</span>
+        </div>
       </div>
-    );
-
-  const maxVal = Math.max(...data.map((d) => d.count), 1);
-  const W = 600;
-  const H = height;
-  const pad = 10;
-  const step = (W - pad * 2) / Math.max(data.length - 1, 1);
-
-  const pts = data.map((d, i) => ({
-    x: pad + i * step,
-    y: H - pad - ((d.count / maxVal) * (H - pad * 2)),
-  }));
-
-  const pathD = pts
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
-    .join(" ");
-
-  const areaD =
-    `M ${pts[0].x} ${H - pad} ` +
-    pts.map((p) => `L ${p.x} ${p.y}`).join(" ") +
-    ` L ${pts[pts.length - 1].x} ${H - pad} Z`;
-
-  return (
-    <div className="w-full">
-      <svg
-        viewBox={`0 0 ${W} ${H + 20}`}
-        width="100%"
-        height={H + 20}
-        preserveAspectRatio="none"
-      >
-        {/* area fill */}
-        <path d={areaD} className="fill-primary/10" />
-        {/* line */}
-        <path
-          d={pathD}
-          className={colorClass}
-          strokeWidth="2.5"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        {/* dots */}
-        {pts.map((p, i) => (
-          <circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r="3.5"
-            className="fill-white stroke-primary"
-            strokeWidth="2"
-          />
-        ))}
-        {/* x-axis labels — show every 3rd */}
-        {data.map((d, i) => {
-          if (i % Math.ceil(data.length / 6) !== 0) return null;
-          return (
-            <text
-              key={i}
-              x={pts[i].x}
-              y={H + 16}
-              textAnchor="middle"
-              fontSize="9"
-              fill="#94a3b8"
-            >
-              {d.label}
-            </text>
-          );
-        })}
-      </svg>
+      <div className="mt-3 flex items-baseline gap-2">
+        <p className="text-[32px] font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50">
+          {value}
+        </p>
+        {live && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+            Live
+          </span>
+        )}
+      </div>
+      {sub && <p className="mt-2 text-xs font-medium leading-5 text-slate-500 dark:text-slate-400">{sub}</p>}
     </div>
   );
 }
 
-// ── Progress bar row ──────────────────────────────────────────────────────────
-function ProgressRow({ label, value, pct, max, colorClass = "bg-primary" }) {
+function StatStrip({ items }) {
+  return (
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-800 dark:shadow-none lg:grid-cols-4">
+      {items.map((it) => (
+        <div key={it.label} className="bg-white p-4 dark:bg-slate-900 sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            <span className={`material-symbols-outlined text-[16px] ${TONE_TEXT[it.tone] || ""}`}>{it.icon}</span>
+            {it.label}
+          </p>
+          <p className="mt-2 text-2xl font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50 sm:text-[28px]">
+            {it.value}
+          </p>
+          {it.sub && <p className="mt-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{it.sub}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Delta({ value, label = "vs prior 6 months" }) {
+  if (value == null) return null;
+  const up = value >= 0;
+  return (
+    <span className="inline-flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+      <span
+        className={`inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+          up
+            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+            : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300"
+        }`}
+      >
+        <span className="material-symbols-outlined text-[14px]">{up ? "trending_up" : "trending_down"}</span>
+        {up ? "+" : ""}
+        {value}%
+      </span>
+      {label}
+    </span>
+  );
+}
+
+function ProgressRow({ label, value, pct = 0, tone = "blue" }) {
   return (
     <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span className="font-medium text-slate-700 dark:text-slate-300 capitalize">
-          {label}
-        </span>
-        <span className="font-bold text-slate-900 dark:text-white tabular-nums">
+      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+        <span className="truncate font-semibold capitalize text-slate-700 dark:text-slate-300">{label}</span>
+        <span className="shrink-0 font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
           {fmtNum(value)}
-          <span className="text-slate-400 font-normal ml-1">({pct}%)</span>
+          <span className="ml-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">{pct}%</span>
         </span>
       </div>
-      <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
         <div
-          className={`h-full rounded-full transition-all duration-700 ${colorClass}`}
-          style={{ width: `${Math.min(pct, 100)}%` }}
+          className={`h-full rounded-full transition-all duration-700 ${TONE_BAR[tone] || TONE_BAR.blue}`}
+          style={{ width: `${Math.min(Number(pct) || 0, 100)}%` }}
         />
       </div>
     </div>
   );
 }
 
-// ── Status badge ──────────────────────────────────────────────────────────────
 function StatusBadge({ status }) {
-  const c = statusColors[status] || statusColors.upcoming;
+  const c = STATUS[status] || STATUS.upcoming;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${c.bg} ${c.text}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${c.cls}`}
     >
-      {status === "in_progress" && (
-        <span className={`size-1.5 rounded-full animate-pulse ${c.dot}`} />
-      )}
+      <span className={`size-1.5 rounded-full ${c.dot} ${status === "in_progress" ? "animate-pulse" : ""}`} />
       {c.label}
     </span>
   );
 }
 
-// ── Empty state ───────────────────────────────────────────────────────────────
 function EmptyState({ icon = "analytics", message = "No data available yet." }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-slate-400 gap-3">
-      <span className="material-symbols-outlined text-5xl">{icon}</span>
-      <p className="text-sm font-medium">{message}</p>
+    <div className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center">
+      <div className="flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+        <span className="material-symbols-outlined text-[24px]">{icon}</span>
+      </div>
+      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">{message}</p>
     </div>
   );
 }
 
-// ─── Full page skeleton ───────────────────────────────────────────────────────
+function DetailRow({ label, value, strong }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-2.5 text-sm last:border-0 dark:border-slate-800">
+      <span className="font-medium text-slate-600 dark:text-slate-400">{label}</span>
+      <span className={`font-extrabold tabular-nums ${strong || "text-slate-900 dark:text-slate-100"}`}>{value}</span>
+    </div>
+  );
+}
+
+// ─── Charts (responsive SVG, theme-aware, with hover tooltips) ────────────────
+function useWidth() {
+  const ref = useRef(null);
+  const [w, setW] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    setW(Math.floor(el.getBoundingClientRect().width));
+    const ro = new ResizeObserver(([e]) => setW(Math.floor(e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  return [ref, w];
+}
+
+function Tooltip({ x, y, width, title, value }) {
+  const left = Math.min(Math.max(x, 56), Math.max(width - 56, 56));
+  return (
+    <div
+      className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs shadow-lg dark:bg-slate-100"
+      style={{ left, top: Math.max(y - 10, 0) }}
+    >
+      <p className="font-medium text-slate-300 dark:text-slate-500">{title}</p>
+      <p className="font-extrabold text-white dark:text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function Axis({ ticks, m, innerW, y, width }) {
+  return (
+    <>
+      {ticks.map((t) => (
+        <g key={t}>
+          <line x1={m.l} x2={m.l + innerW} y1={y(t)} y2={y(t)} className="stroke-slate-100 dark:stroke-slate-800" />
+          <text
+            x={m.l - 8}
+            y={y(t) + 4}
+            textAnchor="end"
+            fontSize="11"
+            className="fill-slate-500 dark:fill-slate-400"
+          >
+            {fmtCompact(t)}
+          </text>
+        </g>
+      ))}
+    </>
+  );
+}
+
+function XLabels({ labels, xAt, innerW, y }) {
+  const n = labels.length;
+  const k = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(innerW / 72))));
+  return labels.map((l, i) => {
+    if (i % k !== 0) return null;
+    return (
+      <text
+        key={i}
+        x={xAt(i)}
+        y={y}
+        textAnchor={i === 0 ? "start" : i === n - 1 ? "end" : "middle"}
+        fontSize="11"
+        className="fill-slate-500 dark:fill-slate-400"
+      >
+        {l}
+      </text>
+    );
+  });
+}
+
+function LineChart({ data, height = 220, tone = "blue", unit = "" }) {
+  const [ref, width] = useWidth();
+  const [hover, setHover] = useState(null);
+  if (!data?.length) return null;
+
+  const t = CHART_TONE[tone];
+  const m = { t: 12, r: 16, b: 30, l: 40 };
+  const n = data.length;
+  const innerW = Math.max(width - m.l - m.r, 10);
+  const innerH = height - m.t - m.b;
+  const { step, max } = niceScale(Math.max(...data.map((d) => d.count), 1));
+  const ticks = [0, 1, 2, 3, 4].map((i) => i * step);
+  const y = (v) => m.t + innerH - (v / max) * innerH;
+  const xAt = (i) => m.l + (n === 1 ? innerW / 2 : (i * innerW) / (n - 1));
+  const pts = data.map((d, i) => ({ x: xAt(i), y: y(d.count) }));
+  const line = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
+  const area = `M ${pts[0].x} ${y(0)} ${pts.map((p) => `L ${p.x} ${p.y}`).join(" ")} L ${pts[n - 1].x} ${y(0)} Z`;
+
+  const onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = e.clientX - r.left;
+    setHover(n === 1 ? 0 : Math.min(n - 1, Math.max(0, Math.round((px / innerW) * (n - 1)))));
+  };
+
+  return (
+    <div ref={ref} className="relative w-full">
+      {width > 0 && (
+        <svg width={width} height={height} className="block" role="img">
+          <Axis ticks={ticks} m={m} innerW={innerW} y={y} width={width} />
+          <path d={area} className={t.area} />
+          <path d={line} fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={t.line} />
+          {hover != null && (
+            <line x1={pts[hover].x} x2={pts[hover].x} y1={m.t} y2={y(0)} className="stroke-slate-300 dark:stroke-slate-600" strokeDasharray="4 4" />
+          )}
+          {pts.map((p, i) =>
+            n <= 16 || i === hover ? (
+              <circle key={i} cx={p.x} cy={p.y} r={i === hover ? 5 : 3.5} strokeWidth="2" className={t.dot} />
+            ) : null
+          )}
+          <XLabels labels={data.map((d) => d.label)} xAt={xAt} innerW={innerW} y={height - 8} />
+          <rect
+            x={m.l}
+            y={m.t}
+            width={innerW}
+            height={innerH}
+            fill="transparent"
+            onPointerMove={onMove}
+            onPointerDown={onMove}
+            onPointerLeave={() => setHover(null)}
+          />
+        </svg>
+      )}
+      {hover != null && width > 0 && (
+        <Tooltip x={pts[hover].x} y={pts[hover].y} width={width} title={data[hover].label} value={`${fmtNum(data[hover].count)} ${unit}`.trim()} />
+      )}
+    </div>
+  );
+}
+
+function BarChart({ data, height = 220, tone = "blue", unit = "" }) {
+  const [ref, width] = useWidth();
+  const [hover, setHover] = useState(null);
+  if (!data?.length) return null;
+
+  const t = CHART_TONE[tone];
+  const m = { t: 12, r: 8, b: 30, l: 40 };
+  const n = data.length;
+  const innerW = Math.max(width - m.l - m.r, 10);
+  const innerH = height - m.t - m.b;
+  const { step, max } = niceScale(Math.max(...data.map((d) => d.count), 1));
+  const ticks = [0, 1, 2, 3, 4].map((i) => i * step);
+  const y = (v) => m.t + innerH - (v / max) * innerH;
+  const band = innerW / n;
+  const barW = Math.max(3, Math.min(band * 0.62, 40));
+  const xAt = (i) => m.l + band * i + band / 2;
+
+  return (
+    <div ref={ref} className="relative w-full">
+      {width > 0 && (
+        <svg width={width} height={height} className="block" role="img">
+          <Axis ticks={ticks} m={m} innerW={innerW} y={y} width={width} />
+          {data.map((d, i) => {
+            const h = Math.max(d.count > 0 ? 3 : 0, y(0) - y(d.count));
+            return (
+              <rect
+                key={i}
+                x={xAt(i) - barW / 2}
+                y={y(0) - h}
+                width={barW}
+                height={h}
+                rx={Math.min(4, barW / 2)}
+                className={t.bar}
+                style={{ opacity: hover == null || hover === i ? 1 : 0.4, transition: "opacity .15s" }}
+              />
+            );
+          })}
+          <XLabels labels={data.map((d) => d.label)} xAt={xAt} innerW={innerW} y={height - 8} />
+          {data.map((d, i) => (
+            <rect
+              key={i}
+              x={m.l + band * i}
+              y={m.t}
+              width={band}
+              height={innerH}
+              fill="transparent"
+              onPointerEnter={() => setHover(i)}
+              onPointerDown={() => setHover(i)}
+              onPointerLeave={() => setHover(null)}
+            />
+          ))}
+        </svg>
+      )}
+      {hover != null && width > 0 && (
+        <Tooltip x={xAt(hover)} y={y(data[hover].count)} width={width} title={data[hover].label} value={`${fmtNum(data[hover].count)} ${unit}`.trim()} />
+      )}
+    </div>
+  );
+}
+
+function Donut({ value = 0, label, size = 148, tone = "blue" }) {
+  const pct = Math.min(100, Math.max(0, Number(value) || 0));
+  const r = 42;
+  const c = 2 * Math.PI * r;
+  const stroke = {
+    blue: "stroke-blue-600 dark:stroke-blue-400",
+    emerald: "stroke-emerald-500",
+    violet: "stroke-violet-500",
+  }[tone];
+  return (
+    <div className="relative mx-auto" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90">
+        <circle cx="50" cy="50" r={r} fill="none" strokeWidth="10" className="stroke-slate-100 dark:stroke-slate-800" />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={`${(pct / 100) * c} ${c}`}
+          className={`${stroke} transition-all duration-700`}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[28px] font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50">
+          {pct}%
+        </span>
+        <span className="mt-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          {label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 function PageSkeleton() {
   return (
-    <div className="space-y-8 animate-pulse">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 h-28"
-          >
-            <Skeleton className="size-10 rounded-lg mb-3" />
-            <Skeleton className="h-3 w-24 mb-2" />
-            <Skeleton className="h-7 w-16" />
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className={`h-36 p-5 ${CARD}`}>
+            <Skeleton className="mb-4 h-3 w-24" />
+            <Skeleton className="h-8 w-20" />
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 h-64"
-          >
-            <Skeleton className="h-5 w-40 mb-4" />
-            <Skeleton className="h-40 w-full" />
-          </div>
-        ))}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className={`h-80 p-6 lg:col-span-2 ${CARD}`}>
+          <Skeleton className="mb-5 h-5 w-44" />
+          <Skeleton className="h-56 w-full" />
+        </div>
+        <div className={`h-80 p-6 ${CARD}`}>
+          <Skeleton className="mb-5 h-5 w-32" />
+          <Skeleton className="mx-auto size-36 rounded-full" />
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═════════════════════════════════════════════════════════════════════════════
 export default function OrganizationAnalyticsDashboards() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -346,7 +527,11 @@ export default function OrganizationAnalyticsDashboards() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [dateRange, setDateRange] = useState({ startDate: "", endDate: "" });
-  const [exportMsg, setExportMsg] = useState("");
+  const [toast, setToast] = useState("");
+  const [eventSearch, setEventSearch] = useState("");
+  const [eventFilter, setEventFilter] = useState("all");
+  const loadedRef = useRef(false);
+  const toastTimer = useRef(null);
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   const fetchData = useCallback(
@@ -361,9 +546,9 @@ export default function OrganizationAnalyticsDashboards() {
         if (dateRange.endDate) filters.endDate = dateRange.endDate;
 
         const res = await getFullAnalytics(filters);
-
         if (res.success) {
           setData(res);
+          loadedRef.current = true;
           setLastUpdated(new Date());
         } else {
           setError(res.message || "Failed to load analytics");
@@ -378,42 +563,51 @@ export default function OrganizationAnalyticsDashboards() {
     [dateRange]
   );
 
+  // First load shows the skeleton; later filter changes refresh quietly
   useEffect(() => {
-    fetchData();
+    fetchData(loadedRef.current);
   }, [fetchData]);
 
   // ── auto-refresh KPIs every 60s ───────────────────────────────────────────
+  const hasData = !!data;
   useEffect(() => {
+    if (!hasData) return undefined;
     const interval = setInterval(async () => {
-      if (!data) return;
-      const res = await getKPISummary();
-      if (res.success) {
-        setData((prev) =>
-          prev ? { ...prev, kpiSummary: res.kpiSummary } : prev
-        );
-        setLastUpdated(new Date());
+      try {
+        const res = await getKPISummary();
+        if (res.success) {
+          setData((prev) => (prev ? { ...prev, kpiSummary: res.kpiSummary } : prev));
+          setLastUpdated(new Date());
+        }
+      } catch (_) {
+        // silent
       }
     }, 60000);
     return () => clearInterval(interval);
-  }, [data]);
+  }, [hasData]);
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  // ── date presets ───────────────────────────────────────────────────────────
+  const activePreset = (() => {
+    if (!dateRange.startDate && !dateRange.endDate) return "all";
+    const today = toISO(new Date());
+    const hit = PRESETS.find(
+      (p) => p.days && dateRange.endDate === today && dateRange.startDate === daysAgoISO(p.days)
+    );
+    return hit ? hit.key : "custom";
+  })();
+
+  const applyPreset = (p) =>
+    setDateRange(p.days ? { startDate: daysAgoISO(p.days), endDate: toISO(new Date()) } : { startDate: "", endDate: "" });
 
   // ── CSV export ─────────────────────────────────────────────────────────────
   const handleExportCSV = () => {
     if (!data?.topEvents?.length) return;
-    const headers = [
-      "Event Name",
-      "Venue",
-      "Start Date",
-      "Status",
-      "Guests",
-      "Checked In",
-      "Check-in Rate",
-      "Services",
-      "Transports",
-    ];
+    const headers = ["Event Name", "Venue", "Start Date", "Status", "Guests", "Checked In", "Check-in Rate", "Services", "Transports"];
     const rows = data.topEvents.map((ev) => [
-      `"${ev.name}"`,
-      `"${ev.venue || ""}"`,
+      ev.name,
+      ev.venue || "",
       fmtDate(ev.startDate),
       ev.status,
       ev.guests,
@@ -422,7 +616,7 @@ export default function OrganizationAnalyticsDashboards() {
       ev.services,
       ev.transports,
     ]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+    const csv = [headers, ...rows].map((r) => r.map(csvCell).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -430,11 +624,11 @@ export default function OrganizationAnalyticsDashboards() {
     a.download = `analytics-export-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    setExportMsg("CSV exported successfully!");
-    setTimeout(() => setExportMsg(""), 3000);
+    setToast("CSV exported successfully");
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 3000);
   };
 
-  // ── tabs config ────────────────────────────────────────────────────────────
   const tabs = [
     { key: "overview", icon: "dashboard", label: "Overview" },
     { key: "guests", icon: "group", label: "Guests" },
@@ -446,50 +640,42 @@ export default function OrganizationAnalyticsDashboards() {
   // ── LOADING ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="p-6 max-w-[1440px] mx-auto">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
-          <span className="text-slate-500 font-medium">
-            Loading organization analytics…
-          </span>
+      <PageShell>
+        <div className="mb-8 space-y-3">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-4 w-96 max-w-full" />
         </div>
         <PageSkeleton />
-      </div>
+      </PageShell>
     );
   }
 
-  // ── ERROR ──────────────────────────────────────────────────────────────────
-  if (error) {
+  // ── ERROR (nothing loaded yet) ─────────────────────────────────────────────
+  if (error && !data) {
     return (
-      <div className="p-6 max-w-[1440px] mx-auto">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-xl p-8 flex flex-col items-center text-center gap-4">
-          <span className="material-symbols-outlined text-5xl text-red-400">
-            error
-          </span>
-          <div>
-            <h3 className="text-lg font-bold text-red-900 dark:text-red-200">
-              Failed to load analytics
-            </h3>
-            <p className="text-red-700 dark:text-red-300 text-sm mt-1">
-              {error}
-            </p>
+      <PageShell>
+        <div className="mx-auto mt-10 max-w-md rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm dark:border-red-500/30 dark:bg-slate-900">
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+            <span className="material-symbols-outlined text-[25px]">error</span>
           </div>
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">Failed to load analytics</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{error}</p>
           <button
             onClick={() => fetchData()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
+            className="mt-6 inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
           >
-            <span className="material-symbols-outlined text-lg">refresh</span>
+            <span className="material-symbols-outlined text-[18px]">refresh</span>
             Retry
           </button>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   if (!data) return null;
 
   const {
-    kpiSummary: kpi,
     monthlyCheckIn,
     guestRegistration,
     serviceBreakdown,
@@ -500,777 +686,586 @@ export default function OrganizationAnalyticsDashboards() {
     topEvents,
     vipStats,
   } = data;
+  const kpi = data.kpiSummary || {};
+  const pending = Math.max((kpi.totalGuests || 0) - (kpi.checkedInGuests || 0), 0);
+  const checkInRate = kpi.checkInRate ?? 0;
+
+  const q = eventSearch.trim().toLowerCase();
+  const visibleEvents = (topEvents || []).filter(
+    (ev) =>
+      (!q || ev.name?.toLowerCase().includes(q) || (ev.venue || "").toLowerCase().includes(q)) &&
+      (eventFilter === "all" || ev.status === eventFilter)
+  );
+
+  const inputCls =
+    "h-9 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-semibold text-slate-800 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:focus:border-blue-500/60 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 dark:[color-scheme:dark]";
 
   // ── RENDER ─────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-[1440px] mx-auto space-y-6 pb-12 pt-4 px-4">
+    <PageShell>
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          className="fixed bottom-4 left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6"
+        >
+          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          {toast}
+        </div>
+      )}
 
       {/* ── Header ── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5">
-          <div>
-            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-              Performance Overview
-            </p>
-            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
-              Organization Analytics
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              Cross-event performance metrics across all your managed events.
-              {lastUpdated && (
-                <span className="ml-2 text-slate-400">
-                  Last updated:{" "}
-                  {lastUpdated.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              )}
-            </p>
-          </div>
+      <header className="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">
+            Performance overview
+          </p>
+          <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50 md:text-[32px]">
+            Organization analytics
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Cross-event performance across all your managed events.
+          </p>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Date range filters */}
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2">
-              <span className="material-symbols-outlined text-slate-400 text-lg">
-                calendar_month
-              </span>
-              <input
-                type="date"
-                value={dateRange.startDate}
-                onChange={(e) =>
-                  setDateRange((p) => ({ ...p, startDate: e.target.value }))
-                }
-                className="text-xs bg-transparent outline-none text-slate-700 dark:text-slate-300"
-              />
-              <span className="text-slate-400 text-xs">→</span>
-              <input
-                type="date"
-                value={dateRange.endDate}
-                onChange={(e) =>
-                  setDateRange((p) => ({ ...p, endDate: e.target.value }))
-                }
-                className="text-xs bg-transparent outline-none text-slate-700 dark:text-slate-300"
-              />
-            </div>
-
-            <button
-              onClick={() => fetchData(true)}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <span
-                className={`material-symbols-outlined text-lg ${
-                  refreshing ? "animate-spin" : ""
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+            {PRESETS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => applyPreset(p)}
+                className={`rounded-md px-3 py-1.5 text-[11px] font-bold transition ${
+                  activePreset === p.key
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
                 }`}
               >
-                refresh
-              </span>
-              {refreshing ? "Refreshing…" : "Refresh"}
-            </button>
-
-            <div className="flex">
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-l-lg text-sm font-bold hover:bg-primary-600 transition-colors"
-              >
-                <span className="material-symbols-outlined text-lg">
-                  download
-                </span>
-                Export CSV
+                {p.label}
               </button>
-            </div>
+            ))}
           </div>
-        </div>
 
-        {/* Export success msg */}
-        {exportMsg && (
-          <div className="mt-3 flex items-center gap-2 text-emerald-700 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-900/30 rounded-lg px-4 py-2 text-sm font-medium">
-            <span className="material-symbols-outlined text-base">
-              check_circle
-            </span>
-            {exportMsg}
+          <div className="flex items-center gap-1.5">
+            <input
+              type="date"
+              aria-label="Start date"
+              value={dateRange.startDate}
+              max={dateRange.endDate || undefined}
+              onChange={(e) => setDateRange((p) => ({ ...p, startDate: e.target.value }))}
+              className={inputCls}
+            />
+            <span className="text-xs font-bold text-slate-400">–</span>
+            <input
+              type="date"
+              aria-label="End date"
+              value={dateRange.endDate}
+              min={dateRange.startDate || undefined}
+              onChange={(e) => setDateRange((p) => ({ ...p, endDate: e.target.value }))}
+              className={inputCls}
+            />
           </div>
-        )}
-      </div>
+
+          <button
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+            title={lastUpdated ? `Updated ${lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Refresh"}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <span className={`material-symbols-outlined text-[18px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
+            {refreshing ? "Refreshing…" : lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Refresh"}
+          </button>
+
+          <button
+            onClick={handleExportCSV}
+            disabled={!topEvents?.length}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+          >
+            <span className="material-symbols-outlined text-[18px]">download</span>
+            Export CSV
+          </button>
+        </div>
+      </header>
+
+      {/* Non-blocking error */}
+      {error && (
+        <div className="mb-5 flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="material-symbols-outlined text-[19px]">warning</span>
+            <span className="truncate text-sm font-medium">{error}</span>
+          </div>
+          <button onClick={() => fetchData(true)} className="shrink-0 text-xs font-bold underline underline-offset-2 hover:no-underline">
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* ── Tabs ── */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
-        {tabs.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all flex-1 justify-center ${
-              activeTab === t.key
-                ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              {t.icon}
-            </span>
-            <span className="hidden md:inline">{t.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          OVERVIEW TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-
-          {/* KPI Row 1 — Events */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard
-              icon="calendar_today"
-              label="Total Events"
-              value={fmtNum(kpi.totalEvents)}
-              sub="All time"
-              accent="primary"
-            />
-            <KPICard
-              icon="event_available"
-              label="Active Events"
-              value={fmtNum(kpi.activeEvents)}
-              sub="Currently running"
-              accent="green"
-              pulse={kpi.activeEvents > 0}
-            />
-            <KPICard
-              icon="upcoming"
-              label="Upcoming"
-              value={fmtNum(kpi.upcomingEvents)}
-              accent="primary"
-            />
-            <KPICard
-              icon="event_busy"
-              label="Completed"
-              value={fmtNum(kpi.completedEvents)}
-              accent="slate"
-            />
-          </div>
-
-          {/* KPI Row 2 — Operational */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard
-              icon="group"
-              label="Total Guests"
-              value={fmtNum(kpi.totalGuests)}
-              sub={`${kpi.checkInRate}% checked in`}
-              accent="indigo"
-            />
-            <KPICard
-              icon="how_to_reg"
-              label="Checked In"
-              value={fmtNum(kpi.checkedInGuests)}
-              sub={`${kpi.totalGuests - kpi.checkedInGuests} pending`}
-              accent="green"
-            />
-            <KPICard
-              icon="pending_actions"
-              label="Open Services"
-              value={fmtNum(kpi.openServices)}
-              sub={`${kpi.serviceResolutionRate}% resolved`}
-              accent={kpi.openServices > 0 ? "amber" : "green"}
-            />
-            <KPICard
-              icon="badge"
-              label="Active Staff"
-              value={fmtNum(kpi.activeStaff)}
-              accent="purple"
-            />
-          </div>
-
-          {/* Charts Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            {/* Monthly check-in trend */}
-            <SectionCard
-              title="Guest Check-in Volume"
-              subtitle="Monthly comparison of arrival traffic"
-              icon="show_chart"
+      <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-800" aria-label="Analytics sections">
+        {tabs.map((t) => {
+          const active = activeTab === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              aria-current={active ? "page" : undefined}
+              className={`-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-4 py-3 text-sm font-bold transition ${
+                active
+                  ? "border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-300"
+                  : "border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+              }`}
             >
-              {monthlyCheckIn?.data?.length ? (
-                <>
-                  <LineChart data={monthlyCheckIn.data} height={160} />
-                  {monthlyCheckIn.yoyChange != null && (
-                    <p className="text-xs text-slate-500 mt-2">
-                      vs prior 6 months:{" "}
-                      <span
-                        className={`font-bold ${
-                          monthlyCheckIn.yoyChange >= 0
-                            ? "text-emerald-600"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {monthlyCheckIn.yoyChange >= 0 ? "+" : ""}
-                        {monthlyCheckIn.yoyChange}%
-                      </span>
-                    </p>
-                  )}
-                </>
-              ) : (
-                <EmptyState icon="show_chart" message="No check-in data yet." />
-              )}
-            </SectionCard>
+              <span className="material-symbols-outlined text-[19px]">{t.icon}</span>
+              {t.label}
+            </button>
+          );
+        })}
+      </nav>
 
-            {/* Guest registration trend */}
-            <SectionCard
-              title="Guest Registration Trend"
-              subtitle="New registrations per month"
-              icon="person_add"
-            >
-              {guestRegistration?.data?.length ? (
-                <>
-                  <BarChart
-                    data={guestRegistration.data}
-                    colorClass="fill-indigo-500"
-                    height={160}
-                  />
-                  {guestRegistration.yoyChange != null && (
-                    <p className="text-xs text-slate-500 mt-2">
-                      vs prior 6 months:{" "}
-                      <span
-                        className={`font-bold ${
-                          guestRegistration.yoyChange >= 0
-                            ? "text-emerald-600"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {guestRegistration.yoyChange >= 0 ? "+" : ""}
-                        {guestRegistration.yoyChange}%
-                      </span>
-                    </p>
-                  )}
-                </>
-              ) : (
-                <EmptyState
-                  icon="person_add"
-                  message="No registration data yet."
-                />
-              )}
-            </SectionCard>
-          </div>
-
-          {/* Service + VIP summary */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            {/* Service breakdown */}
-            <SectionCard
-              title="Service Requests"
-              subtitle="Breakdown by category"
-              icon="room_service"
-            >
-              {serviceBreakdown?.byType?.length ? (
-                <div className="space-y-3">
-                  {serviceBreakdown.byType.map((item) => (
-                    <ProgressRow
-                      key={item.type}
-                      label={item.label}
-                      value={item.count}
-                      pct={item.pct}
-                      colorClass="bg-primary"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <EmptyState icon="room_service" message="No service requests." />
-              )}
-            </SectionCard>
-
-            {/* Room occupancy */}
-            <SectionCard
-              title="Room Occupancy"
-              subtitle="Overall utilization"
-              icon="meeting_room"
-            >
-              <div className="flex flex-col items-center py-4 mb-4">
-                <div className="relative size-28 flex items-center justify-center">
-                  <svg viewBox="0 0 100 100" className="absolute inset-0 size-full -rotate-90">
-                    <circle
-                      cx="50" cy="50" r="40"
-                      fill="transparent"
-                      stroke="#e2e8f0"
-                      strokeWidth="12"
-                    />
-                    <circle
-                      cx="50" cy="50" r="40"
-                      fill="transparent"
-                      stroke="#2463eb"
-                      strokeWidth="12"
-                      strokeDasharray={`${(roomOccupancy?.overallOccupancy / 100) * 251.2} 251.2`}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="flex flex-col items-center z-10">
-                    <span className="text-2xl font-black text-primary">
-                      {roomOccupancy?.overallOccupancy || 0}%
-                    </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                      Occupied
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="space-y-2 text-sm">
-                {[
-                  { label: "Total Rooms", val: roomOccupancy?.totalRooms },
-                  { label: "Occupied", val: roomOccupancy?.occupiedRooms },
-                  { label: "Available", val: roomOccupancy?.availableRooms },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex justify-between border-b border-slate-100 dark:border-slate-800 pb-1"
-                  >
-                    <span className="text-slate-500">{item.label}</span>
-                    <span className="font-bold text-slate-900 dark:text-white">
-                      {fmtNum(item.val)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-
-            {/* VIP analytics */}
-            <SectionCard title="VIP Analytics" subtitle="High-value guest tracking" icon="star">
-              <div className="space-y-4">
-                {[
-                  {
-                    label: "Total VIP Guests",
-                    value: fmtNum(vipStats?.totalVIP),
-                    icon: "star",
-                    color: "text-amber-500",
-                  },
-                  {
-                    label: "VIP Checked In",
-                    value: fmtNum(vipStats?.checkedInVIP),
-                    icon: "how_to_reg",
-                    color: "text-emerald-600",
-                  },
-                  {
-                    label: "VIP Rate",
-                    value: `${vipStats?.vipRate || 0}%`,
-                    icon: "percent",
-                    color: "text-primary",
-                  },
-                  {
-                    label: "VIP Check-in Rate",
-                    value: `${vipStats?.vipCheckInRate || 0}%`,
-                    icon: "verified",
-                    color: "text-purple-600",
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`material-symbols-outlined text-base ${item.color}`}
-                      >
-                        {item.icon}
-                      </span>
-                      <span className="text-sm text-slate-600 dark:text-slate-400">
-                        {item.label}
-                      </span>
-                    </div>
-                    <span className={`text-sm font-black ${item.color}`}>
-                      {item.value}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </SectionCard>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          GUESTS TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "guests" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard icon="group" label="Total Guests" value={fmtNum(kpi.totalGuests)} accent="primary" />
-            <KPICard icon="how_to_reg" label="Checked In" value={fmtNum(kpi.checkedInGuests)} sub={`${kpi.checkInRate}% rate`} accent="green" />
-            <KPICard icon="star" label="VIP Guests" value={fmtNum(vipStats?.totalVIP)} sub={`${vipStats?.vipRate || 0}% of total`} accent="amber" />
-            <KPICard icon="verified" label="VIP Check-in" value={`${vipStats?.vipCheckInRate || 0}%`} accent="purple" />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SectionCard title="Monthly Check-in Trend" subtitle="Arrivals over the past 12 months" icon="trending_up">
-              {monthlyCheckIn?.data?.length ? (
-                <LineChart data={monthlyCheckIn.data} height={200} />
-              ) : (
-                <EmptyState icon="trending_up" message="No check-in history." />
-              )}
-            </SectionCard>
-
-            <SectionCard title="Monthly Registrations" subtitle="New guests registered per month" icon="person_add">
-              {guestRegistration?.data?.length ? (
-                <BarChart data={guestRegistration.data} colorClass="fill-indigo-500" height={200} />
-              ) : (
-                <EmptyState icon="person_add" message="No registration history." />
-              )}
-            </SectionCard>
-          </div>
-
-          <SectionCard title="Check-in Summary" subtitle="Overall guest arrival status" icon="how_to_reg">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <ProgressRow label="Checked In" value={kpi.checkedInGuests} pct={kpi.checkInRate} colorClass="bg-emerald-500" />
-                <ProgressRow label="Not Yet Arrived" value={kpi.totalGuests - kpi.checkedInGuests} pct={100 - kpi.checkInRate} colorClass="bg-slate-300 dark:bg-slate-600" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  { label: "Total Guests", value: kpi.totalGuests, color: "text-slate-900 dark:text-white" },
-                  { label: "Checked In", value: kpi.checkedInGuests, color: "text-emerald-600" },
-                  { label: "VIP Guests", value: vipStats?.totalVIP, color: "text-amber-500" },
-                  { label: "Check-in Rate", value: `${kpi.checkInRate}%`, color: "text-primary" },
-                ].map((item) => (
-                  <div key={item.label} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 text-center">
-                    <p className={`text-2xl font-black ${item.color}`}>{fmtNum(item.value)}</p>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">{item.label}</p>
-                  </div>
-                ))}
-              </div>
+      <div aria-busy={refreshing} className={`transition-opacity ${refreshing ? "opacity-60" : ""}`}>
+        {/* ═════════ OVERVIEW ═════════ */}
+        {activeTab === "overview" && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard
+                icon="calendar_today"
+                label="Total events"
+                value={fmtNum(kpi.totalEvents)}
+                sub={`${fmtNum(kpi.activeEvents)} live · ${fmtNum(kpi.upcomingEvents)} upcoming · ${fmtNum(kpi.completedEvents)} completed`}
+                tone="blue"
+                live={kpi.activeEvents > 0}
+              />
+              <StatCard
+                icon="group"
+                label="Total guests"
+                value={fmtNum(kpi.totalGuests)}
+                sub={`${checkInRate}% checked in · ${fmtNum(pending)} pending`}
+                tone="indigo"
+              />
+              <StatCard
+                icon="pending_actions"
+                label="Open services"
+                value={fmtNum(kpi.openServices)}
+                sub={`${kpi.serviceResolutionRate ?? 0}% resolution rate`}
+                tone={kpi.openServices > 0 ? "amber" : "emerald"}
+              />
+              <StatCard icon="badge" label="Active staff" value={fmtNum(kpi.activeStaff)} sub="Across all events" tone="violet" />
             </div>
-          </SectionCard>
-        </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          SERVICES TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "services" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard icon="receipt_long" label="Total Requests" value={fmtNum(serviceBreakdown?.totalRequests)} accent="primary" />
-            <KPICard icon="pending_actions" label="Open / In Progress" value={fmtNum(kpi.openServices)} accent="amber" />
-            <KPICard icon="check_circle" label="Completed" value={fmtNum(kpi.completedServices)} accent="green" />
-            <KPICard icon="percent" label="Resolution Rate" value={`${kpi.serviceResolutionRate}%`} accent="purple" />
-          </div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <Card
+                title="Guest check-in volume"
+                subtitle="Arrivals per month"
+                icon="show_chart"
+                className="lg:col-span-2"
+                action={<Delta value={monthlyCheckIn?.yoyChange} />}
+              >
+                {monthlyCheckIn?.data?.length ? (
+                  <LineChart data={monthlyCheckIn.data} height={240} unit="check-ins" />
+                ) : (
+                  <EmptyState icon="show_chart" message="No check-in data yet." />
+                )}
+              </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <SectionCard title="By Request Type" subtitle="Volume per service category" icon="category">
-              {serviceBreakdown?.byType?.length ? (
-                <div className="space-y-3">
-                  {serviceBreakdown.byType.map((item) => (
-                    <ProgressRow key={item.type} label={item.label} value={item.count} pct={item.pct} colorClass="bg-primary" />
-                  ))}
+              <Card title="Guest arrival" subtitle="Checked in vs pending" icon="how_to_reg">
+                <Donut value={checkInRate} label="Checked in" tone="emerald" />
+                <div className="mt-5">
+                  <DetailRow label="Checked in" value={fmtNum(kpi.checkedInGuests)} strong="text-emerald-700 dark:text-emerald-300" />
+                  <DetailRow label="Pending" value={fmtNum(pending)} />
+                  <DetailRow label="VIP guests" value={fmtNum(vipStats?.totalVIP)} strong="text-amber-700 dark:text-amber-300" />
                 </div>
-              ) : (
-                <EmptyState icon="category" message="No service data." />
-              )}
-            </SectionCard>
+              </Card>
+            </div>
 
-            <SectionCard title="By Status" subtitle="Current request pipeline" icon="pip">
-              {serviceBreakdown?.byStatus?.length ? (
-                <div className="space-y-3">
-                  {serviceBreakdown.byStatus.map((item) => {
-                    const colorMap = {
-                      open: "bg-amber-400",
-                      in_progress: "bg-primary",
-                      completed: "bg-emerald-500",
-                      cancelled: "bg-slate-300",
-                    };
-                    return (
-                      <ProgressRow
-                        key={item.status}
-                        label={item.status.replace("_", " ")}
-                        value={item.count}
-                        pct={item.pct}
-                        colorClass={colorMap[item.status] || "bg-slate-400"}
-                      />
-                    );
-                  })}
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <Card
+                title="Guest registrations"
+                subtitle="New registrations per month"
+                icon="person_add"
+                className="lg:col-span-2"
+                action={<Delta value={guestRegistration?.yoyChange} />}
+              >
+                {guestRegistration?.data?.length ? (
+                  <BarChart data={guestRegistration.data} tone="indigo" height={240} unit="registrations" />
+                ) : (
+                  <EmptyState icon="person_add" message="No registration data yet." />
+                )}
+              </Card>
+
+              <Card title="Room occupancy" subtitle="Overall utilization" icon="meeting_room">
+                <Donut value={roomOccupancy?.overallOccupancy || 0} label="Occupied" tone="blue" />
+                <div className="mt-5">
+                  <DetailRow label="Total rooms" value={fmtNum(roomOccupancy?.totalRooms)} />
+                  <DetailRow label="Occupied" value={fmtNum(roomOccupancy?.occupiedRooms)} />
+                  <DetailRow label="Available" value={fmtNum(roomOccupancy?.availableRooms)} />
                 </div>
-              ) : (
-                <EmptyState icon="pip" message="No status data." />
-              )}
-            </SectionCard>
+              </Card>
+            </div>
 
-            <SectionCard title="By Urgency" subtitle="Priority distribution" icon="priority_high">
-              {serviceBreakdown?.byUrgency?.length ? (
-                <div className="space-y-3">
-                  {serviceBreakdown.byUrgency.map((item) => {
-                    const colorMap = {
-                      emergency: "bg-red-600",
-                      high: "bg-red-400",
-                      medium: "bg-amber-400",
-                      low: "bg-emerald-400",
-                    };
-                    return (
-                      <ProgressRow
-                        key={item.urgency}
-                        label={item.urgency}
-                        value={item.count}
-                        pct={item.pct}
-                        colorClass={colorMap[item.urgency] || "bg-slate-400"}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <EmptyState icon="priority_high" message="No urgency data." />
-              )}
-            </SectionCard>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <Card title="Service requests" subtitle="Breakdown by category" icon="room_service">
+                {serviceBreakdown?.byType?.length ? (
+                  <div className="space-y-4">
+                    {serviceBreakdown.byType.map((item) => (
+                      <ProgressRow key={item.type} label={item.label} value={item.count} pct={item.pct} tone="blue" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState icon="room_service" message="No service requests." />
+                )}
+              </Card>
 
-            <SectionCard title="Activity Log (30 Days)" subtitle="Daily operational events" icon="timeline">
-              {activityStats?.dailyTrend?.length ? (
-                <BarChart data={activityStats.dailyTrend} colorClass="fill-primary" height={180} />
-              ) : (
-                <EmptyState icon="timeline" message="No activity logs." />
-              )}
-            </SectionCard>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          OPERATIONS TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "operations" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard icon="meeting_room" label="Total Rooms" value={fmtNum(roomOccupancy?.totalRooms)} sub={`${roomOccupancy?.overallOccupancy || 0}% occupied`} accent="purple" />
-            <KPICard icon="local_shipping" label="Total Transports" value={fmtNum(transportStats?.totalTransports)} sub={`${transportStats?.completionRate || 0}% complete`} accent="indigo" />
-            <KPICard icon="badge" label="Total Staff" value={fmtNum(teamStats?.total)} sub={`${teamStats?.activeRate || 0}% active`} accent="green" />
-            <KPICard icon="history" label="Activity Logs" value={fmtNum(activityStats?.total)} accent="primary" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            {/* Transport status */}
-            <SectionCard title="Transport Status" subtitle="Fleet breakdown" icon="local_shipping">
-              {transportStats?.byStatus?.length ? (
-                <div className="space-y-3">
-                  {transportStats.byStatus.map((item) => {
-                    const colorMap = {
-                      scheduled: "bg-primary",
-                      in_transit: "bg-amber-400",
-                      arrived: "bg-emerald-500",
-                      cancelled: "bg-slate-300",
-                    };
-                    return (
-                      <ProgressRow
-                        key={item.status}
-                        label={item.status.replace("_", " ")}
-                        value={item.count}
-                        pct={item.pct}
-                        colorClass={colorMap[item.status] || "bg-slate-400"}
-                      />
-                    );
-                  })}
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-sm">
-                    <span className="text-slate-500">Today Scheduled</span>
-                    <span className="font-bold text-primary">{fmtNum(transportStats.todayCount)}</span>
+              <Card title="VIP analytics" subtitle="High-value guest tracking" icon="star">
+                <div className="mb-5 grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-amber-50 p-4 dark:bg-amber-500/10">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-amber-800 dark:text-amber-300">VIP guests</p>
+                    <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-amber-900 dark:text-amber-200">{fmtNum(vipStats?.totalVIP)}</p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 p-4 dark:bg-emerald-500/10">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-800 dark:text-emerald-300">Checked in</p>
+                    <p className="mt-1.5 text-2xl font-extrabold tabular-nums text-emerald-900 dark:text-emerald-200">{fmtNum(vipStats?.checkedInVIP)}</p>
                   </div>
                 </div>
-              ) : (
-                <EmptyState icon="local_shipping" message="No transport data." />
-              )}
-            </SectionCard>
-
-            {/* Team distribution */}
-            <SectionCard title="Team Roles" subtitle="Top role distribution" icon="groups">
-              {teamStats?.byRole?.length ? (
-                <div className="space-y-3">
-                  {teamStats.byRole.map((item) => (
-                    <ProgressRow key={item.role} label={item.role} value={item.count} pct={item.pct} colorClass="bg-purple-500" />
-                  ))}
+                <div className="space-y-4">
+                  <ProgressRow label="VIP share of guests" value={vipStats?.totalVIP} pct={vipStats?.vipRate || 0} tone="amber" />
+                  <ProgressRow label="VIP check-in rate" value={vipStats?.checkedInVIP} pct={vipStats?.vipCheckInRate || 0} tone="emerald" />
                 </div>
-              ) : (
-                <EmptyState icon="groups" message="No team data." />
-              )}
-            </SectionCard>
+              </Card>
+            </div>
+          </div>
+        )}
 
-            {/* Activity by type */}
-            <SectionCard title="Activity by Type" subtitle="Log category breakdown" icon="timeline">
-              {activityStats?.byType?.length ? (
-                <div className="space-y-3">
-                  {activityStats.byType.map((item) => {
-                    const total = activityStats.total || 1;
-                    return (
+        {/* ═════════ GUESTS ═════════ */}
+        {activeTab === "guests" && (
+          <div className="space-y-5">
+            <StatStrip
+              items={[
+                { icon: "group", label: "Total guests", value: fmtNum(kpi.totalGuests), tone: "blue" },
+                { icon: "how_to_reg", label: "Checked in", value: fmtNum(kpi.checkedInGuests), sub: `${checkInRate}% rate`, tone: "emerald" },
+                { icon: "star", label: "VIP guests", value: fmtNum(vipStats?.totalVIP), sub: `${vipStats?.vipRate || 0}% of total`, tone: "amber" },
+                { icon: "verified", label: "VIP check-in", value: `${vipStats?.vipCheckInRate || 0}%`, tone: "violet" },
+              ]}
+            />
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <Card title="Monthly check-in trend" subtitle="Arrivals over time" icon="trending_up" action={<Delta value={monthlyCheckIn?.yoyChange} />}>
+                {monthlyCheckIn?.data?.length ? (
+                  <LineChart data={monthlyCheckIn.data} height={240} unit="check-ins" />
+                ) : (
+                  <EmptyState icon="trending_up" message="No check-in history." />
+                )}
+              </Card>
+              <Card title="Monthly registrations" subtitle="New guests registered per month" icon="person_add" action={<Delta value={guestRegistration?.yoyChange} />}>
+                {guestRegistration?.data?.length ? (
+                  <BarChart data={guestRegistration.data} tone="indigo" height={240} unit="registrations" />
+                ) : (
+                  <EmptyState icon="person_add" message="No registration history." />
+                )}
+              </Card>
+            </div>
+
+            <Card title="Check-in summary" subtitle="Overall guest arrival status" icon="how_to_reg">
+              <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-3">
+                <Donut value={checkInRate} label="Checked in" tone="emerald" />
+                <div className="space-y-5 md:col-span-2">
+                  <ProgressRow label="Checked in" value={kpi.checkedInGuests} pct={checkInRate} tone="emerald" />
+                  <ProgressRow label="Not yet arrived" value={pending} pct={Math.max(0, 100 - checkInRate)} tone="slate" />
+                  <ProgressRow label="VIP checked in" value={vipStats?.checkedInVIP} pct={vipStats?.vipCheckInRate || 0} tone="amber" />
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ═════════ SERVICES ═════════ */}
+        {activeTab === "services" && (
+          <div className="space-y-5">
+            <StatStrip
+              items={[
+                { icon: "receipt_long", label: "Total requests", value: fmtNum(serviceBreakdown?.totalRequests), tone: "blue" },
+                { icon: "pending_actions", label: "Open / in progress", value: fmtNum(kpi.openServices), tone: "amber" },
+                { icon: "check_circle", label: "Completed", value: fmtNum(kpi.completedServices), tone: "emerald" },
+                { icon: "percent", label: "Resolution rate", value: `${kpi.serviceResolutionRate ?? 0}%`, tone: "violet" },
+              ]}
+            />
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <Card title="By request type" subtitle="Volume per service category" icon="category">
+                {serviceBreakdown?.byType?.length ? (
+                  <div className="space-y-4">
+                    {serviceBreakdown.byType.map((item) => (
+                      <ProgressRow key={item.type} label={item.label} value={item.count} pct={item.pct} tone="blue" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState icon="category" message="No service data." />
+                )}
+              </Card>
+
+              <Card title="By status" subtitle="Current request pipeline" icon="pip">
+                {serviceBreakdown?.byStatus?.length ? (
+                  <div className="space-y-4">
+                    {serviceBreakdown.byStatus.map((item) => {
+                      const tone = { open: "amber", in_progress: "blue", completed: "emerald", cancelled: "slate" }[item.status] || "slate";
+                      return (
+                        <ProgressRow key={item.status} label={item.status.replace(/_/g, " ")} value={item.count} pct={item.pct} tone={tone} />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState icon="pip" message="No status data." />
+                )}
+              </Card>
+
+              <Card title="By urgency" subtitle="Priority distribution" icon="priority_high">
+                {serviceBreakdown?.byUrgency?.length ? (
+                  <div className="space-y-4">
+                    {serviceBreakdown.byUrgency.map((item) => {
+                      const tone = { emergency: "red", high: "orange", medium: "amber", low: "emerald" }[item.urgency] || "slate";
+                      return <ProgressRow key={item.urgency} label={item.urgency} value={item.count} pct={item.pct} tone={tone} />;
+                    })}
+                  </div>
+                ) : (
+                  <EmptyState icon="priority_high" message="No urgency data." />
+                )}
+              </Card>
+
+              <Card title="Activity log (30 days)" subtitle="Daily operational events" icon="timeline">
+                {activityStats?.dailyTrend?.length ? (
+                  <BarChart data={activityStats.dailyTrend} height={220} unit="events" />
+                ) : (
+                  <EmptyState icon="timeline" message="No activity logs." />
+                )}
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* ═════════ OPERATIONS ═════════ */}
+        {activeTab === "operations" && (
+          <div className="space-y-5">
+            <StatStrip
+              items={[
+                { icon: "meeting_room", label: "Total rooms", value: fmtNum(roomOccupancy?.totalRooms), sub: `${roomOccupancy?.overallOccupancy || 0}% occupied`, tone: "violet" },
+                { icon: "local_shipping", label: "Transports", value: fmtNum(transportStats?.totalTransports), sub: `${transportStats?.completionRate || 0}% complete`, tone: "blue" },
+                { icon: "badge", label: "Total staff", value: fmtNum(teamStats?.total), sub: `${teamStats?.activeRate || 0}% active`, tone: "emerald" },
+                { icon: "history", label: "Activity logs", value: fmtNum(activityStats?.total), tone: "amber" },
+              ]}
+            />
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <Card title="Transport status" subtitle="Fleet breakdown" icon="local_shipping">
+                {transportStats?.byStatus?.length ? (
+                  <div className="space-y-4">
+                    {transportStats.byStatus.map((item) => {
+                      const tone = { scheduled: "blue", in_transit: "amber", arrived: "emerald", cancelled: "slate" }[item.status] || "slate";
+                      return (
+                        <ProgressRow key={item.status} label={item.status.replace(/_/g, " ")} value={item.count} pct={item.pct} tone={tone} />
+                      );
+                    })}
+                    <div className="border-t border-slate-100 pt-2 dark:border-slate-800">
+                      <DetailRow label="Scheduled today" value={fmtNum(transportStats.todayCount)} strong="text-blue-700 dark:text-blue-300" />
+                    </div>
+                  </div>
+                ) : (
+                  <EmptyState icon="local_shipping" message="No transport data." />
+                )}
+              </Card>
+
+              <Card title="Team roles" subtitle="Top role distribution" icon="groups">
+                {teamStats?.byRole?.length ? (
+                  <div className="space-y-4">
+                    {teamStats.byRole.map((item) => (
+                      <ProgressRow key={item.role} label={item.role} value={item.count} pct={item.pct} tone="violet" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState icon="groups" message="No team data." />
+                )}
+              </Card>
+
+              <Card title="Activity by type" subtitle="Log category breakdown" icon="timeline">
+                {activityStats?.byType?.length ? (
+                  <div className="space-y-4">
+                    {activityStats.byType.map((item) => (
                       <ProgressRow
                         key={item.type}
                         label={item.type.replace(/-/g, " ")}
                         value={item.count}
-                        pct={Math.round((item.count / total) * 100)}
-                        colorClass="bg-primary"
+                        pct={Math.round((item.count / (activityStats.total || 1)) * 100)}
+                        tone="blue"
                       />
-                    );
-                  })}
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState icon="timeline" message="No activity data." />
+                )}
+              </Card>
+            </div>
+
+            <Card title="Room type distribution" subtitle="Inventory by category" icon="meeting_room">
+              {roomOccupancy?.byType?.length ? (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {roomOccupancy.byType.map((item) => (
+                    <div key={item.type} className="rounded-xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/50">
+                      <p className="text-2xl font-extrabold tabular-nums text-slate-950 dark:text-slate-50">{fmtNum(item.count)}</p>
+                      <p className="mt-1 text-xs font-bold capitalize text-slate-700 dark:text-slate-300">{item.type}</p>
+                      <p className="mt-0.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{item.pct}% of rooms</p>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <EmptyState icon="timeline" message="No activity data." />
+                <EmptyState icon="meeting_room" message="No room data." />
               )}
-            </SectionCard>
+            </Card>
           </div>
+        )}
 
-          {/* Room type breakdown */}
-          <SectionCard title="Room Type Distribution" subtitle="Inventory by category" icon="meeting_room">
-            {roomOccupancy?.byType?.length ? (
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                {roomOccupancy.byType.map((item) => (
-                  <div key={item.type} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-black text-primary">{item.count}</p>
-                    <p className="text-xs text-slate-500 font-bold capitalize mt-1">{item.type}</p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">{item.pct}%</p>
+        {/* ═════════ EVENTS ═════════ */}
+        {activeTab === "events" && (
+          <div className="space-y-5">
+            <StatStrip
+              items={[
+                { icon: "calendar_today", label: "Total events", value: fmtNum(kpi.totalEvents), tone: "blue" },
+                { icon: "event_available", label: "Active now", value: fmtNum(kpi.activeEvents), tone: "emerald" },
+                { icon: "upcoming", label: "Upcoming", value: fmtNum(kpi.upcomingEvents), tone: "indigo" },
+                { icon: "event_busy", label: "Completed", value: fmtNum(kpi.completedEvents), tone: "slate" },
+              ]}
+            />
+
+            <section className={`overflow-hidden ${CARD}`}>
+              <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h3 className="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Event performance</h3>
+                  <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">Sorted by most recent start date</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative">
+                    <span className="material-symbols-outlined pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[17px] text-slate-400">search</span>
+                    <input
+                      value={eventSearch}
+                      onChange={(e) => setEventSearch(e.target.value)}
+                      placeholder="Search events…"
+                      className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-blue-500/60 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 sm:w-48"
+                    />
                   </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState icon="meeting_room" message="No room data." />
-            )}
-          </SectionCard>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          EVENTS TABLE TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "events" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <KPICard icon="calendar_today" label="Total Events" value={fmtNum(kpi.totalEvents)} accent="primary" />
-            <KPICard icon="event_available" label="Active Now" value={fmtNum(kpi.activeEvents)} accent="green" pulse={kpi.activeEvents > 0} />
-            <KPICard icon="upcoming" label="Upcoming" value={fmtNum(kpi.upcomingEvents)} accent="primary" />
-            <KPICard icon="event_busy" label="Completed" value={fmtNum(kpi.completedEvents)} accent="slate" />
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
-                  Top Performing Events
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Sorted by most recent start date
-                </p>
-              </div>
-              <button
-                onClick={handleExportCSV}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">download</span>
-                Export
-              </button>
-            </div>
-
-            {topEvents?.length ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead className="bg-slate-50 dark:bg-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    <tr>
-                      <th className="px-6 py-4">Event Name</th>
-                      <th className="px-6 py-4">Venue</th>
-                      <th className="px-6 py-4">Dates</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-center">Guests</th>
-                      <th className="px-6 py-4 text-center">Check-in</th>
-                      <th className="px-6 py-4 text-center">Services</th>
-                      <th className="px-6 py-4 text-center">Transport</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                    {topEvents.map((ev) => (
-                      <tr
-                        key={ev._id}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  <div className="flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                    {[
+                      ["all", "All"],
+                      ["in_progress", "Live"],
+                      ["upcoming", "Upcoming"],
+                      ["completed", "Completed"],
+                    ].map(([k, l]) => (
+                      <button
+                        key={k}
+                        onClick={() => setEventFilter(k)}
+                        className={`rounded-md px-2.5 py-1.5 text-[11px] font-bold transition ${
+                          eventFilter === k
+                            ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                            : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                        }`}
                       >
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-slate-900 dark:text-white line-clamp-1">
-                            {ev.name}
-                          </div>
-                          {ev.isPrivate && (
-                            <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[10px]">lock</span>
-                              Private
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 line-clamp-1">
-                          {ev.venue || "—"}
-                        </td>
-                        <td className="px-6 py-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">
-                          {fmtDate(ev.startDate)}
-                          {ev.endDate && (
-                            <span className="text-slate-400"> → {fmtDate(ev.endDate)}</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={ev.status} />
-                        </td>
-                        <td className="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">
-                          {fmtNum(ev.guests)}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span className="font-bold text-emerald-600">
-                              {ev.checkInRate}%
-                            </span>
-                            <div className="w-16 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                              <div
-                                className="h-full bg-emerald-500 rounded-full"
-                                style={{ width: `${ev.checkInRate}%` }}
-                              />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center text-slate-700 dark:text-slate-300">
-                          {fmtNum(ev.services)}
-                        </td>
-                        <td className="px-6 py-4 text-center text-slate-700 dark:text-slate-300">
-                          {fmtNum(ev.transports)}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <Link
-                            to={`/events/${ev._id}/overview`}
-                            className="inline-flex items-center gap-1 text-primary text-xs font-bold hover:underline"
-                          >
-                            Manage
-                            <span className="material-symbols-outlined text-sm">
-                              open_in_new
-                            </span>
-                          </Link>
-                        </td>
-                      </tr>
+                        {l}
+                      </button>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <div className="p-10">
+
+              {visibleEvents.length ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[880px] text-left">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-800/40">
+                        {[
+                          ["Event", ""],
+                          ["Venue", ""],
+                          ["Dates", ""],
+                          ["Status", ""],
+                          ["Guests", "text-right"],
+                          ["Check-in", ""],
+                          ["Services", "text-right"],
+                          ["Transport", "text-right"],
+                          ["", "text-right"],
+                        ].map(([h, a], i) => (
+                          <th key={i} className={`px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 ${a}`}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+                      {visibleEvents.map((ev) => (
+                        <tr key={ev._id} className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                          <td className="px-5 py-3.5">
+                            <div className="max-w-[220px] truncate font-bold text-slate-900 dark:text-slate-100">{ev.name}</div>
+                            {ev.isPrivate && (
+                              <div className="mt-0.5 flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                <span className="material-symbols-outlined text-[13px]">lock</span>
+                                Private
+                              </div>
+                            )}
+                          </td>
+                          <td className="max-w-[180px] truncate px-5 py-3.5 text-xs font-medium text-slate-600 dark:text-slate-400">{ev.venue || "—"}</td>
+                          <td className="whitespace-nowrap px-5 py-3.5 text-xs font-medium text-slate-600 dark:text-slate-400">
+                            {fmtDate(ev.startDate)}
+                            {ev.endDate && ` – ${fmtDate(ev.endDate)}`}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <StatusBadge status={ev.status} />
+                          </td>
+                          <td className="px-5 py-3.5 text-right font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{fmtNum(ev.guests)}</td>
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.min(ev.checkInRate || 0, 100)}%` }} />
+                              </div>
+                              <span className="w-10 text-xs font-extrabold tabular-nums text-emerald-700 dark:text-emerald-300">{ev.checkInRate}%</span>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-right font-semibold tabular-nums text-slate-700 dark:text-slate-300">{fmtNum(ev.services)}</td>
+                          <td className="px-5 py-3.5 text-right font-semibold tabular-nums text-slate-700 dark:text-slate-300">{fmtNum(ev.transports)}</td>
+                          <td className="px-5 py-3.5 text-right">
+                            <Link
+                              to={`/events/${ev._id}/overview`}
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 transition hover:bg-white hover:text-slate-950 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            >
+                              Manage
+                              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
                 <EmptyState
                   icon="calendar_today"
-                  message="No events found. Create your first event to see analytics."
+                  message={
+                    topEvents?.length
+                      ? "No events match your search or filter."
+                      : "No events found. Create your first event to see analytics."
+                  }
                 />
+              )}
+
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/60 px-5 py-3.5 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 dark:text-slate-400 sm:px-6">
+                <span>
+                  Showing {visibleEvents.length} of {topEvents?.length || 0} events
+                </span>
+                <Link to="/events" className="font-bold text-blue-700 hover:underline dark:text-blue-300">
+                  View all events →
+                </Link>
               </div>
-            )}
-
-            <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-              <span>Showing {topEvents?.length || 0} events</span>
-              <Link
-                to="/events"
-                className="font-bold text-primary hover:underline"
-              >
-                View all events →
-              </Link>
-            </div>
+            </section>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ── Footer note ── */}
-      <p className="text-center text-xs text-slate-400 pb-2">
-        Data generated at{" "}
-        {data.generatedAt
-          ? new Date(data.generatedAt).toLocaleString()
-          : "—"}
+      <p className="mt-8 text-center text-xs font-medium text-slate-500 dark:text-slate-400">
+        Data generated at {data.generatedAt ? new Date(data.generatedAt).toLocaleString() : "—"}
       </p>
-    </div>
+    </PageShell>
   );
 }
