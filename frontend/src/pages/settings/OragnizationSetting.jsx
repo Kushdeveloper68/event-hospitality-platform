@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
@@ -9,7 +9,7 @@ import {
   updateNotifications,
 } from "../../api/organizationSettingApi";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 const TIMEZONES = [
   "UTC",
   "America/New_York",
@@ -47,46 +47,75 @@ const SECTIONS = [
   { key: "organization", icon: "business", label: "Organization" },
   { key: "appearance", icon: "palette", label: "Appearance" },
   { key: "security", icon: "lock", label: "Security" },
-  {
-    key: "notifications",
-    icon: "notifications_active",
-    label: "Notifications",
-  },
+  { key: "notifications", icon: "notifications_active", label: "Notifications" },
 ];
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Shared class strings (same palette as the Operations Dashboard) ──────────
+const CARD =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none";
 
+const INPUT_BASE =
+  "w-full rounded-xl border bg-slate-50 px-3.5 text-sm font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-900";
+
+const INPUT_STATE = {
+  default:
+    "border-slate-200 focus:border-blue-400 focus:ring-blue-100 dark:border-slate-700 dark:focus:border-blue-500/60 dark:focus:ring-blue-500/20",
+  error:
+    "border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/40 dark:focus:border-red-500/60 dark:focus:ring-red-500/20",
+  success:
+    "border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100 dark:border-emerald-500/40 dark:focus:border-emerald-500/60 dark:focus:ring-emerald-500/20",
+};
+
+// ─── Small UI pieces ──────────────────────────────────────────────────────────
 function Toast({ toast }) {
   if (!toast) return null;
+  const isError = toast.type === "error";
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold transition-all animate-in slide-in-from-bottom-4 ${
-        toast.type === "error"
-          ? "bg-red-600 text-white"
-          : "bg-emerald-600 text-white"
+      role="status"
+      className={`fixed bottom-4 left-4 right-4 z-50 flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-xl animate-in slide-in-from-bottom-4 sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+        isError ? "bg-red-600" : "bg-emerald-600"
       }`}
     >
-      <span className="material-symbols-outlined text-lg">
-        {toast.type === "error" ? "error" : "check_circle"}
+      <span className="material-symbols-outlined text-[20px]">
+        {isError ? "error" : "check_circle"}
       </span>
-      {toast.msg}
+      <span className="min-w-0">{toast.msg}</span>
     </div>
   );
 }
 
-function FieldLabel({ children, required }) {
+function Field({ label, htmlFor, required, hint, error, className = "", children }) {
   return (
-    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+    <div className={className}>
+      <label
+        htmlFor={htmlFor}
+        className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300"
+      >
+        {label}
+        {required && <span className="ml-0.5 text-red-500">*</span>}
+      </label>
       {children}
-      {required && <span className="text-red-500 ml-1">*</span>}
-    </label>
+      {error ? (
+        <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400">
+          <span className="material-symbols-outlined text-[14px]">error</span>
+          {error}
+        </p>
+      ) : (
+        hint && (
+          <p className="mt-1.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+            {hint}
+          </p>
+        )
+      )}
+    </div>
   );
 }
 
-function Input({ className = "", ...props }) {
+function Input({ state = "default", className = "", ...props }) {
   return (
     <input
-      className={`w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-900 ${className}`}
+      className={`h-10 ${INPUT_BASE} ${INPUT_STATE[state]} ${className}`}
       {...props}
     />
   );
@@ -94,88 +123,163 @@ function Input({ className = "", ...props }) {
 
 function Select({ children, className = "", ...props }) {
   return (
-    <select
-      className={`w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm appearance-none cursor-pointer ${className}`}
-      {...props}
-    >
-      {children}
-    </select>
+    <div className="relative">
+      <select
+        className={`h-10 cursor-pointer appearance-none pr-10 ${INPUT_BASE} ${INPUT_STATE.default} ${className}`}
+        {...props}
+      >
+        {children}
+      </select>
+      <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[20px] text-slate-400">
+        expand_more
+      </span>
+    </div>
   );
 }
 
-function SaveBtn({ loading, onClick, label = "Save Changes" }) {
+function PasswordInput({ show, onToggle, state, ...props }) {
+  return (
+    <div className="relative">
+      <Input
+        type={show ? "text" : "password"}
+        state={state}
+        className="pr-11"
+        placeholder="••••••••"
+        {...props}
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={show ? "Hide password" : "Show password"}
+        className="absolute right-1.5 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+      >
+        <span className="material-symbols-outlined text-[19px]">
+          {show ? "visibility_off" : "visibility"}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+function PrimaryBtn({ loading, onClick, disabled, label = "Save changes" }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      disabled={loading}
-      className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-60 disabled:scale-100"
+      disabled={loading || disabled}
+      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
     >
       {loading && (
-        <span className="animate-spin size-4 border-2 border-white/30 border-t-white rounded-full" />
+        <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white dark:border-slate-900/30 dark:border-t-slate-900" />
       )}
       {loading ? "Saving…" : label}
     </button>
   );
 }
 
-function CancelBtn({ onClick }) {
+function SecondaryBtn({ onClick, disabled, children = "Cancel" }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="px-6 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+      disabled={disabled}
+      className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
     >
-      Cancel
+      {children}
     </button>
   );
 }
 
-function SectionCard({ title, subtitle, icon, children }) {
+function SectionCard({ title, subtitle, icon, footer, children }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-      <div className="px-7 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-        <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-primary text-lg">
-            {icon}
-          </span>
+    <section className={`overflow-hidden ${CARD}`}>
+      <div className="flex items-center gap-3.5 border-b border-slate-100 px-5 py-4 dark:border-slate-800 sm:px-7 sm:py-5">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+          <span className="material-symbols-outlined text-[21px]">{icon}</span>
         </div>
-        <div>
-          <h2 className="font-display text-card-h3 text-slate-900 dark:text-white">
+        <div className="min-w-0">
+          <h2 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
               {subtitle}
             </p>
           )}
         </div>
       </div>
-      <div className="p-7">{children}</div>
-    </div>
+
+      <div className="p-5 sm:p-7">{children}</div>
+
+      {footer && (
+        <div className="flex flex-col-reverse gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-4 dark:border-slate-800 dark:bg-slate-800/30 sm:flex-row sm:items-center sm:justify-between sm:px-7">
+          {footer}
+        </div>
+      )}
+    </section>
   );
 }
 
-function Toggle({ checked, onChange, label, description }) {
+function FooterActions({ dirty, children }) {
   return (
-    <div className="flex items-center justify-between p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-      <div>
-        <p className="text-sm font-semibold text-slate-900 dark:text-white">
-          {label}
-        </p>
+    <>
+      <p className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+        {dirty ? (
+          <>
+            <span className="size-1.5 rounded-full bg-amber-500" />
+            You have unsaved changes
+          </>
+        ) : (
+          <>
+            <span className="size-1.5 rounded-full bg-emerald-500" />
+            All changes saved
+          </>
+        )}
+      </p>
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+        {children}
+      </div>
+    </>
+  );
+}
+
+function Toggle({ checked, onChange, label, description, disabled, comingSoon }) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-800/30 ${
+        disabled ? "opacity-60" : ""
+      }`}
+    >
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{label}</p>
+          {comingSoon && (
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              Coming soon
+            </span>
+          )}
+        </div>
         {description && (
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
             {description}
           </p>
         )}
       </div>
+
       <button
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-          checked ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        onClick={() => onChange?.(!checked)}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:cursor-not-allowed ${
+          checked ? "bg-blue-600" : "bg-slate-300 dark:bg-slate-600"
         }`}
       >
         <span
-          className={`inline-block size-5 transform rounded-full bg-white shadow-md transition-transform ${
-            checked ? "translate-x-5" : "translate-x-0.5"
+          className={`inline-block size-5 rounded-full bg-white shadow transition-transform ${
+            checked ? "translate-x-[22px]" : "translate-x-0.5"
           }`}
         />
       </button>
@@ -192,108 +296,123 @@ function PasswordStrength({ password }) {
     { label: "Special character", ok: /[^A-Za-z0-9]/.test(password) },
   ];
   const score = checks.filter((c) => c.ok).length;
-  const colors = [
-    "bg-red-400",
-    "bg-orange-400",
-    "bg-amber-400",
-    "bg-emerald-400",
-    "bg-emerald-500",
+  const bars = ["", "bg-red-500", "bg-orange-500", "bg-amber-500", "bg-emerald-500"];
+  const texts = [
+    "",
+    "text-red-600 dark:text-red-400",
+    "text-orange-600 dark:text-orange-400",
+    "text-amber-600 dark:text-amber-400",
+    "text-emerald-600 dark:text-emerald-400",
   ];
   const labels = ["", "Weak", "Fair", "Good", "Strong"];
 
   return (
-    <div className="mt-2 space-y-2">
-      <div className="flex gap-1">
-        {[0, 1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full transition-all ${i < score ? colors[score] : "bg-slate-100 dark:bg-slate-800"}`}
-          />
-        ))}
-      </div>
-      <div className="flex items-center justify-between">
-        <div className="flex gap-3 flex-wrap">
-          {checks.map((c) => (
-            <span
-              key={c.label}
-              className={`text-[10px] font-medium flex items-center gap-1 ${c.ok ? "text-emerald-600" : "text-slate-400"}`}
-            >
-              <span className="material-symbols-outlined text-[12px]">
-                {c.ok ? "check_circle" : "radio_button_unchecked"}
-              </span>
-              {c.label}
-            </span>
+    <div className="mt-3 space-y-2.5">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-1 gap-1">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-all ${
+                i < score ? bars[score] : "bg-slate-200 dark:bg-slate-700"
+              }`}
+            />
           ))}
         </div>
         {score > 0 && (
-          <span
-            className={`text-xs font-bold ${colors[score].replace("bg-", "text-")}`}
-          >
+          <span className={`w-12 text-right text-xs font-bold ${texts[score]}`}>
             {labels[score]}
           </span>
         )}
       </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+        {checks.map((c) => (
+          <span
+            key={c.label}
+            className={`flex items-center gap-1.5 text-[11px] font-medium ${
+              c.ok
+                ? "text-emerald-600 dark:text-emerald-400"
+                : "text-slate-400 dark:text-slate-500"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[14px]">
+              {c.ok ? "check_circle" : "radio_button_unchecked"}
+            </span>
+            {c.label}
+          </span>
+        ))}
+      </div>
     </div>
+  );
+}
+
+function ThemeCard({ value, current, label, preview, onSelect }) {
+  const active = current === value;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      aria-pressed={active}
+      className={`group flex flex-col gap-3 rounded-2xl border-2 p-3 text-left transition ${
+        active
+          ? "border-blue-600 bg-blue-50/60 dark:border-blue-500 dark:bg-blue-500/10"
+          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-600 dark:hover:bg-slate-800/50"
+      }`}
+    >
+      <div className="h-24 w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
+        {preview}
+      </div>
+      <div className="flex items-center justify-between px-1">
+        <span
+          className={`text-sm font-bold ${
+            active
+              ? "text-blue-700 dark:text-blue-300"
+              : "text-slate-700 dark:text-slate-300"
+          }`}
+        >
+          {label}
+        </span>
+        <span
+          className={`material-symbols-outlined text-[20px] ${
+            active ? "text-blue-600 dark:text-blue-400" : "text-slate-300 dark:text-slate-600"
+          }`}
+        >
+          {active ? "check_circle" : "radio_button_unchecked"}
+        </span>
+      </div>
+    </button>
   );
 }
 
 function Skeleton({ className = "" }) {
   return (
-    <div
-      className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded-xl ${className}`}
-    />
+    <div className={`animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800 ${className}`} />
   );
 }
 
-function PageSkeleton() {
+function PageShell({ children }) {
   return (
-    <div className="space-y-6">
-      {[...Array(3)].map((_, i) => (
-        <div
-          key={i}
-          className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-7"
-        >
-          <Skeleton className="h-6 w-48 mb-6" />
-          <div className="grid grid-cols-2 gap-5">
-            <Skeleton className="h-11" />
-            <Skeleton className="h-11" />
-            <Skeleton className="h-11" />
-            <Skeleton className="h-11" />
-          </div>
-        </div>
-      ))}
+    <div className="min-h-screen w-full bg-[#f7f8fa] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        {children}
+      </div>
     </div>
   );
 }
 
-// ─── Theme Selector card ──────────────────────────────────────────────────────
-function ThemeCard({ value, current, label, preview, onSelect }) {
-  const active = current === value;
+function PageHeader() {
   return (
-    <button
-      onClick={() => onSelect(value)}
-      className={`group relative flex flex-col gap-3 rounded-2xl border-2 p-4 transition-all text-left ${
-        active
-          ? "border-primary bg-primary/5 dark:bg-primary/10 shadow-md shadow-primary/10"
-          : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-      }`}
-    >
-      <div className="h-20 w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
-        {preview}
-      </div>
-      <div className="flex items-center justify-between">
-        <span
-          className={`text-sm font-bold ${active ? "text-primary" : "text-slate-700 dark:text-slate-300"}`}
-        >
-          {label}
-        </span>
-        <span
-          className={`material-symbols-outlined text-lg ${active ? "text-primary" : "text-transparent"}`}
-        >
-          check_circle
-        </span>
-      </div>
-    </button>
+    <header className="mb-6 lg:mb-8">
+      <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">
+        Account
+      </p>
+      <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50 md:text-[32px]">
+        Settings
+      </h1>
+      <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+        Manage your profile, organization, appearance and security.
+      </p>
+    </header>
   );
 }
 
@@ -310,16 +429,16 @@ export default function OrganizationSetting() {
   const [saving, setSaving] = useState({});
   const [toast, setToast] = useState(null);
   const [errors, setErrors] = useState({});
+  const toastTimer = useRef(null);
 
-  // Profile form
   const [profileForm, setProfileForm] = useState({
     name: "",
     jobTitle: "",
     timezone: "UTC",
   });
   const [profileDirty, setProfileDirty] = useState(false);
+  const savedProfile = useRef(null);
 
-  // Org form
   const [orgForm, setOrgForm] = useState({
     organizationName: "",
     industry: "",
@@ -329,8 +448,8 @@ export default function OrganizationSetting() {
     primaryContactEmail: "",
   });
   const [orgDirty, setOrgDirty] = useState(false);
+  const savedOrg = useRef(null);
 
-  // Security form
   const [secForm, setSecForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -342,84 +461,148 @@ export default function OrganizationSetting() {
     confirm: false,
   });
 
-  // Notifications
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [notifSaving, setNotifSaving] = useState(false);
 
   // ── Toast helper ─────────────────────────────────────────────────────────
-  const showToast = (msg, type = "success") => {
+  const showToast = useCallback((msg, type = "success") => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   // ── Fetch settings ────────────────────────────────────────────────────────
   const fetchSettings = useCallback(async () => {
     setLoading(true);
-    const res = await getSettings();
-    if (res.success) {
-      const s = res.settings;
-      setProfileForm({
-        name: s.name || "",
-        jobTitle: s.jobTitle || "",
-        timezone: s.timezone || "UTC",
-      });
-      setOrgForm({
-        organizationName: s.organizationName || "",
-        industry: s.industry || "",
-        website: s.website || "",
-        address: s.address || "",
-        primaryContactName: s.primaryContactName || "",
-        primaryContactEmail: s.primaryContactEmail || "",
-      });
-      setNotificationsEnabled(s.notificationsEnabled ?? true);
-    } else {
-      showToast(res.message || "Failed to load settings", "error");
+    try {
+      const res = await getSettings();
+      if (res.success) {
+        const s = res.settings;
+        const profile = {
+          name: s.name || "",
+          jobTitle: s.jobTitle || "",
+          timezone: s.timezone || "UTC",
+        };
+        const org = {
+          organizationName: s.organizationName || "",
+          industry: s.industry || "",
+          website: s.website || "",
+          address: s.address || "",
+          primaryContactName: s.primaryContactName || "",
+          primaryContactEmail: s.primaryContactEmail || "",
+        };
+        savedProfile.current = profile;
+        savedOrg.current = org;
+        setProfileForm(profile);
+        setOrgForm(org);
+        setProfileDirty(false);
+        setOrgDirty(false);
+        setNotificationsEnabled(s.notificationsEnabled ?? true);
+      } else {
+        showToast(res.message || "Failed to load settings", "error");
+      }
+    } catch (err) {
+      showToast("Network error. Please try again.", "error");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
 
-  // ── Profile save ──────────────────────────────────────────────────────────
+  // ── Profile ───────────────────────────────────────────────────────────────
+  const onProfileChange = (key, val) => {
+    setProfileForm((p) => ({ ...p, [key]: val }));
+    setProfileDirty(true);
+    if (errors[key]) setErrors((p) => ({ ...p, [key]: undefined }));
+  };
+
   const handleSaveProfile = async () => {
     if (!profileForm.name.trim()) {
       setErrors((p) => ({ ...p, name: "Name is required" }));
       return;
     }
     setSaving((p) => ({ ...p, profile: true }));
-    const res = await updateProfile(profileForm);
-    setSaving((p) => ({ ...p, profile: false }));
-    if (res.success) {
-      showToast("Profile updated successfully");
-      setProfileDirty(false);
-      setErrors((p) => ({ ...p, name: undefined }));
-      // sync name into auth context
-      if (user) login({ ...user, name: profileForm.name });
-    } else {
-      showToast(res.message, "error");
+    try {
+      const res = await updateProfile(profileForm);
+      if (res.success) {
+        showToast("Profile updated successfully");
+        savedProfile.current = profileForm;
+        setProfileDirty(false);
+        setErrors((p) => ({ ...p, name: undefined }));
+        if (user) login({ ...user, name: profileForm.name });
+      } else {
+        showToast(res.message, "error");
+      }
+    } catch (err) {
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setSaving((p) => ({ ...p, profile: false }));
     }
   };
 
-  // ── Org save ──────────────────────────────────────────────────────────────
+  const handleCancelProfile = () => {
+    if (savedProfile.current) setProfileForm(savedProfile.current);
+    setProfileDirty(false);
+    setErrors((p) => ({ ...p, name: undefined }));
+  };
+
+  // ── Organization ──────────────────────────────────────────────────────────
+  const onOrgChange = (key, val) => {
+    setOrgForm((p) => ({ ...p, [key]: val }));
+    setOrgDirty(true);
+    if (errors.orgName) setErrors((p) => ({ ...p, orgName: undefined }));
+  };
+
   const handleSaveOrg = async () => {
     if (!orgForm.organizationName.trim()) {
       setErrors((p) => ({ ...p, orgName: "Organization name is required" }));
       return;
     }
     setSaving((p) => ({ ...p, org: true }));
-    const res = await updateOrgInfo(orgForm);
-    setSaving((p) => ({ ...p, org: false }));
-    if (res.success) {
-      showToast("Organization info updated");
-      setOrgDirty(false);
-      setErrors((p) => ({ ...p, orgName: undefined }));
-    } else {
-      showToast(res.message, "error");
+    try {
+      const res = await updateOrgInfo(orgForm);
+      if (res.success) {
+        showToast("Organization info updated");
+        savedOrg.current = orgForm;
+        setOrgDirty(false);
+        setErrors((p) => ({ ...p, orgName: undefined }));
+      } else {
+        showToast(res.message, "error");
+      }
+    } catch (err) {
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setSaving((p) => ({ ...p, org: false }));
     }
   };
 
-  // ── Password save ─────────────────────────────────────────────────────────
+  const handleCancelOrg = () => {
+    if (savedOrg.current) setOrgForm(savedOrg.current);
+    setOrgDirty(false);
+    setErrors((p) => ({ ...p, orgName: undefined }));
+  };
+
+  // ── Password ──────────────────────────────────────────────────────────────
+  const onSecChange = (key, val) => {
+    setSecForm((p) => ({ ...p, [key]: val }));
+    if (errors[key]) setErrors((p) => ({ ...p, [key]: undefined }));
+  };
+
+  const resetSecurity = () => {
+    setSecForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    setErrors((p) => ({
+      ...p,
+      currentPassword: undefined,
+      newPassword: undefined,
+      confirmPassword: undefined,
+    }));
+  };
+
   const handleChangePassword = async () => {
     const errs = {};
     if (!secForm.currentPassword) errs.currentPassword = "Required";
@@ -434,221 +617,225 @@ export default function OrganizationSetting() {
     }
 
     setSaving((p) => ({ ...p, password: true }));
-    const res = await import("../../api/organizationSettingApi").then((m) =>
-      m.changePassword(secForm),
-    );
-    setSaving((p) => ({ ...p, password: false }));
-    if (res.success) {
-      showToast("Password changed successfully");
-      setSecForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-      setErrors((p) => ({
-        ...p,
-        currentPassword: undefined,
-        newPassword: undefined,
-        confirmPassword: undefined,
-      }));
-    } else {
-      showToast(res.message, "error");
+    try {
+      const res = await changePassword(secForm);
+      if (res.success) {
+        showToast("Password changed successfully");
+        resetSecurity();
+      } else {
+        showToast(res.message, "error");
+      }
+    } catch (err) {
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setSaving((p) => ({ ...p, password: false }));
     }
   };
 
-  // ── Notifications toggle ──────────────────────────────────────────────────
+  // ── Notifications ─────────────────────────────────────────────────────────
   const handleToggleNotifications = async (val) => {
     setNotificationsEnabled(val);
-    const res = await import("../../api/organizationSettingApi").then((m) =>
-      m.updateNotifications(val),
-    );
-    if (res.success) {
-      showToast(`Notifications ${val ? "enabled" : "disabled"}`);
-    } else {
-      setNotificationsEnabled(!val); // revert
-      showToast(res.message, "error");
+    setNotifSaving(true);
+    try {
+      const res = await updateNotifications(val);
+      if (res.success) {
+        showToast(`Notifications ${val ? "enabled" : "disabled"}`);
+      } else {
+        setNotificationsEnabled(!val);
+        showToast(res.message, "error");
+      }
+    } catch (err) {
+      setNotificationsEnabled(!val);
+      showToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setNotifSaving(false);
     }
   };
 
-  // ── Profile field change ──────────────────────────────────────────────────
-  const onProfileChange = (key, val) => {
-    setProfileForm((p) => ({ ...p, [key]: val }));
-    setProfileDirty(true);
-    if (errors[key]) setErrors((p) => ({ ...p, [key]: undefined }));
-  };
-
-  // ── Org field change ──────────────────────────────────────────────────────
-  const onOrgChange = (key, val) => {
-    setOrgForm((p) => ({ ...p, [key]: val }));
-    setOrgDirty(true);
-    if (errors.orgName) setErrors((p) => ({ ...p, orgName: undefined }));
-  };
-
-  // ── User initials ─────────────────────────────────────────────────────────
+  // ── Derived ───────────────────────────────────────────────────────────────
   const initials = profileForm.name
     ? profileForm.name
         .split(" ")
+        .filter(Boolean)
         .map((w) => w[0])
         .join("")
         .slice(0, 2)
         .toUpperCase()
     : "??";
 
+  const passwordsMatch =
+    secForm.confirmPassword && secForm.newPassword === secForm.confirmPassword;
+  const passwordsMismatch =
+    secForm.confirmPassword && secForm.newPassword !== secForm.confirmPassword;
+  const securityTouched =
+    secForm.currentPassword || secForm.newPassword || secForm.confirmPassword;
+
   // ── LOADING ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="animate-spin size-5 border-2 border-primary border-t-transparent rounded-full" />
-          <span className="text-slate-500 text-sm">Loading settings…</span>
+      <PageShell>
+        <div className="mb-8 space-y-3">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-80 max-w-full" />
         </div>
-        <PageSkeleton />
-      </div>
+        <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
+          <div className="hidden w-64 shrink-0 space-y-3 lg:block">
+            <Skeleton className="h-44 w-full" />
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full" />
+            ))}
+          </div>
+          <div className={`min-w-0 flex-1 p-7 ${CARD}`}>
+            <Skeleton className="mb-7 h-6 w-48" />
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-10" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </PageShell>
     );
   }
 
   // ── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-5xl mx-auto pb-16 px-4 pt-6 dark:bg-slate-950">
+    <PageShell>
       <Toast toast={toast} />
+      <PageHeader />
 
-      {/* ── Page header ── */}
-      <div className="mb-8">
-        <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
-          Settings
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">
-          Manage your personal profile, organization, appearance, and security.
-        </p>
-      </div>
-
-      <div className="flex gap-8">
-        {/* ── Sidebar nav ── */}
-        <aside className="hidden lg:flex flex-col gap-1 w-56 shrink-0">
-          {/* Avatar card */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 mb-4 flex flex-col items-center gap-3 shadow-sm">
-            <div className="size-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:gap-8">
+        {/* ── Sidebar (desktop) ── */}
+        <aside className="hidden w-64 shrink-0 lg:sticky lg:top-6 lg:block">
+          <div className={`mb-4 flex items-center gap-3 p-4 ${CARD}`}>
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-base font-extrabold text-white dark:bg-slate-100 dark:text-slate-900">
               {initials}
             </div>
-            <div className="text-center">
-              <p className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[150px]">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-extrabold text-slate-900 dark:text-slate-100">
                 {profileForm.name || user?.name || "—"}
               </p>
-              <p className="text-xs text-slate-400 truncate max-w-[150px]">
+              <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
                 {user?.email || "—"}
               </p>
-            </div>
-            <div
-              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase px-2.5 py-1 rounded-full ${
-                resolvedTheme === "dark"
-                  ? "bg-slate-800 text-slate-400"
-                  : "bg-slate-100 text-slate-500"
-              }`}
-            >
-              <span className="material-symbols-outlined text-[12px]">
-                {resolvedTheme === "dark" ? "dark_mode" : "light_mode"}
-              </span>
-              {resolvedTheme} mode
+              {orgForm.organizationName && (
+                <p className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                  {orgForm.organizationName}
+                </p>
+              )}
             </div>
           </div>
 
-          {/* Nav items */}
-          {SECTIONS.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setActiveSection(s.key)}
-              className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${
-                activeSection === s.key
-                  ? "bg-primary/10 text-primary"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              <span className="material-symbols-outlined text-lg">
-                {s.icon}
-              </span>
-              {s.label}
-            </button>
-          ))}
+          <nav className="flex flex-col gap-1" aria-label="Settings sections">
+            {SECTIONS.map((s) => {
+              const active = activeSection === s.key;
+              return (
+                <button
+                  key={s.key}
+                  type="button"
+                  onClick={() => setActiveSection(s.key)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-bold transition ${
+                    active
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[20px]">{s.icon}</span>
+                  {s.label}
+                </button>
+              );
+            })}
+          </nav>
         </aside>
 
-        {/* ── Mobile section pills ── */}
-        <div className="lg:hidden flex gap-2 mb-4 overflow-x-auto pb-1 w-full">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.key}
-              onClick={() => setActiveSection(s.key)}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap flex-shrink-0 transition-all ${
-                activeSection === s.key
-                  ? "bg-primary text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
-              }`}
-            >
-              <span className="material-symbols-outlined text-sm">
-                {s.icon}
-              </span>
-              {s.label}
-            </button>
-          ))}
-        </div>
+        {/* ── Section pills (mobile / tablet) ── */}
+        <nav
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:-mx-6 sm:px-6 lg:hidden"
+          aria-label="Settings sections"
+        >
+          {SECTIONS.map((s) => {
+            const active = activeSection === s.key;
+            return (
+              <button
+                key={s.key}
+                type="button"
+                onClick={() => setActiveSection(s.key)}
+                aria-current={active ? "page" : undefined}
+                className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-xs font-bold transition ${
+                  active
+                    ? "bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900"
+                    : "border border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">{s.icon}</span>
+                {s.label}
+              </button>
+            );
+          })}
+        </nav>
 
         {/* ── Main content ── */}
-        <div className="flex-1 min-w-0 space-y-6">
-          {/* ════════════════════════════════
-              PROFILE SECTION
-          ════════════════════════════════ */}
+        <div className="min-w-0 flex-1 space-y-6">
+          {/* PROFILE */}
           {activeSection === "profile" && (
             <SectionCard
-              title="Personal Information"
+              title="Personal information"
               subtitle="Update your name, role and timezone"
               icon="person"
+              footer={
+                <FooterActions dirty={profileDirty}>
+                  <SecondaryBtn onClick={handleCancelProfile} disabled={!profileDirty} />
+                  <PrimaryBtn
+                    loading={saving.profile}
+                    disabled={!profileDirty}
+                    onClick={handleSaveProfile}
+                  />
+                </FooterActions>
+              }
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <FieldLabel required>Full Name</FieldLabel>
+              <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                <Field label="Full name" htmlFor="profile-name" required error={errors.name}>
                   <Input
+                    id="profile-name"
                     type="text"
                     value={profileForm.name}
+                    state={errors.name ? "error" : "default"}
                     onChange={(e) => onProfileChange("name", e.target.value)}
                     placeholder="Your full name"
                   />
-                  {errors.name && (
-                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">
-                        error
-                      </span>
-                      {errors.name}
-                    </p>
-                  )}
-                </div>
+                </Field>
 
-                <div>
-                  <FieldLabel>Work Email</FieldLabel>
+                <Field
+                  label="Work email"
+                  htmlFor="profile-email"
+                  hint="Email can't be changed here."
+                >
                   <Input
+                    id="profile-email"
                     type="email"
                     value={user?.email || ""}
                     disabled
                     placeholder="email@example.com"
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Email cannot be changed here
-                  </p>
-                </div>
+                </Field>
 
-                <div>
-                  <FieldLabel>Job Title</FieldLabel>
+                <Field label="Job title" htmlFor="profile-title">
                   <Input
+                    id="profile-title"
                     type="text"
                     value={profileForm.jobTitle}
-                    onChange={(e) =>
-                      onProfileChange("jobTitle", e.target.value)
-                    }
+                    onChange={(e) => onProfileChange("jobTitle", e.target.value)}
                     placeholder="e.g. Operations Manager"
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <FieldLabel>Timezone</FieldLabel>
+                <Field label="Timezone" htmlFor="profile-tz">
                   <Select
+                    id="profile-tz"
                     value={profileForm.timezone}
-                    onChange={(e) =>
-                      onProfileChange("timezone", e.target.value)
-                    }
+                    onChange={(e) => onProfileChange("timezone", e.target.value)}
                   >
                     {TIMEZONES.map((tz) => (
                       <option key={tz} value={tz}>
@@ -656,56 +843,48 @@ export default function OrganizationSetting() {
                       </option>
                     ))}
                   </Select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                {profileDirty && (
-                  <CancelBtn
-                    onClick={() => {
-                      fetchSettings();
-                      setProfileDirty(false);
-                    }}
-                  />
-                )}
-                <SaveBtn loading={saving.profile} onClick={handleSaveProfile} />
+                </Field>
               </div>
             </SectionCard>
           )}
 
-          {/* ════════════════════════════════
-              ORGANIZATION SECTION
-          ════════════════════════════════ */}
+          {/* ORGANIZATION */}
           {activeSection === "organization" && (
             <SectionCard
-              title="Organization Info"
-              subtitle="Manage your organization's identity and contact details"
+              title="Organization info"
+              subtitle="Your organization's identity and contact details"
               icon="business"
+              footer={
+                <FooterActions dirty={orgDirty}>
+                  <SecondaryBtn onClick={handleCancelOrg} disabled={!orgDirty} />
+                  <PrimaryBtn
+                    loading={saving.org}
+                    disabled={!orgDirty}
+                    onClick={handleSaveOrg}
+                  />
+                </FooterActions>
+              }
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <FieldLabel required>Organization Name</FieldLabel>
+              <div className="grid grid-cols-1 gap-x-5 gap-y-5 md:grid-cols-2">
+                <Field
+                  label="Organization name"
+                  htmlFor="org-name"
+                  required
+                  error={errors.orgName}
+                >
                   <Input
+                    id="org-name"
                     type="text"
                     value={orgForm.organizationName}
-                    onChange={(e) =>
-                      onOrgChange("organizationName", e.target.value)
-                    }
+                    state={errors.orgName ? "error" : "default"}
+                    onChange={(e) => onOrgChange("organizationName", e.target.value)}
                     placeholder="Your organization name"
                   />
-                  {errors.orgName && (
-                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                      <span className="material-symbols-outlined text-sm">
-                        error
-                      </span>
-                      {errors.orgName}
-                    </p>
-                  )}
-                </div>
+                </Field>
 
-                <div>
-                  <FieldLabel>Industry</FieldLabel>
+                <Field label="Industry" htmlFor="org-industry">
                   <Select
+                    id="org-industry"
                     value={orgForm.industry}
                     onChange={(e) => onOrgChange("industry", e.target.value)}
                   >
@@ -716,406 +895,286 @@ export default function OrganizationSetting() {
                       </option>
                     ))}
                   </Select>
-                </div>
+                </Field>
 
-                <div className="md:col-span-2">
-                  <FieldLabel>Website</FieldLabel>
-                  <div className="flex rounded-xl shadow-sm overflow-hidden border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-                    <span className="inline-flex items-center px-4 bg-slate-50 dark:bg-slate-800 text-slate-400 text-sm border-r border-slate-200 dark:border-slate-700 shrink-0">
+                <Field label="Website" htmlFor="org-website" className="md:col-span-2">
+                  <div className="flex h-10 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 transition focus-within:border-blue-400 focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-100 dark:border-slate-700 dark:bg-slate-800/50 dark:focus-within:border-blue-500/60 dark:focus-within:bg-slate-900 dark:focus-within:ring-blue-500/20">
+                    <span className="inline-flex shrink-0 items-center border-r border-slate-200 bg-slate-100 px-3.5 text-sm font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                       https://
                     </span>
                     <input
+                      id="org-website"
                       type="text"
                       value={orgForm.website}
                       onChange={(e) => onOrgChange("website", e.target.value)}
                       placeholder="www.example.com"
-                      className="flex-1 px-4 py-2.5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none text-sm"
+                      className="min-w-0 flex-1 bg-transparent px-3.5 text-sm font-medium text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 dark:text-slate-100 dark:placeholder:text-slate-500"
                     />
                   </div>
-                </div>
+                </Field>
 
-                <div className="md:col-span-2">
-                  <FieldLabel>Physical Address</FieldLabel>
+                <Field label="Physical address" htmlFor="org-address" className="md:col-span-2">
                   <textarea
+                    id="org-address"
                     value={orgForm.address}
                     onChange={(e) => onOrgChange("address", e.target.value)}
                     rows={3}
                     placeholder="123 Main Street, City, Country"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm resize-none"
+                    className={`resize-none py-2.5 ${INPUT_BASE} ${INPUT_STATE.default}`}
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <FieldLabel>Primary Contact Name</FieldLabel>
+                <Field label="Primary contact name" htmlFor="org-contact-name">
                   <Input
+                    id="org-contact-name"
                     type="text"
                     value={orgForm.primaryContactName}
-                    onChange={(e) =>
-                      onOrgChange("primaryContactName", e.target.value)
-                    }
+                    onChange={(e) => onOrgChange("primaryContactName", e.target.value)}
                     placeholder="Contact person name"
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <FieldLabel>Primary Contact Email</FieldLabel>
+                <Field label="Primary contact email" htmlFor="org-contact-email">
                   <Input
+                    id="org-contact-email"
                     type="email"
                     value={orgForm.primaryContactEmail}
-                    onChange={(e) =>
-                      onOrgChange("primaryContactEmail", e.target.value)
-                    }
+                    onChange={(e) => onOrgChange("primaryContactEmail", e.target.value)}
                     placeholder="contact@example.com"
                   />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                {orgDirty && (
-                  <CancelBtn
-                    onClick={() => {
-                      fetchSettings();
-                      setOrgDirty(false);
-                    }}
-                  />
-                )}
-                <SaveBtn loading={saving.org} onClick={handleSaveOrg} />
+                </Field>
               </div>
             </SectionCard>
           )}
 
-          {/* ════════════════════════════════
-              APPEARANCE SECTION
-          ════════════════════════════════ */}
+          {/* APPEARANCE */}
           {activeSection === "appearance" && (
             <SectionCard
               title="Appearance"
-              subtitle="Customize how the interface looks and feels"
+              subtitle="Choose how the interface looks"
               icon="palette"
             >
-              <div>
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">
-                  Color Theme
-                </p>
-                <div className="grid grid-cols-3 gap-4">
-                  <ThemeCard
-                    value="light"
-                    current={theme}
-                    label="Light"
-                    onSelect={setTheme}
-                    preview={
-                      <div className="w-full h-full bg-white flex flex-col p-2 gap-2">
-                        <div className="flex gap-1">
-                          <div className="h-1.5 w-1/3 bg-slate-200 rounded-full" />
-                          <div className="h-1.5 w-1/4 bg-primary/30 rounded-full" />
-                        </div>
-                        <div className="flex-1 bg-slate-100 rounded-lg" />
-                        <div className="flex gap-1">
-                          <div className="h-1.5 flex-1 bg-slate-100 rounded-full" />
-                          <div className="h-1.5 flex-1 bg-slate-100 rounded-full" />
-                        </div>
+              <p className="mb-3 text-xs font-bold text-slate-700 dark:text-slate-300">
+                Color theme
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                <ThemeCard
+                  value="light"
+                  current={theme}
+                  label="Light"
+                  onSelect={setTheme}
+                  preview={
+                    <div className="flex h-full w-full flex-col gap-2 bg-white p-2.5">
+                      <div className="flex gap-1">
+                        <div className="h-1.5 w-1/3 rounded-full bg-slate-200" />
+                        <div className="h-1.5 w-1/4 rounded-full bg-blue-300" />
                       </div>
-                    }
-                  />
-                  <ThemeCard
-                    value="dark"
-                    current={theme}
-                    label="Dark"
-                    onSelect={setTheme}
-                    preview={
-                      <div className="w-full h-full bg-slate-900 flex flex-col p-2 gap-2">
-                        <div className="flex gap-1">
-                          <div className="h-1.5 w-1/3 bg-slate-700 rounded-full" />
-                          <div className="h-1.5 w-1/4 bg-primary/50 rounded-full" />
-                        </div>
-                        <div className="flex-1 bg-slate-800 rounded-lg" />
-                        <div className="flex gap-1">
-                          <div className="h-1.5 flex-1 bg-slate-800 rounded-full" />
-                          <div className="h-1.5 flex-1 bg-slate-800 rounded-full" />
-                        </div>
+                      <div className="flex-1 rounded-lg bg-slate-100" />
+                      <div className="flex gap-1">
+                        <div className="h-1.5 flex-1 rounded-full bg-slate-100" />
+                        <div className="h-1.5 flex-1 rounded-full bg-slate-100" />
                       </div>
-                    }
-                  />
-                  <ThemeCard
-                    value="system"
-                    current={theme}
-                    label="System"
-                    onSelect={setTheme}
-                    preview={
-                      <div className="w-full h-full flex">
-                        <div className="w-1/2 bg-white flex flex-col p-2 gap-2">
-                          <div className="h-1.5 w-full bg-slate-200 rounded-full" />
-                          <div className="flex-1 bg-slate-100 rounded-md" />
-                        </div>
-                        <div className="w-1/2 bg-slate-900 flex flex-col p-2 gap-2">
-                          <div className="h-1.5 w-full bg-slate-700 rounded-full" />
-                          <div className="flex-1 bg-slate-800 rounded-md" />
-                        </div>
+                    </div>
+                  }
+                />
+                <ThemeCard
+                  value="dark"
+                  current={theme}
+                  label="Dark"
+                  onSelect={setTheme}
+                  preview={
+                    <div className="flex h-full w-full flex-col gap-2 bg-slate-900 p-2.5">
+                      <div className="flex gap-1">
+                        <div className="h-1.5 w-1/3 rounded-full bg-slate-700" />
+                        <div className="h-1.5 w-1/4 rounded-full bg-blue-500/60" />
                       </div>
-                    }
-                  />
-                </div>
-
-                <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">
-                  Currently showing:{" "}
-                  <span className="font-bold text-slate-600 dark:text-slate-300 capitalize">
-                    {resolvedTheme} mode
-                  </span>
-                  {theme === "system" && " (from system preference)"}
-                </p>
+                      <div className="flex-1 rounded-lg bg-slate-800" />
+                      <div className="flex gap-1">
+                        <div className="h-1.5 flex-1 rounded-full bg-slate-800" />
+                        <div className="h-1.5 flex-1 rounded-full bg-slate-800" />
+                      </div>
+                    </div>
+                  }
+                />
+                <ThemeCard
+                  value="system"
+                  current={theme}
+                  label="System"
+                  onSelect={setTheme}
+                  preview={
+                    <div className="flex h-full w-full">
+                      <div className="flex w-1/2 flex-col gap-2 bg-white p-2.5">
+                        <div className="h-1.5 w-full rounded-full bg-slate-200" />
+                        <div className="flex-1 rounded-md bg-slate-100" />
+                      </div>
+                      <div className="flex w-1/2 flex-col gap-2 bg-slate-900 p-2.5">
+                        <div className="h-1.5 w-full rounded-full bg-slate-700" />
+                        <div className="flex-1 rounded-md bg-slate-800" />
+                      </div>
+                    </div>
+                  }
+                />
               </div>
 
-              <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                  Quick Toggle
-                </p>
+              <p className="mt-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+                Currently showing{" "}
+                <span className="font-bold capitalize text-slate-700 dark:text-slate-200">
+                  {resolvedTheme} mode
+                </span>
+                {theme === "system" && " (from your system preference)"}
+              </p>
+
+              <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-6 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                    Quick toggle
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                    Instantly switch between light and dark.
+                  </p>
+                </div>
                 <button
-                  onClick={() =>
-                    setTheme(resolvedTheme === "dark" ? "light" : "dark")
-                  }
-                  className="flex items-center gap-3 px-5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group"
+                  type="button"
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
-                  <span className="material-symbols-outlined text-xl text-slate-500 group-hover:text-primary transition-colors">
+                  <span className="material-symbols-outlined text-[19px]">
                     {resolvedTheme === "dark" ? "light_mode" : "dark_mode"}
                   </span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Switch to {resolvedTheme === "dark" ? "Light" : "Dark"} mode
-                  </span>
+                  Switch to {resolvedTheme === "dark" ? "light" : "dark"} mode
                 </button>
               </div>
             </SectionCard>
           )}
 
-          {/* ════════════════════════════════
-              SECURITY SECTION
-          ════════════════════════════════ */}
+          {/* SECURITY */}
           {activeSection === "security" && (
             <SectionCard
-              title="Security"
-              subtitle="Change your password and manage authentication"
+              title="Password"
+              subtitle="Choose a strong password to keep your account safe"
               icon="lock"
+              footer={
+                <FooterActions dirty={!!securityTouched}>
+                  <SecondaryBtn onClick={resetSecurity} disabled={!securityTouched} />
+                  <PrimaryBtn
+                    loading={saving.password}
+                    onClick={handleChangePassword}
+                    label="Update password"
+                  />
+                </FooterActions>
+              }
             >
-              <div className="grid grid-cols-1 gap-5">
-                {/* Current password */}
-                <div>
-                  <FieldLabel required>Current Password</FieldLabel>
-                  <div className="relative">
-                    <Input
-                      type={showPasswords.current ? "text" : "password"}
-                      value={secForm.currentPassword}
-                      onChange={(e) => {
-                        setSecForm((p) => ({
-                          ...p,
-                          currentPassword: e.target.value,
-                        }));
-                        if (errors.currentPassword)
-                          setErrors((p) => ({
-                            ...p,
-                            currentPassword: undefined,
-                          }));
-                      }}
-                      placeholder="••••••••"
-                      className="pr-11"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowPasswords((p) => ({ ...p, current: !p.current }))
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        {showPasswords.current
-                          ? "visibility_off"
-                          : "visibility"}
-                      </span>
-                    </button>
-                  </div>
-                  {errors.currentPassword && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.currentPassword}
-                    </p>
-                  )}
-                </div>
+              <div className="mx-auto max-w-xl space-y-5">
+                <Field
+                  label="Current password"
+                  htmlFor="sec-current"
+                  required
+                  error={errors.currentPassword}
+                >
+                  <PasswordInput
+                    id="sec-current"
+                    value={secForm.currentPassword}
+                    state={errors.currentPassword ? "error" : "default"}
+                    show={showPasswords.current}
+                    onToggle={() => setShowPasswords((p) => ({ ...p, current: !p.current }))}
+                    onChange={(e) => onSecChange("currentPassword", e.target.value)}
+                    autoComplete="current-password"
+                  />
+                </Field>
 
-                {/* New password */}
-                <div>
-                  <FieldLabel required>New Password</FieldLabel>
-                  <div className="relative">
-                    <Input
-                      type={showPasswords.new ? "text" : "password"}
-                      value={secForm.newPassword}
-                      onChange={(e) => {
-                        setSecForm((p) => ({
-                          ...p,
-                          newPassword: e.target.value,
-                        }));
-                        if (errors.newPassword)
-                          setErrors((p) => ({ ...p, newPassword: undefined }));
-                      }}
-                      placeholder="••••••••"
-                      className="pr-11"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowPasswords((p) => ({ ...p, new: !p.new }))
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        {showPasswords.new ? "visibility_off" : "visibility"}
-                      </span>
-                    </button>
-                  </div>
+                <Field
+                  label="New password"
+                  htmlFor="sec-new"
+                  required
+                  error={errors.newPassword}
+                >
+                  <PasswordInput
+                    id="sec-new"
+                    value={secForm.newPassword}
+                    state={errors.newPassword ? "error" : "default"}
+                    show={showPasswords.new}
+                    onToggle={() => setShowPasswords((p) => ({ ...p, new: !p.new }))}
+                    onChange={(e) => onSecChange("newPassword", e.target.value)}
+                    autoComplete="new-password"
+                  />
                   <PasswordStrength password={secForm.newPassword} />
-                  {errors.newPassword && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.newPassword}
+                </Field>
+
+                <Field
+                  label="Confirm new password"
+                  htmlFor="sec-confirm"
+                  required
+                  error={passwordsMismatch ? "Passwords do not match" : errors.confirmPassword}
+                >
+                  <PasswordInput
+                    id="sec-confirm"
+                    value={secForm.confirmPassword}
+                    state={passwordsMismatch ? "error" : passwordsMatch ? "success" : "default"}
+                    show={showPasswords.confirm}
+                    onToggle={() => setShowPasswords((p) => ({ ...p, confirm: !p.confirm }))}
+                    onChange={(e) => onSecChange("confirmPassword", e.target.value)}
+                    autoComplete="new-password"
+                  />
+                  {passwordsMatch && (
+                    <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                      Passwords match
                     </p>
                   )}
-                </div>
-
-                {/* Confirm password */}
-                <div>
-                  <FieldLabel required>Confirm New Password</FieldLabel>
-                  <div className="relative">
-                    <Input
-                      type={showPasswords.confirm ? "text" : "password"}
-                      value={secForm.confirmPassword}
-                      onChange={(e) => {
-                        setSecForm((p) => ({
-                          ...p,
-                          confirmPassword: e.target.value,
-                        }));
-                        if (errors.confirmPassword)
-                          setErrors((p) => ({
-                            ...p,
-                            confirmPassword: undefined,
-                          }));
-                      }}
-                      placeholder="••••••••"
-                      className={`pr-11 ${
-                        secForm.confirmPassword &&
-                        secForm.newPassword !== secForm.confirmPassword
-                          ? "border-red-400 focus:ring-red-200"
-                          : secForm.confirmPassword &&
-                              secForm.newPassword === secForm.confirmPassword
-                            ? "border-emerald-400 focus:ring-emerald-200"
-                            : ""
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowPasswords((p) => ({ ...p, confirm: !p.confirm }))
-                      }
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        {showPasswords.confirm
-                          ? "visibility_off"
-                          : "visibility"}
-                      </span>
-                    </button>
-                  </div>
-                  {secForm.confirmPassword &&
-                    secForm.newPassword !== secForm.confirmPassword && (
-                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">
-                          error
-                        </span>
-                        Passwords do not match
-                      </p>
-                    )}
-                  {secForm.confirmPassword &&
-                    secForm.newPassword === secForm.confirmPassword && (
-                      <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-sm">
-                          check_circle
-                        </span>
-                        Passwords match
-                      </p>
-                    )}
-                  {errors.confirmPassword && !secForm.confirmPassword && (
-                    <p className="text-xs text-red-500 mt-1">
-                      {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
-                <CancelBtn
-                  onClick={() =>
-                    setSecForm({
-                      currentPassword: "",
-                      newPassword: "",
-                      confirmPassword: "",
-                    })
-                  }
-                />
-                <SaveBtn
-                  loading={saving.password}
-                  onClick={handleChangePassword}
-                  label="Update Password"
-                />
+                </Field>
               </div>
             </SectionCard>
           )}
 
-          {/* ════════════════════════════════
-              NOTIFICATIONS SECTION
-          ════════════════════════════════ */}
+          {/* NOTIFICATIONS */}
           {activeSection === "notifications" && (
             <SectionCard
-              title="Notification Preferences"
-              subtitle="Control how and when you receive alerts"
+              title="Notification preferences"
+              subtitle="Control the alerts you receive"
               icon="notifications_active"
             >
+              <Toggle
+                checked={notificationsEnabled}
+                onChange={handleToggleNotifications}
+                disabled={notifSaving}
+                label="Email notifications"
+                description="Receive operational alerts, guest arrivals, service requests and event updates by email."
+              />
+
+              <div className="mb-3 mt-7 flex items-center gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                  More controls
+                </p>
+                <div className="h-px flex-1 bg-slate-100 dark:bg-slate-800" />
+              </div>
+
               <div className="space-y-3">
                 <Toggle
-                  checked={notificationsEnabled}
-                  onChange={handleToggleNotifications}
-                  label="Email Notifications"
-                  description="Receive operational alerts, guest arrivals, service requests, and event updates via email."
-                />
-
-                {/* These are UI-only extras — extend backend as needed */}
-                <Toggle
-                  checked={notificationsEnabled}
-                  onChange={() => {}}
-                  label="Guest Check-in Alerts"
+                  checked={false}
+                  disabled
+                  comingSoon
+                  label="Guest check-in alerts"
                   description="Get notified when VIP guests check in or check out."
                 />
                 <Toggle
-                  checked={notificationsEnabled}
-                  onChange={() => {}}
-                  label="Service Request Alerts"
+                  checked={false}
+                  disabled
+                  comingSoon
+                  label="Service request alerts"
                   description="Receive alerts when high-priority service requests are created."
                 />
                 <Toggle
                   checked={false}
-                  onChange={() => {}}
-                  label="Weekly Summary Report"
+                  disabled
+                  comingSoon
+                  label="Weekly summary report"
                   description="Receive a weekly digest of event performance and key metrics."
                 />
-
-                <div className="flex items-start gap-3 mt-4 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-900/30">
-                  <span className="material-symbols-outlined text-amber-500 text-lg mt-0.5">
-                    info
-                  </span>
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
-                    Additional granular notification controls will be available
-                    in a future update. Currently all notification preferences
-                    are linked to the master toggle above.
-                  </p>
-                </div>
               </div>
             </SectionCard>
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

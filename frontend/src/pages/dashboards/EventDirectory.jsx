@@ -76,18 +76,23 @@ function EventDirectory() {
     const status = getEventStatus(startDate, endDate)
     const badges = {
       live: (
-        <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit">
-          <span className="size-2 bg-green-500 rounded-full animate-pulse"></span>
-          Live
+        <span className="inline-flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700 shadow-sm ring-1 ring-black/5">
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-60"></span>
+            <span className="relative inline-flex size-2 rounded-full bg-emerald-600"></span>
+          </span>
+          Live now
         </span>
       ),
       upcoming: (
-        <span className="bg-primary/10 text-primary dark:bg-primary/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-amber-700 ring-1 ring-amber-600/10">
+          <span className="material-symbols-outlined text-[13px]">schedule</span>
           Upcoming
         </span>
       ),
       completed: (
-        <span className="bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-600 ring-1 ring-black/10">
+          <span className="material-symbols-outlined text-[13px]">check_circle</span>
           Completed
         </span>
       ),
@@ -95,179 +100,295 @@ function EventDirectory() {
     return badges[status] || badges.upcoming
   }
 
+  const getEventInitials = (name = '') => {
+    const words = name.trim().split(/\s+/).filter(Boolean)
+    if (!words.length) return 'EV'
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase()
+    return `${words[0][0]}${words[1][0]}`.toUpperCase()
+  }
+
+  const getEventAccent = (index) => {
+    const accents = [
+      'from-slate-900 via-slate-800 to-slate-900',
+      'from-blue-900 via-blue-800 to-slate-900',
+      'from-indigo-900 via-indigo-800 to-slate-900',
+      'from-emerald-900 via-emerald-800 to-slate-900',
+    ]
+    return accents[index % accents.length]
+  }
+
+  const tabs = [
+    { id: 'all', label: 'All events', icon: 'apps' },
+    { id: 'live', label: 'Live now', icon: 'radio_button_checked' },
+    { id: 'upcoming', label: 'Upcoming', icon: 'schedule' },
+    { id: 'completed', label: 'Completed', icon: 'check_circle' },
+  ]
+
   return (
-    <div className="relative flex h-auto min-screen w-full flex-col group/design-root overflow-x-hidden">
-      <div className="layout-container flex h-full grow flex-col">
-        <main className="flex flex-col flex-1 px-4 py-8">
-          {/* <!-- Breadcrumbs --> */}
-          <nav className="flex items-center gap-2 mb-6">
-            <Link to="/dashboard" className="text-gray-500 dark:text-gray-400 text-sm font-medium hover:text-primary flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm">home</span>
-              Dashboard
-            </Link>
-            <span className="text-gray-400 text-sm font-medium">
-              <span className="material-symbols-outlined text-sm">chevron_right</span>
-            </span>
-            <span className="text-gray-900 dark:text-white text-sm font-semibold">Events</span>
-          </nav>
-          {/* <!-- Page Header --> */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-            <div className="flex flex-col gap-1">
-              <h1 className="font-display text-page-h1 text-gray-900 dark:text-white">Events Directory
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 text-base">Track and manage high-level hospitality operations
-                across all venues.</p>
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#f7f8fa] dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      <main className="mx-auto flex w-full max-w-[1480px] flex-col px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        {/* Breadcrumbs */}
+        <nav className="mb-7 flex items-center gap-2 text-sm">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 font-medium text-slate-500 dark:text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-slate-100"
+          >
+            <span className="material-symbols-outlined text-[17px]">home</span>
+            Dashboard
+          </Link>
+          <span className="material-symbols-outlined text-[16px] text-slate-300 dark:text-slate-600">chevron_right</span>
+          <span className="font-semibold text-slate-900 dark:text-slate-100">Events</span>
+        </nav>
+
+        {/* Header */}
+        <section className="mb-7 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-slate-600 dark:text-slate-400 shadow-sm">
+              <span className="size-1.5 rounded-full bg-blue-600 dark:bg-blue-400"></span>
+              Event operations
             </div>
-            <Link to="/create-event">
-            <button
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-bold transition-all shadow-sm">
-              <span className="material-symbols-outlined text-[20px]">add</span>
-              <span>Create Event</span>
-            </button>
-            </Link>
+            <h1 className="text-3xl font-black tracking-[-0.035em] text-slate-900 dark:text-slate-100 sm:text-4xl">
+              Events directory
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
+              Find an event quickly and jump straight into its hospitality operations.
+            </p>
           </div>
-          {/* <!-- Search and Filters Section --> */}
-          <div className="flex flex-col gap-4 mb-8">
-            <div className="relative">
-              <span
-                className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+
+          <Link
+            to="/create-event"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-5 py-3.5 text-sm font-bold text-white dark:text-slate-900 shadow-[0_10px_25px_rgba(15,23,42,0.14)] dark:shadow-none transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 dark:hover:bg-slate-200 hover:shadow-[0_14px_30px_rgba(15,23,42,0.2)] dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.45)] sm:w-auto"
+          >
+            <span className="material-symbols-outlined text-[19px]">add</span>
+            Create event
+          </Link>
+        </section>
+
+        {/* Search / filter command bar */}
+        <section className="mb-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-[0_8px_30px_rgba(15,23,42,0.05)] dark:shadow-none">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <div className="relative min-w-0 flex-1">
+              <span className="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[21px] text-slate-400 dark:text-slate-500">
+                search
+              </span>
               <input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none text-gray-900 dark:text-white"
-                placeholder="Search events by name..." type="text" />
+                className="h-12 w-full rounded-xl border border-transparent bg-slate-50 dark:bg-slate-800/50 pl-11 pr-4 text-sm font-medium text-slate-900 dark:text-slate-100 outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-400 dark:focus:border-blue-500/60 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-500/20"
+                placeholder="Search by event name..."
+                type="text"
+              />
             </div>
-            <div className="flex border-b border-gray-200 dark:border-gray-800 gap-8 overflow-x-auto">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`border-b-2 pb-3 font-bold text-sm whitespace-nowrap transition-colors ${
-                  activeTab === 'all'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                }`}>
-                All Events
-              </button>
-              <button
-                onClick={() => setActiveTab('live')}
-                className={`border-b-2 pb-3 font-bold text-sm whitespace-nowrap transition-colors ${
-                  activeTab === 'live'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                }`}>
-                Live Now
-              </button>
-              <button
-                onClick={() => setActiveTab('upcoming')}
-                className={`border-b-2 pb-3 font-bold text-sm whitespace-nowrap transition-colors ${
-                  activeTab === 'upcoming'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                }`}>
-                Upcoming
-              </button>
-              <button
-                onClick={() => setActiveTab('completed')}
-                className={`border-b-2 pb-3 font-bold text-sm whitespace-nowrap transition-colors ${
-                  activeTab === 'completed'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700'
-                }`}>
-                Completed
-              </button>
+
+            <div className="flex min-w-0 gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+              {tabs.map((tab) => {
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-3.5 text-xs font-bold transition-all sm:px-4 ${
+                      isActive
+                        ? 'bg-white dark:bg-slate-900 text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                        : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
-          {/* <!-- Events Grid --> */}
-          {loading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                <p className="text-gray-500 dark:text-gray-400 mt-4">Loading events...</p>
-              </div>
+        </section>
+
+        {/* Directory summary */}
+        {!loading && !error && (
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                {activeTab === 'all' ? 'All events' : `${tabs.find(tab => tab.id === activeTab)?.label}`}
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                {searchQuery
+                  ? `${filteredEvents.length} result${filteredEvents.length === 1 ? '' : 's'} for “${searchQuery}”`
+                  : `${filteredEvents.length} event${filteredEvents.length === 1 ? '' : 's'} in this view`}
+              </p>
             </div>
-          ) : error ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="text-center">
-                <p className="text-red-500">{error}</p>
-                <button
-                  onClick={fetchEvents}
-                  className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
-                  Retry
-                </button>
-              </div>
+            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              {filteredEvents.length} shown <span className="mx-1 text-slate-300 dark:text-slate-600">/</span> {events.length} total
             </div>
-          ) : filteredEvents.length === 0 ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="text-center">
-                <span className="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4">event</span>
-                <p className="text-gray-500 dark:text-gray-400">
-                  {searchQuery ? 'No events found matching your search.' : 'No events available.'}
-                </p>
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading ? (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div key={item} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_6px_25px_rgba(15,23,42,0.035)] dark:shadow-none">
+                <div className="h-44 animate-pulse bg-slate-200 dark:bg-slate-800"></div>
+                <div className="space-y-4 p-5">
+                  <div className="h-5 w-3/4 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
+                  <div className="h-3 w-full animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-slate-100 dark:bg-slate-800"></div>
+                  <div className="h-10 w-full animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800"></div>
+                </div>
               </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-red-200 dark:border-red-500/30 bg-white dark:bg-slate-900 p-10 text-center shadow-[0_8px_30px_rgba(15,23,42,0.04)] dark:shadow-none">
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+              <span className="material-symbols-outlined">cloud_off</span>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEvents.map((event) => (
-                <div
-                  key={event._id}
-                  className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-shadow group">
-                  <div className="h-40 bg-gradient-to-br from-blue-400 to-purple-500 relative flex items-center justify-center">
-                    <span className="material-symbols-outlined text-6xl text-white/20">event</span>
-                    <div className="absolute top-3 right-3">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Couldn’t load your events</h3>
+            <p className="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">{error}</p>
+            <button
+              onClick={fetchEvents}
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-4 py-2.5 text-sm font-bold text-white dark:text-slate-900 transition-colors hover:bg-slate-800 dark:hover:bg-slate-200"
+            >
+              <span className="material-symbols-outlined text-[17px]">refresh</span>
+              Retry
+            </button>
+          </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 px-6 py-16 text-center">
+            <div className="mx-auto mb-5 flex size-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+              <span className="material-symbols-outlined text-[30px]">event_busy</span>
+            </div>
+            <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">
+              {searchQuery ? 'No matching events' : 'No events in this view'}
+            </h3>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500 dark:text-slate-400">
+              {searchQuery
+                ? 'Try a different event name or clear the search to see everything.'
+                : 'Create your first event to start managing guests, rooms and operations.'}
+            </p>
+            {searchQuery ? (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-slate-100 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                Clear search
+              </button>
+            ) : (
+              <Link
+                to="/create-event"
+                className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-4 py-2.5 text-sm font-bold text-white dark:text-slate-900 transition-colors hover:bg-slate-800 dark:hover:bg-slate-200"
+              >
+                <span className="material-symbols-outlined text-[17px]">add</span>
+                Create event
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {filteredEvents.map((event, index) => (
+              <article
+                key={event._id}
+                className="group flex min-h-[430px] flex-col overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_7px_28px_rgba(15,23,42,0.045)] dark:shadow-none transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 dark:hover:border-slate-700 hover:shadow-[0_18px_45px_rgba(15,23,42,0.10)] dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
+              >
+                {/* Event visual header */}
+                <div className={`relative h-44 overflow-hidden bg-gradient-to-br ${getEventAccent(index)} p-5`}>
+                  <div className="absolute -right-10 -top-16 size-44 rounded-full border border-white/10 bg-white/[0.04]"></div>
+                  <div className="absolute -bottom-24 -left-10 size-48 rounded-full border border-white/10 bg-white/[0.04]"></div>
+
+                  <div className="relative flex h-full flex-col justify-between">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex size-11 items-center justify-center rounded-xl border border-white/15 bg-white/10 text-sm font-black tracking-tight text-white backdrop-blur-sm">
+                        {getEventInitials(event.name)}
+                      </div>
                       {getStatusBadge(event.startDate, event.endDate)}
                     </div>
-                  </div>
-                  <div className="p-6">
-                    <h3
-                      className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary transition-colors line-clamp-2">
-                      {event.name}
-                    </h3>
-                    <div className="flex flex-col gap-2">
-                      {event.venue && (
-                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-                          <span className="material-symbols-outlined text-sm">location_on</span>
-                          <span className="line-clamp-1">{event.venue}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm">
-                        <span className="material-symbols-outlined text-sm">calendar_month</span>
-                        <span>
-                          {formatDate(event.startDate)}
-                          {event.endDate && ` - ${formatDate(event.endDate)}`}
-                        </span>
-                      </div>
-                      {event.description && (
-                        <div className="flex items-start gap-2 text-gray-500 dark:text-gray-400 text-sm mt-2">
-                          <span className="material-symbols-outlined text-sm flex-shrink-0">description</span>
-                          <span className="line-clamp-2">{event.description}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-between items-center">
-                      <span className="text-xs font-medium text-gray-400">
-                        {event.isPrivate ? 'Private Event' : 'Public Event'}
-                      </span>
-                      <Link to={`/events/${event._id}/overview`} className="text-primary font-bold text-sm hover:underline">
-                        Manage
-                      </Link>
+
+                    <div>
+                      <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">Event</p>
+                      <h3 className="line-clamp-2 max-w-[90%] text-xl font-extrabold leading-tight tracking-[-0.02em] text-white">
+                        {event.name}
+                      </h3>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
 
-          {/* <!-- Pagination --> */}
-          {filteredEvents.length > 0 && (
-            <div className="mt-12 flex items-center justify-between border-t border-gray-200 dark:border-gray-800 pt-6">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Showing {filteredEvents.length} of {events.length} events
-              </p>
-            </div>
-          )}
-        </main>
-        {/* <!-- Footer --> */}
-       
-      </div>
+                {/* Event details */}
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="space-y-3">
+                    {event.venue && (
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                          <span className="material-symbols-outlined text-[17px]">location_on</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">Venue</p>
+                          <p className="mt-0.5 truncate text-sm font-semibold text-slate-700 dark:text-slate-300">{event.venue}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+                        <span className="material-symbols-outlined text-[17px]">calendar_month</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">Event dates</p>
+                        <p className="mt-0.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          {formatDate(event.startDate)}
+                          {event.endDate && ` — ${formatDate(event.endDate)}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    {event.description && (
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                          <span className="material-symbols-outlined text-[17px]">description</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">About</p>
+                          <p className="mt-0.5 line-clamp-2 text-sm leading-5 text-slate-500 dark:text-slate-400">{event.description}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-auto pt-5">
+                    <div className="mb-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                        <span className="material-symbols-outlined text-[15px]">
+                          {event.isPrivate ? 'lock' : 'public'}
+                        </span>
+                        {event.isPrivate ? 'Private event' : 'Public event'}
+                      </span>
+                      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                        Operations
+                      </span>
+                    </div>
+
+                    <Link
+                      to={`/events/${event._id}/overview`}
+                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-4 py-3 text-sm font-bold text-white dark:text-slate-900 transition-all duration-200 group-hover:bg-slate-800 dark:group-hover:bg-slate-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_rgba(15,23,42,0.16)] dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.45)]"
+                    >
+                      Manage event
+                      <span className="material-symbols-outlined text-[17px] transition-transform duration-200 group-hover:translate-x-0.5">arrow_forward</span>
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {/* Footer count */}
+        {!loading && !error && filteredEvents.length > 0 && (
+          <div className="mt-8 flex flex-col gap-2 border-t border-slate-200 dark:border-slate-800 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Showing <span className="font-bold text-slate-700 dark:text-slate-300">{filteredEvents.length}</span> of{' '}
+              <span className="font-bold text-slate-700 dark:text-slate-300">{events.length}</span> events
+            </p>
+            <p className="text-xs font-medium text-slate-400 dark:text-slate-500">EventCure operations directory</p>
+          </div>
+        )}
+      </main>
     </div>
   )
 }
