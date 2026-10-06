@@ -7,8 +7,11 @@ const verifyEventOwnership = async (eventId, userId) => {
   if (!event) {
     throw new Error("Event not found");
   }
+  if (!userId) {
+    throw new Error("Authentication required");
+  }
   const ownerId = event.createdBy?._id || event.createdBy;
-  if (userId && String(ownerId) !== String(userId)) {
+  if (String(ownerId) !== String(userId)) {
     throw new Error("Unauthorized access to this event");
   }
   return true;

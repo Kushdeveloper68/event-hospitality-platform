@@ -80,8 +80,13 @@ if (process.env.NODE_ENV === "production") {
 }
 
 app.use(globalLimiter);
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// Default body-parser limit is 100kb — a full 1000-row CSV import (guests
+// especially, with 9 fields each) comfortably exceeds that and would fail
+// with a confusing "PayloadTooLargeError" instead of the bulk-import
+// endpoints' own, clearer 1000-row message. 2mb stays well short of a DoS
+// concern for an authenticated, rate-limited route.
+app.use(bodyParser.json({ limit: "2mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "2mb" }));
 app.use(cookiesP());
 
 app.use(

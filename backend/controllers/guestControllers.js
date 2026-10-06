@@ -166,9 +166,12 @@ const handleBulkImportGuests = async (req, res) => {
     }
 
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const ev = await getEventById(event);
     const ownerId = ev.createdBy?._id || ev.createdBy;
-    if (userId && String(ownerId) !== String(userId)) {
+    if (String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: "Forbidden: you do not own this event" });
     }
 
