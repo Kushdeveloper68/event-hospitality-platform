@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getEventById } from "../../api/eventApi";
@@ -15,9 +15,141 @@ import OprationalEventSchedule from "./OprationalEventSchedule";
 import EventSummaryDashboards from "./EventSummaryDashboards";
 import EventAdminstrativeSetting from "../settings/EventAdminstrativeSetting";
 import TeamMemberManagement from "../inventory/TeamMemberManagement";
-// Shown on the Overview tab when a newly created event still has rooms,
-// guests or team members missing — replaces the generic "live ops" welcome
-// text, which used to show even for a brand-new, empty event.
+
+// ─── Constants & helpers ──────────────────────────────────────────────────────
+const TABS = [
+  { key: "overview", icon: "dashboard", label: "Overview" },
+  { key: "guests", icon: "group", label: "Guests" },
+  { key: "rooms", icon: "meeting_room", label: "Rooms" },
+  { key: "checkin", icon: "how_to_reg", label: "Check-in" },
+  { key: "transport", icon: "local_shipping", label: "Transport" },
+  { key: "service", icon: "room_service", label: "Service" },
+  { key: "schedule", icon: "schedule", label: "Schedule" },
+  { key: "reports", icon: "analytics", label: "Reports" },
+  { key: "team", icon: "groups", label: "Team" },
+  { key: "settings", icon: "settings", label: "Settings" },
+];
+
+const CARD =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none";
+
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+const getEventStatus = (startDate, endDate) => {
+  const now = new Date();
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (now >= start && now <= end) return "live";
+  if (now < start) return "upcoming";
+  if (now > end) return "completed";
+  return "upcoming";
+};
+
+const timeAgo = (ts) => {
+  if (!ts) return "";
+  const t = new Date(ts).getTime();
+  if (Number.isNaN(t)) return "";
+  const m = Math.floor((Date.now() - t) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+const STATUS_BADGE = {
+  live: {
+    label: "Live",
+    cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+    dot: "bg-emerald-500 animate-pulse",
+  },
+  upcoming: {
+    label: "Upcoming",
+    cls: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+    dot: "bg-blue-500",
+  },
+  completed: {
+    label: "Completed",
+    cls: "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    dot: "bg-slate-400",
+  },
+};
+
+// ─── Small UI pieces ──────────────────────────────────────────────────────────
+function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />;
+}
+
+function StatusBadge({ startDate, endDate }) {
+  const c = STATUS_BADGE[getEventStatus(startDate, endDate)];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${c.cls}`}
+    >
+      <span className={`size-1.5 rounded-full ${c.dot}`} />
+      {c.label}
+    </span>
+  );
+}
+
+function MetaChip({ icon, children }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 dark:text-slate-400">
+      <span className="material-symbols-outlined text-[18px] text-slate-400 dark:text-slate-500">{icon}</span>
+      {children}
+    </span>
+  );
+}
+
+function KpiCard({ icon, label, value, suffix, tone = "blue", progress, foot }) {
+  const chip = {
+    blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+    emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+    amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+    indigo: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+  }[tone];
+  const bar = {
+    blue: "bg-blue-600 dark:bg-blue-500",
+    emerald: "bg-emerald-500",
+    amber: "bg-amber-500",
+    indigo: "bg-indigo-500",
+  }[tone];
+
+  return (
+    <div className={`flex flex-col p-5 ${CARD}`}>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">{label}</p>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${chip}`}>
+          <span className="material-symbols-outlined text-[19px]">{icon}</span>
+        </div>
+      </div>
+      <div className="mt-3 flex items-baseline gap-1.5">
+        <span className="text-[32px] font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50">
+          {value}
+        </span>
+        {suffix && <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{suffix}</span>}
+      </div>
+      {progress != null && (
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ${bar}`}
+            style={{ width: `${Math.min(Math.max(progress, 0), 100)}%` }}
+          />
+        </div>
+      )}
+      {foot && <div className="mt-auto pt-3 text-xs font-medium leading-5 text-slate-500 dark:text-slate-400">{foot}</div>}
+    </div>
+  );
+}
+
+// Shown on Overview while a new event still has rooms, guests or team missing
 function SetupChecklist({ eventId, metrics }) {
   const items = [
     {
@@ -46,125 +178,159 @@ function SetupChecklist({ eventId, metrics }) {
     },
   ];
   const completedCount = items.filter((i) => i.done).length;
+  const nextKey = items.find((i) => !i.done)?.key;
 
   return (
-    <div className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-8 shadow-sm">
-      <div className="flex items-center justify-between mb-1">
-        <h2 className="font-display text-section-h2 text-slate-900 dark:text-white">
-          Let's get this event ready
-        </h2>
-        <span className="text-sm font-bold text-slate-500">
-          {completedCount} of {items.length} done
-        </span>
-      </div>
-      <p className="text-slate-500 mb-6">
-        Complete these steps so your team and guests can start using this event.
-      </p>
-      <div className="w-full bg-neutral-soft dark:bg-slate-800 h-2 rounded-full overflow-hidden mb-6">
-        <div
-          className="bg-primary h-full rounded-full transition-all duration-500"
-          style={{ width: `${(completedCount / items.length) * 100}%` }}
-        ></div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {items.map((item) => (
-          <Link
-            key={item.key}
-            to={item.path}
-            className={`flex items-start gap-3 p-4 rounded-lg border transition-colors ${
-              item.done
-                ? "border-success/30 bg-success/5 dark:bg-success/10"
-                : "border-border-light dark:border-slate-700 hover:border-primary/40 hover:bg-primary/5"
-            }`}
-          >
-            <span
-              className={`material-symbols-outlined text-2xl ${item.done ? "text-success" : "text-primary-500"}`}
+    <section className="overflow-hidden rounded-2xl border border-blue-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-blue-500/30 dark:bg-slate-900 dark:shadow-none">
+      <div className="p-5 sm:p-7">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">
+              Getting started
+            </p>
+            <h2 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+              Let's get this event ready
+            </h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Complete these steps so your team and guests can start using this event.
+            </p>
+          </div>
+          <span className="mt-2 shrink-0 text-sm font-extrabold tabular-nums text-slate-700 dark:text-slate-300 sm:mt-0">
+            {completedCount} of {items.length} done
+          </span>
+        </div>
+
+        <div className="my-5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+          <div
+            className="h-full rounded-full bg-blue-600 transition-all duration-500 dark:bg-blue-500"
+            style={{ width: `${(completedCount / items.length) * 100}%` }}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {items.map((item, i) => (
+            <Link
+              key={item.key}
+              to={item.path}
+              className={`group flex items-start gap-3.5 rounded-xl border p-4 transition ${
+                item.done
+                  ? "border-emerald-200 bg-emerald-50/60 hover:border-emerald-300 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+                  : item.key === nextKey
+                    ? "border-blue-300 bg-blue-50/60 hover:border-blue-400 dark:border-blue-500/40 dark:bg-blue-500/10"
+                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800/50"
+              }`}
             >
-              {item.done ? "check_circle" : item.icon}
-            </span>
-            <div>
-              <p className="font-bold text-sm text-slate-900 dark:text-white">
-                {item.label}
-              </p>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {item.done ? "Done — click to manage" : item.desc}
-              </p>
-            </div>
-          </Link>
+              <span
+                className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
+                  item.done
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300"
+                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[22px]">{item.done ? "check_circle" : item.icon}</span>
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                    {i + 1}. {item.label}
+                  </p>
+                  {item.key === nextKey && (
+                    <span className="rounded-full bg-blue-600 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white dark:bg-blue-500">
+                      Next
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+                  {item.done ? "Done — click to manage" : item.desc}
+                </p>
+              </div>
+              <span className="material-symbols-outlined mt-0.5 text-[18px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-500 dark:text-slate-600 dark:group-hover:text-slate-400">
+                arrow_forward
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className={`h-40 p-5 ${CARD}`}>
+            <Skeleton className="mb-4 h-3 w-28" />
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="mt-5 h-2 w-full" />
+          </div>
         ))}
+      </div>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className={`h-96 p-6 lg:col-span-2 ${CARD}`}>
+          <Skeleton className="mb-5 h-5 w-44" />
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="mb-3 h-10 w-full" />
+          ))}
+        </div>
+        <div className={`h-96 p-6 ${CARD}`}>
+          <Skeleton className="mb-5 h-5 w-32" />
+          <Skeleton className="h-24 w-full" />
+        </div>
       </div>
     </div>
   );
 }
 
+function ShellSkeleton() {
+  return (
+    <div className="min-h-screen bg-[#f7f8fa] dark:bg-slate-950">
+      <div className="h-16 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />
+      <div className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="mx-auto max-w-[1440px] space-y-3 px-4 py-6 sm:px-6 lg:px-8">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-9 w-80 max-w-full" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+      </div>
+      <div className="mx-auto max-w-[1440px] px-4 py-8 sm:px-6 lg:px-8">
+        <OverviewSkeleton />
+      </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═════════════════════════════════════════════════════════════════════════════
 function EventWorkspaceShell() {
   const { user } = useAuth();
   const { eventId, tab, "*": rest } = useParams();
+  const activeTab = tab || "overview";
+
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(tab || "overview");
   const [overviewData, setOverviewData] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewError, setOverviewError] = useState(null);
+  const [overviewSyncedAt, setOverviewSyncedAt] = useState(null);
   const [exportingData, setExportingData] = useState(false);
   const [exportMessage, setExportMessage] = useState(null);
+
   const exportMessageTimerRef = useRef(null);
+  const eventReq = useRef(0);
+  const overviewReq = useRef(0);
+  const tabsRef = useRef(null);
 
-  // keep tab in sync with url param
-  useEffect(() => {
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab);
-    }
-    if (!tab && activeTab !== "overview") {
-      setActiveTab("overview");
-    }
-  }, [tab]);
-
-  useEffect(() => {
-    if (eventId) {
-      loadEvent();
-    }
-  }, [eventId]);
-
-  useEffect(() => {
-    if (eventId && activeTab === "overview") {
-      loadOverview();
-    }
-  }, [eventId, activeTab]);
-
-  useEffect(() => {
-    return () => {
-      if (exportMessageTimerRef.current) {
-        window.clearTimeout(exportMessageTimerRef.current);
-      }
-    };
-  }, []);
-
-  const loadOverview = async () => {
-    try {
-      setOverviewLoading(true);
-      setOverviewError(null);
-      const res = await getOverviewData(eventId);
-      if (res.success) {
-        setOverviewData(res);
-      } else {
-        setOverviewError(res.message || "Failed to sync dashboard data");
-      }
-    } catch (err) {
-      console.error("Error loading overview data:", err);
-      setOverviewError(
-        "Dashboard synchronization failed. Please check your connection.",
-      );
-    } finally {
-      setOverviewLoading(false);
-    }
-  };
-
-  const loadEvent = async () => {
+  // ── Loaders (stale responses are ignored) ──────────────────────────────────
+  const loadEvent = useCallback(async () => {
+    const id = ++eventReq.current;
     try {
       setLoading(true);
       const res = await getEventById(eventId);
+      if (id !== eventReq.current) return;
       if (res.success) {
         setEvent(res.event);
         setError(null);
@@ -172,637 +338,632 @@ function EventWorkspaceShell() {
         setError(res.message || "Failed to load event");
       }
     } catch (err) {
+      if (id !== eventReq.current) return;
       console.error("Error loading event:", err);
       setError("Error loading event");
     } finally {
-      setLoading(false);
+      if (id === eventReq.current) setLoading(false);
     }
-  };
+  }, [eventId]);
 
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+  const loadOverview = useCallback(async () => {
+    const id = ++overviewReq.current;
+    try {
+      setOverviewLoading(true);
+      setOverviewError(null);
+      const res = await getOverviewData(eventId);
+      if (id !== overviewReq.current) return;
+      if (res.success) {
+        setOverviewData(res);
+        setOverviewSyncedAt(new Date());
+      } else {
+        setOverviewError(res.message || "Failed to sync dashboard data");
+      }
+    } catch (err) {
+      if (id !== overviewReq.current) return;
+      console.error("Error loading overview data:", err);
+      setOverviewError("Dashboard synchronization failed. Please check your connection.");
+    } finally {
+      if (id === overviewReq.current) setOverviewLoading(false);
+    }
+  }, [eventId]);
 
-  const getEventStatus = (startDate, endDate) => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+  useEffect(() => {
+    if (eventId) {
+      setOverviewData(null);
+      loadEvent();
+    }
+  }, [eventId, loadEvent]);
 
-    if (now >= start && now <= end) return "live";
-    if (now < start) return "upcoming";
-    if (now > end) return "completed";
-    return "upcoming";
-  };
+  useEffect(() => {
+    if (eventId && activeTab === "overview") {
+      loadOverview();
+    }
+  }, [eventId, activeTab, loadOverview]);
 
-  const getStatusBadge = (startDate, endDate) => {
-    const status = getEventStatus(startDate, endDate);
-    const badges = {
-      live: (
-        <span className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 w-fit">
-          <span className="size-2 bg-green-500 rounded-full animate-pulse"></span>
-          Live
-        </span>
-      ),
-      upcoming: (
-        <span className="bg-primary/10 text-primary-500 dark:bg-primary/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-          Upcoming
-        </span>
-      ),
-      completed: (
-        <span className="bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-          Completed
-        </span>
-      ),
+  useEffect(() => {
+    return () => {
+      if (exportMessageTimerRef.current) window.clearTimeout(exportMessageTimerRef.current);
     };
-    return badges[status] || badges.upcoming;
-  };
+  }, []);
 
+  // Keep the active tab visible in the scrollable tab bar (mobile)
+  useEffect(() => {
+    const nav = tabsRef.current;
+    const el = nav?.querySelector('[aria-current="page"]');
+    if (nav && el) {
+      nav.scrollTo({
+        left: el.offsetLeft - nav.clientWidth / 2 + el.clientWidth / 2,
+        behavior: "smooth",
+      });
+    }
+  }, [activeTab, loading]);
+
+  // ── Export ─────────────────────────────────────────────────────────────────
   const handleExportData = async () => {
     if (exportingData || !eventId) return;
-
     try {
       setExportingData(true);
       setExportMessage(null);
-
       const result = await exportEventWorkbook(eventId, event?.name || "event");
-
       setExportMessage({
         type: result.success ? "success" : "error",
         text: result.message,
       });
     } catch (err) {
       console.error("Error exporting event workbook:", err);
-      setExportMessage({
-        type: "error",
-        text: "Failed to export event data",
-      });
+      setExportMessage({ type: "error", text: "Failed to export event data" });
     } finally {
       setExportingData(false);
-      if (exportMessageTimerRef.current) {
-        window.clearTimeout(exportMessageTimerRef.current);
-      }
-      exportMessageTimerRef.current = window.setTimeout(() => {
-        setExportMessage(null);
-      }, 4000);
+      if (exportMessageTimerRef.current) window.clearTimeout(exportMessageTimerRef.current);
+      exportMessageTimerRef.current = window.setTimeout(() => setExportMessage(null), 4000);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-gray-500 dark:text-gray-400">
-            Loading event...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // ── Loading / error ────────────────────────────────────────────────────────
+  if (loading) return <ShellSkeleton />;
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-red-500 mb-4">{error}</p>
-          <Link
-            to="/events"
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
-          >
-            Back to directory
-          </Link>
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f8fa] p-6 dark:bg-slate-950">
+        <div className="w-full max-w-md rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm dark:border-red-500/30 dark:bg-slate-900">
+          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+            <span className="material-symbols-outlined text-[25px]">error</span>
+          </div>
+          <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">Couldn't load this event</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{error}</p>
+          <div className="mt-6 flex flex-col-reverse justify-center gap-2 sm:flex-row">
+            <Link
+              to="/events"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              Back to directory
+            </Link>
+            <button
+              type="button"
+              onClick={loadEvent}
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+            >
+              <span className="material-symbols-outlined text-[18px]">refresh</span>
+              Retry
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // ── Overview derived data ──────────────────────────────────────────────────
+  const m = overviewData?.metrics || {};
+  const guests = m.guests || {};
+  const checkInPct = guests.total > 0 ? Math.round(((guests.checkedIn || 0) / guests.total) * 100) : 0;
+  const setupIncomplete =
+    !!overviewData &&
+    ((m.rooms?.total || 0) === 0 || (m.guests?.total || 0) === 0 || (m.staff?.active || 0) === 0);
+  const activity = overviewData?.recentActivity || [];
+  const pendingServices = m.services?.pending || 0;
+
+  const iconBtn =
+    "relative flex size-9 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100";
+
   return (
     <EventContext.Provider value={{ event, setEvent }}>
-      <div className="relative flex flex-col min-h-screen dark:bg-slate-950">
-        {/* <!-- Top Sticky Header Container --> */}
-        <header className=" top-0 z-50 w-full bg-white dark:bg-slate-950 border-b border-border-light dark:border-slate-800 shadow-sm">
-          {/* <!-- Global Navbar --> */}
-          <div className="max-w-[1440px] mx-auto px-6 h-16 flex items-center justify-between gap-4">
-            {/* <!-- Left: Platform Logo & Search --> */}
-            <div className="flex items-center gap-6 flex-1">
-              <div className="flex items-center gap-2 text-primary-500">
-                <Link to="/">
-                            <div className="size-8 rounded-lg flex items-center justify-center">
-                              <img src="/event-logo-with-icon-dark-bg-removebg-preview.png" alt="EventCure Logo" loading='lazy'/>
-                            </div>
-                          </Link>
-                <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden lg:block">
-                  EventCure
-                </span>
+      <div className="relative flex min-h-screen flex-col bg-[#f7f8fa] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        {/* ── Export toast ── */}
+        {exportMessage && (
+          <div
+            role="status"
+            className={`fixed bottom-4 left-4 right-4 z-[60] flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+              exportMessage.type === "success" ? "bg-emerald-600" : "bg-red-600"
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              {exportMessage.type === "success" ? "check_circle" : "error"}
+            </span>
+            <span className="min-w-0">{exportMessage.text}</span>
+          </div>
+        )}
+
+        {/* ── Global navbar ── */}
+        <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+            <Link to="/" className="flex shrink-0 items-center gap-2.5">
+              <div className="flex size-9 items-center justify-center overflow-hidden rounded-xl">
+                <img
+                  src="/event-logo-with-icon-dark-bg-removebg-preview.png"
+                  alt="EventCure Logo"
+                  loading="lazy"
+                  className="size-full object-contain"
+                />
               </div>
-              {/* <!-- Global Search --> */}
-              
-            </div>
-            {/* <!-- Right: Utilities & User --> */}
-            <div className="flex items-center gap-3">
-              <Link to="/notifications">
-              <button title="notifications" className="p-2 text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors relative">
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute top-2 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-slate-900"></span>
-              </button>
+              <span className="hidden text-[17px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:block">
+                EventCure
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <Link to="/notifications" title="Notifications" aria-label="Notifications" className={iconBtn}>
+                <span className="material-symbols-outlined text-[21px]">notifications</span>
               </Link>
-              <button title="help" className="p-2 text-slate-500 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded-lg transition-colors">
-                <span className="material-symbols-outlined">help_outline</span>
+              <button
+                type="button"
+                disabled
+                title="Help center — coming soon"
+                aria-label="Help (coming soon)"
+                className="flex size-9 cursor-not-allowed items-center justify-center rounded-xl text-slate-300 dark:text-slate-600"
+              >
+                <span className="material-symbols-outlined text-[21px]">help_outline</span>
               </button>
-              <div className="h-8 w-px bg-border-light dark:bg-slate-800 mx-2"></div>
-             {/* User */}
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold leading-none dark:text-white">
-                  {user?.name || "Operator"}
-                </p>
-                <p className="text-[10px] text-neutral-muted mt-1 uppercase font-bold tracking-tight">
-                  {user?.organizationName || "Operations"}
-                </p>
+
+              <div className="mx-1 hidden h-7 w-px bg-slate-200 dark:bg-slate-800 sm:block" />
+
+              <div className="flex items-center gap-2.5">
+                <div className="hidden text-right sm:block">
+                  <p className="text-xs font-bold leading-4 text-slate-800 dark:text-slate-200">{user?.name || "Operator"}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+                    {user?.organizationName || "Operations"}
+                  </p>
+                </div>
+                <div className="flex size-9 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white dark:bg-slate-100 dark:text-slate-900">
+                  {(user?.name || "O").charAt(0).toUpperCase()}
+                </div>
               </div>
-              <div className="size-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-                {(user?.name || "O").charAt(0).toUpperCase()}
-              </div>
-            </div>
             </div>
           </div>
-          {/* <!-- Event Context Header --> */}
-          <div className="max-w-[1440px] mx-auto px-6 py-6 border-t border-slate-100 dark:border-slate-800">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="flex flex-col gap-2">
-                {/* <!-- Breadcrumb --> */}
-                <div className="flex items-center gap-2 text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  <Link
-                    to="/events"
-                    className="hover:text-primary-500 transition-colors"
-                  >
-                    Events
-                  </Link>
-                  <span className="material-symbols-outlined text-[14px]">
-                    chevron_right
-                  </span>
-                  <span className="text-slate-900 dark:text-white line-clamp-1">
-                    {event?.name}
-                  </span>
-                </div>
-                {/* <!-- Event Details --> */}
-                <div className="flex items-center gap-4 flex-wrap">
-                  <h1 className="font-display text-page-h1 text-slate-900 dark:text-white line-clamp-2">
+        </header>
+
+        {/* ── Event context ── */}
+        <section className="bg-white dark:bg-slate-900">
+          <div className="mx-auto max-w-[1440px] px-4 pb-5 pt-5 sm:px-6 lg:px-8 lg:pb-6">
+            <Link
+              to="/events"
+              className="mb-3 inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+              All events
+            </Link>
+
+            <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <h1 className="line-clamp-2 text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50 md:text-[32px]">
                     {event?.name}
                   </h1>
-                  {getStatusBadge(event?.startDate, event?.endDate)}
+                  <StatusBadge startDate={event?.startDate} endDate={event?.endDate} />
                 </div>
-                <div className="flex flex-wrap items-center gap-5 text-slate-500 text-sm mt-1">
-                  {event?.venue && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-lg">
-                        location_on
-                      </span>
-                      {event.venue}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-lg">
-                      calendar_today
-                    </span>
+                <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5">
+                  {event?.venue && <MetaChip icon="location_on">{event.venue}</MetaChip>}
+                  <MetaChip icon="calendar_today">
                     {formatDate(event?.startDate)}
-                    {event?.endDate && ` - ${formatDate(event.endDate)}`}
-                  </div>
+                    {event?.endDate && ` – ${formatDate(event.endDate)}`}
+                  </MetaChip>
+                  {event?.isPrivate && <MetaChip icon="lock">Private event</MetaChip>}
                 </div>
               </div>
-              {/* <!-- Quick Action Buttons --> */}
-              <div className="flex flex-col items-end gap-2">
-                <button
-                  type="button"
-                  onClick={handleExportData}
-                  disabled={exportingData}
-                  className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-border-light dark:border-slate-700 text-slate-900 dark:text-white font-semibold text-sm rounded-lg hover:bg-neutral-soft transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <span className="material-symbols-outlined text-xl">
-                    {exportingData ? "hourglass_top" : "share"}
-                  </span>
-                  {exportingData ? "Exporting..." : "Export Data"}
-                </button>
-                {exportMessage && (
-                  <div
-                    className={`max-w-sm rounded-lg px-3 py-2 text-xs font-medium shadow-sm ${
-                      exportMessage.type === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-900/40"
-                        : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-900/40"
-                    }`}
-                  >
-                    {exportMessage.text}
-                  </div>
-                )}
-                
-              </div>
+
+              <button
+                type="button"
+                onClick={handleExportData}
+                disabled={exportingData}
+                className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 md:w-auto"
+              >
+                <span className={`material-symbols-outlined text-[19px] ${exportingData ? "animate-spin" : ""}`}>
+                  {exportingData ? "progress_activity" : "download"}
+                </span>
+                {exportingData ? "Exporting…" : "Export Data"}
+              </button>
             </div>
           </div>
-          {/* <!-- Horizontal Navigation Tabs --> */}
-          <div className="max-w-[1440px] mx-auto px-6">
-            <nav className="flex gap-8 overflow-x-auto hide-scrollbar scroll-smooth">
-              {[
-                { key: "overview", icon: "dashboard", label: "Overview" },
-                { key: "guests", icon: "group", label: "Guests" },
-                { key: "rooms", icon: "meeting_room", label: "Rooms" },
-                { key: "checkin", icon: "how_to_reg", label: "Check-in" },
-                {
-                  key: "transport",
-                  icon: "local_shipping",
-                  label: "Transport",
-                },
-                { key: "service", icon: "room_service", label: "Service" },
-                { key: "schedule", icon: "schedule", label: "Schedule" },
-                { key: "reports", icon: "analytics", label: "Reports" },
-                { key: "team", icon: "groups", label: "Team" },
-                { key: "settings", icon: "settings", label: "Settings" },
-              ].map((tab) => {
-                const active = activeTab === tab.key;
-                // build path: omit overview segment to keep /events/:id form
-                const path = `/events/${eventId}/${tab.key}`;
+        </section>
+
+        {/* ── Sticky tab bar ── */}
+        <div className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+          <div className="mx-auto max-w-[1440px] px-2 sm:px-6 lg:px-8">
+            <nav
+              ref={tabsRef}
+              aria-label="Event sections"
+              className="hide-scrollbar relative flex gap-1 overflow-x-auto"
+            >
+              {TABS.map((t) => {
+                const active = activeTab === t.key;
                 return (
                   <Link
-                    key={tab.key}
-                    to={path}
-                    className={`flex items-center gap-2 py-4 border-b-2 ${active ? "border-primary-500 text-primary-500 font-bold" : "border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-white font-semibold"} text-sm whitespace-nowrap transition-all`}
+                    key={t.key}
+                    to={`/events/${eventId}/${t.key}`}
+                    aria-current={active ? "page" : undefined}
+                    className={`-mb-px flex shrink-0 items-center gap-2 border-b-2 px-3.5 py-3.5 text-sm font-bold whitespace-nowrap transition ${
+                      active
+                        ? "border-blue-600 text-blue-700 dark:border-blue-400 dark:text-blue-300"
+                        : "border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                    }`}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {tab.icon}
-                    </span>
-                    {tab.label}
+                    <span className="material-symbols-outlined text-[20px]">{t.icon}</span>
+                    {t.label}
                   </Link>
                 );
               })}
             </nav>
           </div>
-        </header>
-        {/* <!-- Main Content Area --> */}
-        <main className="flex-1 w-full max-w-[1440px] mx-auto dark:bg-slate-950 px-6 py-8">
-          {/* Tabbed Content Area */}
-          <div>
-            {activeTab === "overview" && (
-              <div className="space-y-6">
-                {overviewError && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined">error</span>
-                      <span>{overviewError}</span>
-                    </div>
-                    <button
-                      onClick={loadOverview}
-                      className="text-sm font-bold underline hover:no-underline"
-                    >
-                      Retry Sync
-                    </button>
-                  </div>
-                )}
+        </div>
 
-                <div
-                  className={`grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-opacity duration-300 ${overviewLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+        {/* ── Main content ── */}
+        <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {/* ═════════ OVERVIEW ═════════ */}
+          {activeTab === "overview" && (
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                    Event overview
+                  </h2>
+                  <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                    {overviewSyncedAt
+                      ? `Synced at ${overviewSyncedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                      : "Live operational snapshot"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={loadOverview}
+                  disabled={overviewLoading}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                 >
-                  {/* <!-- Welcome / Setup Card --> */}
-                  {(overviewData?.metrics?.rooms?.total || 0) === 0 ||
-                  (overviewData?.metrics?.guests?.total || 0) === 0 ||
-                  (overviewData?.metrics?.staff?.active || 0) === 0 ? (
-                    <SetupChecklist eventId={eventId} metrics={overviewData?.metrics} />
-                  ) : (
-                    <div className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 shadow-sm">
-                      <div className="flex-1 space-y-4 text-center md:text-left">
-                        <h2 className="font-display text-section-h2 text-slate-900 dark:text-white">
-                          Welcome back to Operations, {user?.name || "Director"}
-                        </h2>
-                        <p className="text-slate-500 max-w-2xl text-lg">
-                          You have{" "}
-                          <span className="text-slate-900 dark:text-white font-bold">
-                            {overviewData?.metrics?.guests?.checkedIn || 0} guests
-                          </span>{" "}
-                          checked in out of{" "}
-                          {overviewData?.metrics?.guests?.total || 0} expected.
-                          Room turnover is at{" "}
-                          {overviewData?.metrics?.rooms?.occupancyRate || 0}%
-                          occupancy.
-                        </p>
-                        <div className="flex flex-wrap justify-center md:justify-start gap-4 pt-2">
-                          <div className="bg-primary/5 dark:bg-primary/20 px-4 py-2 rounded-lg">
-                            <span className="block text-xs text-slate-500 font-semibold uppercase">
-                              Total Occupancy
-                            </span>
-                            <span className="text-xl font-bold text-primary-500">
-                              {overviewData?.metrics?.rooms?.occupancyRate || 0}%
-                            </span>
-                          </div>
-                          <div className="bg-success/5 dark:bg-success/20 px-4 py-2 rounded-lg">
-                            <span className="block text-xs text-slate-500 font-semibold uppercase">
-                              Active Staff
-                            </span>
-                            <span className="text-xl font-bold text-success">
-                              {overviewData?.metrics?.staff?.active || 0} On-Duty
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="w-full max-w-xs md:max-w-[300px] aspect-video rounded-lg overflow-hidden relative group">
-                        <img
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          data-alt="Conference hall stage with lighting and screens"
-                          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDKbZxD21XGZETliznl2BY0ABjw2hTBOlpOCLB3sRRM9QbJO6CqvX5TQgUWjffQQLmFJmyHLRA-Y55VuSg-cYkp6TiNE4gvVedvsGDr6Pw1uN7UEsWTjmGuAjl6kS4MjbfadqG8ms-ta7VxqmIpKaAB4JZTkP-hTiUive76P_qOpVbfbrR0zaqtWi2_RJiUgLcbpjZUgwkCpDYZLce9q97y5u_VL95jS4rhgBao5iDZx212pAiSU_NUnMeGdMz7FtzA8TjhfCxLCFb"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4"></div>
-                      </div>
-                    </div>
-                  )}
-                  {/* <!-- Stats Widgets --> */}
-                  <div className="bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                        Check-in Progress
-                      </span>
-                      <span className="material-symbols-outlined text-primary-500">
-                        how_to_reg
-                      </span>
-                    </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white">
-                      {overviewData?.metrics?.guests?.checkedIn || 0}
-                      <span className="text-sm font-normal text-slate-500 ml-1">
-                        / {overviewData?.metrics?.guests?.total || 0}
-                      </span>
-                    </div>
-                    <div className="mt-4 w-full bg-neutral-soft dark:bg-slate-800 h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-primary h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${(overviewData?.metrics?.guests?.checkedIn / overviewData?.metrics?.guests?.total) * 100 || 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
-                      {overviewData?.metrics?.guests?.total > 0
-                        ? `${Math.round((overviewData?.metrics?.guests?.checkedIn / overviewData?.metrics?.guests?.total) * 100)}% of guests checked in`
-                        : "No guests registered yet"}
-                    </p>
+                  <span className={`material-symbols-outlined text-[18px] ${overviewLoading ? "animate-spin" : ""}`}>
+                    refresh
+                  </span>
+                  {overviewLoading ? "Syncing…" : "Refresh"}
+                </button>
+              </div>
+
+              {overviewError && (
+                <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="material-symbols-outlined text-[19px]">warning</span>
+                    <span className="text-sm font-medium">{overviewError}</span>
                   </div>
-                  <div className="bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                        Pending Service
-                      </span>
-                      <span className="material-symbols-outlined text-orange-500">
-                        pending_actions
-                      </span>
-                    </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white">
-                      {overviewData?.metrics?.services?.pending || 0}
-                      <span className="text-sm font-normal text-slate-500 ml-1">
-                        requests
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-4">
-                      {overviewData?.metrics?.services?.pending > 0 ? (
+                  <button
+                    onClick={loadOverview}
+                    className="shrink-0 text-xs font-bold underline underline-offset-2 hover:no-underline"
+                  >
+                    Retry sync
+                  </button>
+                </div>
+              )}
+
+              {!overviewData && overviewLoading ? (
+                <OverviewSkeleton />
+              ) : !overviewData ? null : (
+                <div
+                  aria-busy={overviewLoading}
+                  className={`space-y-5 transition-opacity duration-300 ${overviewLoading ? "opacity-60" : "opacity-100"}`}
+                >
+                  {setupIncomplete && <SetupChecklist eventId={eventId} metrics={m} />}
+
+                  {/* KPIs */}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <KpiCard
+                      icon="how_to_reg"
+                      label="Check-in progress"
+                      value={guests.checkedIn || 0}
+                      suffix={`/ ${guests.total || 0}`}
+                      tone="emerald"
+                      progress={checkInPct}
+                      foot={guests.total > 0 ? `${checkInPct}% of guests checked in` : "No guests registered yet"}
+                    />
+                    <KpiCard
+                      icon="meeting_room"
+                      label="Room occupancy"
+                      value={`${m.rooms?.occupancyRate || 0}%`}
+                      tone="blue"
+                      progress={m.rooms?.occupancyRate || 0}
+                      foot={(m.rooms?.total || 0) > 0 ? `${m.rooms.total} rooms in inventory` : "No rooms added yet"}
+                    />
+                    <KpiCard
+                      icon="pending_actions"
+                      label="Pending service"
+                      value={pendingServices}
+                      suffix="requests"
+                      tone={pendingServices > 0 ? "amber" : "emerald"}
+                      foot={
+                        pendingServices > 0 ? (
+                          <>
+                            Awaiting response —{" "}
+                            <Link
+                              to={`/events/${eventId}/service`}
+                              className="font-bold text-blue-700 hover:underline dark:text-blue-300"
+                            >
+                              view requests
+                            </Link>
+                          </>
+                        ) : (
+                          "No pending service requests"
+                        )
+                      }
+                    />
+                    <KpiCard
+                      icon="directions_bus"
+                      label="Transport load"
+                      value={m.transport?.active || 0}
+                      suffix="active"
+                      tone="indigo"
+                      foot={
                         <>
-                          Awaiting response —{" "}
+                          Active or scheduled shuttles —{" "}
                           <Link
-                            to={`/events/${eventId}/service`}
-                            className="text-primary-500 font-bold hover:underline"
+                            to={`/events/${eventId}/transport`}
+                            className="font-bold text-blue-700 hover:underline dark:text-blue-300"
                           >
-                            view requests
+                            manage
                           </Link>
                         </>
-                      ) : (
-                        "No pending service requests"
-                      )}
-                    </p>
+                      }
+                    />
                   </div>
-                  <div className="bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                        Transport Load
-                      </span>
-                      <span className="material-symbols-outlined text-indigo-500">
-                        directions_bus
-                      </span>
-                    </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white">
-                      {overviewData?.metrics?.transport?.active || 0}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-3">
-                      Active or scheduled shuttles
-                    </p>
-                  </div>
-                  <div className="bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl p-5 shadow-sm">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                        Audit Logs
-                      </span>
-                      <span className="material-symbols-outlined text-primary-500">
-                        description
-                      </span>
-                    </div>
-                    <div className="text-3xl font-black text-slate-900 dark:text-white">
-                      {overviewData?.metrics?.logs?.total || 0}
-                    </div>
-                    <Link
-                      to={`/events/${eventId}/reports`}
-                      className="mt-4 block w-full py-2 bg-neutral-soft dark:bg-slate-800 hover:bg-neutral-soft/80 dark:hover:bg-slate-700 text-xs font-bold text-slate-900 dark:text-white text-center rounded-lg transition-colors"
-                    >
-                      View Analytics
-                    </Link>
-                  </div>
-                  {/* <!-- Main Activity Table Area --> */}
-                  <div className="col-span-1 md:col-span-3 lg:col-span-4 bg-white dark:bg-slate-900/50 border border-border-light dark:border-slate-800 rounded-xl shadow-sm overflow-hidden">
-                    <div className="px-6 py-4 border-b border-border-light dark:border-slate-800 flex items-center justify-between">
-                      <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
-                        Recent Guest Activity
-                      </h3>
-                      <div className="flex items-center gap-2">
-                        <button className="p-1.5 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded transition-colors text-slate-500">
-                          <span className="material-symbols-outlined">
-                            filter_list
-                          </span>
-                        </button>
-                        <button className="p-1.5 hover:bg-neutral-soft dark:hover:bg-slate-800 rounded transition-colors text-slate-500">
-                          <span className="material-symbols-outlined">
-                            more_vert
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left border-collapse">
-                        <thead className="bg-background-light dark:bg-slate-900/60 text-[11px] font-bold text-slate-500 uppercase tracking-widest border-b border-border-light dark:border-slate-800">
-                          <tr>
-                            <th className="px-6 py-3">Guest Name</th>
-                            <th className="px-6 py-3">Status</th>
-                            <th className="px-6 py-3">Room / Location</th>
-                            <th className="px-6 py-3">Assigned Staff</th>
-                            <th className="px-6 py-3 text-right">
-                              Activity Time
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                          {overviewData?.recentActivity?.length > 0 ? (
-                            overviewData.recentActivity.map((log) => (
-                              <tr
-                                key={log._id}
-                                className="hover:bg-neutral-soft/30 dark:hover:bg-slate-800/30 transition-colors"
-                              >
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-3">
-                                    <div className="size-8 rounded-full bg-primary/10 text-primary-500 flex items-center justify-center font-bold text-xs">
-                                      {log.relatedGuest?.fullName
-                                        ?.substring(0, 2)
-                                        .toUpperCase() || "??"}
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-bold text-slate-900 dark:text-white">
-                                        {log.relatedGuest?.fullName || "System"}
-                                      </p>
-                                      <p className="text-[10px] text-slate-500">
-                                        {log.relatedGuest?.groupName ||
-                                          "Log Entry"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                  <span
-                                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                      log.type === "check-in"
-                                        ? "bg-success/10 text-success"
-                                        : "bg-primary/10 text-primary-500"
-                                    }`}
-                                  >
-                                    {log.type || "Activity"}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-slate-500">
-                                  {log.message || "Updated event status"}
-                                </td>
-                                <td className="px-6 py-4">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-slate-900 dark:text-white font-medium">
-                                      {log.relatedStaff?.name || "Automated"}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 text-right text-xs text-slate-500 font-medium">
-                                  {new Date(log.timestamp).toLocaleTimeString(
-                                    [],
-                                    { hour: "2-digit", minute: "2-digit" },
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td
-                                colSpan="5"
-                                className="px-6 py-10 text-center text-slate-500"
-                              >
-                                No recent activity found.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="px-6 py-3 bg-background-light dark:bg-slate-900/60 border-t border-border-light dark:border-slate-800 flex items-center justify-between">
-                      <p className="text-xs text-slate-500">
-                        {overviewData?.recentActivity?.length > 0
-                          ? `Showing latest ${overviewData.recentActivity.length} activities`
-                          : "No activity to display"}
-                      </p>
-                      <div className="flex gap-2">
+
+                  <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                    {/* Recent activity */}
+                    <section className={`min-w-0 overflow-hidden lg:col-span-2 ${CARD}`}>
+                      <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800 sm:px-6">
+                        <div>
+                          <h3 className="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                            Recent guest activity
+                          </h3>
+                          <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                            Latest operational events for this event
+                          </p>
+                        </div>
                         <Link
                           to={`/events/${eventId}/reports`}
-                          className="px-3 py-1 bg-white dark:bg-slate-800 border border-border-light dark:border-slate-700 text-xs font-bold rounded hover:bg-neutral-soft transition-colors text-slate-900 dark:text-white"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-blue-700 transition hover:bg-blue-50 dark:text-blue-300 dark:hover:bg-blue-500/10"
                         >
-                          View Full Logs
+                          View full logs
+                          <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
                         </Link>
+                      </div>
+
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[640px] text-left">
+                          <thead>
+                            <tr className="border-b border-slate-100 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-800/40">
+                              {["Guest", "Type", "Details", "Staff", "Time"].map((h, i) => (
+                                <th
+                                  key={h}
+                                  className={`px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 ${
+                                    i === 4 ? "text-right" : ""
+                                  }`}
+                                >
+                                  {h}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {activity.length > 0 ? (
+                              activity.map((log) => (
+                                <tr key={log._id} className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                                  <td className="px-5 py-3.5">
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                                        {log.relatedGuest?.fullName?.substring(0, 2).toUpperCase() || "??"}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="max-w-[160px] truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                                          {log.relatedGuest?.fullName || "System"}
+                                        </p>
+                                        <p className="max-w-[160px] truncate text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                          {log.relatedGuest?.groupName || "Log entry"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="px-5 py-3.5">
+                                    <span
+                                      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                                        log.type === "check-in"
+                                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                                          : "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300"
+                                      }`}
+                                    >
+                                      {(log.type || "Activity").replace(/-/g, " ")}
+                                    </span>
+                                  </td>
+                                  <td className="max-w-[240px] px-5 py-3.5 text-sm font-medium text-slate-600 dark:text-slate-400">
+                                    <span className="line-clamp-2">{log.message || "Updated event status"}</span>
+                                  </td>
+                                  <td className="whitespace-nowrap px-5 py-3.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
+                                    {log.relatedStaff?.name || "Automated"}
+                                  </td>
+                                  <td
+                                    className="whitespace-nowrap px-5 py-3.5 text-right text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400"
+                                    title={log.timestamp ? new Date(log.timestamp).toLocaleString() : undefined}
+                                  >
+                                    {timeAgo(log.timestamp) ||
+                                      (log.timestamp
+                                        ? new Date(log.timestamp).toLocaleTimeString([], {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })
+                                        : "—")}
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="5" className="px-6 py-14 text-center">
+                                  <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                                    <span className="material-symbols-outlined text-[24px]">dynamic_feed</span>
+                                  </div>
+                                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No recent activity</p>
+                                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                    Activity will appear once operations begin.
+                                  </p>
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-3 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 dark:text-slate-400 sm:px-6">
+                        {activity.length > 0 ? `Showing latest ${activity.length} activities` : "No activity to display"}
+                      </div>
+                    </section>
+
+                    {/* Side column */}
+                    <div className="space-y-5">
+                      <div className={`p-5 ${CARD}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+                            Team on duty
+                          </p>
+                          <div className="flex size-9 items-center justify-center rounded-xl bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300">
+                            <span className="material-symbols-outlined text-[19px]">badge</span>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-[32px] font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50">
+                          {m.staff?.active || 0}
+                        </p>
+                        <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">Active staff members</p>
+                      </div>
+
+                      <div className={`p-5 ${CARD}`}>
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+                            Audit logs
+                          </p>
+                          <div className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            <span className="material-symbols-outlined text-[19px]">description</span>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-[32px] font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50">
+                          {m.logs?.total || 0}
+                        </p>
+                        <Link
+                          to={`/events/${eventId}/reports`}
+                          className="mt-4 flex h-9 w-full items-center justify-center rounded-lg border border-slate-200 text-xs font-bold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          View analytics
+                        </Link>
+                      </div>
+
+                      <div className={`p-3 ${CARD}`}>
+                        <p className="px-2 pb-2 pt-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+                          Quick actions
+                        </p>
+                        {[
+                          { icon: "how_to_reg", label: "Open check-in desk", to: "checkin" },
+                          { icon: "group", label: "Manage guests", to: "guests" },
+                          { icon: "schedule", label: "View schedule", to: "schedule" },
+                        ].map((a) => (
+                          <Link
+                            key={a.to}
+                            to={`/events/${eventId}/${a.to}`}
+                            className="group flex items-center gap-3 rounded-xl px-2 py-2.5 transition hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                          >
+                            <span className="flex size-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                              <span className="material-symbols-outlined text-[17px]">{a.icon}</span>
+                            </span>
+                            <span className="text-xs font-bold text-slate-700 group-hover:text-slate-950 dark:text-slate-300 dark:group-hover:text-slate-100">
+                              {a.label}
+                            </span>
+                            <span className="material-symbols-outlined ml-auto text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-600 dark:group-hover:text-slate-400">
+                              arrow_forward
+                            </span>
+                          </Link>
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {activeTab === "guests" && (
-              <div className="space-y-6">
-                {/* show a small back link if we are in a sub-route like add/edit */}
-                {rest && (
-                  <div className="px-6">
-                    <Link
-                      to={`/events/${eventId}/guests`}
-                      className="text-primary-500 text-sm font-semibold inline-flex items-center gap-1"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        arrow_back
-                      </span>
-                      Guest List
-                    </Link>
-                  </div>
-                )}
-                {/* pass rest so the guest list can render add/edit form when needed */}
-                <GuestMasterList extraPath={rest || ""} eventId={eventId} />
-              </div>
-            )}
+          {activeTab === "guests" && (
+            <div className="space-y-6">
+              {/* back link when inside a sub-route like add/edit */}
+              {rest && (
+                <Link
+                  to={`/events/${eventId}/guests`}
+                  className="inline-flex items-center gap-1 text-sm font-bold text-blue-700 hover:underline dark:text-blue-300"
+                >
+                  <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                  Guest List
+                </Link>
+              )}
+              {/* pass rest so the guest list can render add/edit form when needed */}
+              <GuestMasterList extraPath={rest || ""} eventId={eventId} />
+            </div>
+          )}
 
-            {activeTab === "rooms" && (
-              <div className="space-y-6">
-                <RoomInventoryManagement />
-              </div>
-            )}
+          {activeTab === "rooms" && (
+            <div className="space-y-6">
+              <RoomInventoryManagement />
+            </div>
+          )}
 
-            {activeTab === "checkin" && (
-              <div className="space-y-6">
-                <CheckInOprationDesk eventId={eventId} />
-              </div>
-            )}
+          {activeTab === "checkin" && (
+            <div className="space-y-6">
+              <CheckInOprationDesk eventId={eventId} />
+            </div>
+          )}
 
-            {activeTab === "transport" && (
-              <div className="space-y-6">
-                <TransportCoordinationLogs eventId={eventId} />
-              </div>
-            )}
+          {activeTab === "transport" && (
+            <div className="space-y-6">
+              <TransportCoordinationLogs eventId={eventId} />
+            </div>
+          )}
 
-            {activeTab === "service" && (
-              <div className="space-y-6">
-                <ServiceRequestLogs eventId={eventId} />
-              </div>
-            )}
+          {activeTab === "service" && (
+            <div className="space-y-6">
+              <ServiceRequestLogs eventId={eventId} />
+            </div>
+          )}
 
-            {activeTab === "schedule" && (
-              <div className="space-y-6">
-                <OprationalEventSchedule />
-              </div>
-            )}
+          {activeTab === "schedule" && (
+            <div className="space-y-6">
+              <OprationalEventSchedule />
+            </div>
+          )}
 
-            {activeTab === "reports" && (
-              <div className="space-y-6">
-                <EventSummaryDashboards />
-              </div>
-            )}
+          {activeTab === "reports" && (
+            <div className="space-y-6">
+              <EventSummaryDashboards />
+            </div>
+          )}
 
-            {activeTab === "team" && (
-              <div className="space-y-6">
-                <TeamMemberManagement eventId={eventId} />
-              </div>
-            )}
+          {activeTab === "team" && (
+            <div className="space-y-6">
+              <TeamMemberManagement eventId={eventId} />
+            </div>
+          )}
 
-            {activeTab === "settings" && (
-              <div className="space-y-6">
-                <EventAdminstrativeSetting />
-              </div>
-            )}
-          </div>
+          {activeTab === "settings" && (
+            <div className="space-y-6">
+              <EventAdminstrativeSetting />
+            </div>
+          )}
         </main>
-        {/* <!-- Footer --> */}
-    
       </div>
     </EventContext.Provider>
   );
