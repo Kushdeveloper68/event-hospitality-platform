@@ -194,7 +194,7 @@ export default function Landingpage() {
            )}
             <Link to="/login" className="ec-signin">Sign in</Link>
             <Link to="/login" className="ec-btn ec-btn-dark ec-btn-small">
-              Request Beta <span className="material-symbols-outlined">arrow_forward</span>
+              Sign up for beta access <span className="material-symbols-outlined">arrow_forward</span>
             </Link>
           </div>
         </div>
@@ -230,7 +230,7 @@ export default function Landingpage() {
 
               <div className="ec-hero-actions">
                 <Link to="/login" className="ec-btn ec-btn-dark">
-                  Request Beta Access
+                  Sign up for Beta Access
                   <span className="material-symbols-outlined">arrow_forward</span>
                 </Link>
                 <Link to="/#product" className="ec-btn ec-btn-ghost">
@@ -655,7 +655,7 @@ export default function Landingpage() {
               <h2 style={headlineStyle}>Get EventCure into <span>your next event.</span></h2>
               <p>We're building with event teams, not guessing from the sidelines. Use the product on a real workflow and help shape what comes next.</p>
               <Link to="/login" className="ec-btn ec-btn-dark">
-                Request Beta Access <span className="material-symbols-outlined">arrow_forward</span>
+                Sign up for Beta Access <span className="material-symbols-outlined">arrow_forward</span>
               </Link>
             </div>
 
@@ -707,7 +707,7 @@ export default function Landingpage() {
             <h2 style={headlineStyle}>Give your operations desk<br /><span>a better system.</span></h2>
             <p>Bring guests, rooms, transport, services and team execution into one live operational workspace.</p>
             <Link to="/login" className="ec-btn ec-btn-light">
-              Request Beta Access <span className="material-symbols-outlined">arrow_forward</span>
+              Sign up for Beta Access <span className="material-symbols-outlined">arrow_forward</span>
             </Link>
           </div>
         </section>
