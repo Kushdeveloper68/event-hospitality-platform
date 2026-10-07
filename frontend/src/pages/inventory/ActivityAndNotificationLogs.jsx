@@ -6,58 +6,59 @@ import {
 } from '../../api/activityAndNotificationLogsApi';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
+const LIMIT = 20;
+
+const CARD =
+  'rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none';
+const FIELD =
+  'h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/60 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20 dark:[color-scheme:dark]';
+const BTN_PRIMARY =
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200';
+const BTN_SECONDARY =
+  'inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800';
 
 const PRIORITY_CONFIG = {
   critical: {
-    bg: 'bg-red-100 dark:bg-red-900/30',
-    text: 'text-red-700 dark:text-red-400',
-    border: 'border-red-200 dark:border-red-900/40',
-    dot: 'bg-red-500',
-    rowBg: 'bg-red-50/50 dark:bg-red-900/10',
     label: 'Critical',
-    icon: 'emergency',
+    badge: 'border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300',
+    dot: 'bg-red-500',
+    bar: 'bg-red-500',
+    row: 'bg-red-50/40 dark:bg-red-500/5',
     pulse: true,
   },
   high: {
-    bg: 'bg-orange-100 dark:bg-orange-900/30',
-    text: 'text-orange-700 dark:text-orange-400',
-    border: 'border-orange-200 dark:border-orange-900/40',
-    dot: 'bg-orange-500',
-    rowBg: 'bg-orange-50/30 dark:bg-orange-900/5',
     label: 'High',
-    icon: 'warning',
+    badge: 'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-orange-300',
+    dot: 'bg-orange-500',
+    bar: 'bg-orange-500',
+    row: 'bg-orange-50/30 dark:bg-orange-500/5',
     pulse: false,
   },
   normal: {
-    bg: 'bg-slate-100 dark:bg-slate-800',
-    text: 'text-slate-600 dark:text-slate-400',
-    border: 'border-slate-200 dark:border-slate-700',
-    dot: 'bg-slate-400',
-    rowBg: '',
     label: 'Normal',
-    icon: 'info',
+    badge: 'border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300',
+    dot: 'bg-slate-400',
+    bar: 'bg-transparent',
+    row: '',
     pulse: false,
   },
 };
 
 const TYPE_CONFIG = {
-  'check-in': { icon: 'how_to_reg', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', label: 'Check-in' },
-  'check-out': { icon: 'logout', color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800', label: 'Check-out' },
-  'registration': { icon: 'person_add', color: 'text-primary-600 dark:text-primary-400', bg: 'bg-primary-50 dark:bg-primary-900/20', label: 'Registration' },
-  'service': { icon: 'room_service', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20', label: 'Service' },
-  'transport': { icon: 'local_shipping', color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20', label: 'Transport' },
-  'room-assignment': { icon: 'meeting_room', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20', label: 'Room Assign' },
-  'schedule': { icon: 'schedule', color: 'text-teal-600 dark:text-teal-400', bg: 'bg-teal-50 dark:bg-teal-900/20', label: 'Schedule' },
+  'check-in': { icon: 'how_to_reg', chip: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300', label: 'Check-in' },
+  'check-out': { icon: 'logout', chip: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: 'Check-out' },
+  registration: { icon: 'person_add', chip: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300', label: 'Registration' },
+  service: { icon: 'room_service', chip: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300', label: 'Service' },
+  transport: { icon: 'local_shipping', chip: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300', label: 'Transport' },
+  'room-assignment': { icon: 'meeting_room', chip: 'bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300', label: 'Room assign' },
+  schedule: { icon: 'schedule', chip: 'bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300', label: 'Schedule' },
 };
 
 const getTypeConfig = (type) =>
-  TYPE_CONFIG[type] || { icon: 'notifications', color: 'text-slate-500 dark:text-slate-400', bg: 'bg-slate-100 dark:bg-slate-800', label: type };
-
-const getPriorityConfig = (priority) =>
-  PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.normal;
+  TYPE_CONFIG[type] || { icon: 'notifications', chip: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300', label: type };
+const getPriorityConfig = (priority) => PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.normal;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
 const timeAgo = (ts) => {
   const diff = Date.now() - new Date(ts).getTime();
   const m = Math.floor(diff / 60000);
@@ -71,99 +72,116 @@ const timeAgo = (ts) => {
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+const fmtTime = (d) => (d ? new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
 
-function StatPill({ icon, label, value, accent = 'slate', pulse = false }) {
-  const accentMap = {
-    red: 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-100 dark:border-red-900/30',
-    orange: 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border-orange-100 dark:border-orange-900/30',
-    blue: 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-900/30',
-    slate: 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-100 dark:border-slate-700',
-    green: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30',
-  };
+const dayKey = (ts) => {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+};
+
+const dayLabel = (ts) => {
+  const d = new Date(ts);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (dayKey(d) === dayKey(today)) return 'Today';
+  if (dayKey(d) === dayKey(yesterday)) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+const csvCell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+function Skeleton({ className = '' }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />;
+}
+
+function StatStrip({ items }) {
   return (
-    <div className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border ${accentMap[accent]}`}>
-      <span className="material-symbols-outlined text-lg">{icon}</span>
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">{label}</p>
-        <p className="text-lg font-black leading-none flex items-center gap-1.5">
-          {value}
-          {pulse && <span className="size-2 rounded-full bg-red-500 animate-pulse" />}
-        </p>
-      </div>
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-800 dark:shadow-none lg:grid-cols-4">
+      {items.map((it) => (
+        <div key={it.label} className="bg-white p-4 dark:bg-slate-900 sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            <span className={`material-symbols-outlined text-[16px] ${it.color}`}>{it.icon}</span>
+            {it.label}
+          </p>
+          <div className="mt-2 flex items-center gap-2">
+            <p className="text-2xl font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50 sm:text-[28px]">
+              {it.value}
+            </p>
+            {it.pulse && <span className="size-2 animate-pulse rounded-full bg-red-500" />}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-function LogRow({ log, isNew = false }) {
-  const typeConfig = getTypeConfig(log.type);
-  const priorityConfig = getPriorityConfig(log.priority);
+function LogRow({ log }) {
+  const type = getTypeConfig(log.type);
+  const priority = getPriorityConfig(log.priority);
+  const flagged = log.priority === 'critical' || log.priority === 'high';
 
   return (
-    <div className={`group relative flex items-start gap-4 px-6 py-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 last:border-0 ${priorityConfig.rowBg} ${isNew ? 'animate-pulse-once' : ''}`}>
-      
-      {/* Priority left accent */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r ${priorityConfig.dot}`} />
+    <div className={`group relative flex items-start gap-3.5 border-b border-slate-100 px-5 py-4 transition-colors last:border-0 hover:bg-slate-50/70 dark:border-slate-800 dark:hover:bg-slate-800/40 sm:gap-4 sm:px-6 ${priority.row}`}>
+      <div className={`absolute bottom-0 left-0 top-0 w-1 ${priority.bar}`} />
 
-      {/* Type icon */}
-      <div className={`shrink-0 size-10 rounded-xl flex items-center justify-center ${typeConfig.bg}`}>
-        <span className={`material-symbols-outlined text-lg ${typeConfig.color}`}>{typeConfig.icon}</span>
+      <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${type.chip}`}>
+        <span className="material-symbols-outlined text-[20px]">{type.icon}</span>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug line-clamp-2">
-              {log.message}
-            </p>
-
-            {/* Event pill */}
-            {log.event?.name && (
-              <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
-                <span className="material-symbols-outlined text-[10px]">event</span>
-                {log.event.name}
+          <p className="line-clamp-2 min-w-0 flex-1 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">
+            {log.message}
+          </p>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            <span className="whitespace-nowrap text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400" title={fmtDate(log.timestamp)}>
+              {fmtTime(log.timestamp)}
+              <span className="ml-1.5 hidden font-medium text-slate-400 dark:text-slate-500 sm:inline">· {timeAgo(log.timestamp)}</span>
+            </span>
+            {flagged && (
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${priority.badge}`}>
+                <span className={`size-1.5 rounded-full ${priority.dot} ${priority.pulse ? 'animate-pulse' : ''}`} />
+                {priority.label}
               </span>
             )}
-
-            {/* Guest pill */}
-            {log.relatedGuest?.fullName && (
-              <span className={`inline-flex items-center gap-1 mt-1 ml-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${log.relatedGuest.vipStatus ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'}`}>
-                <span className="material-symbols-outlined text-[10px]">{log.relatedGuest.vipStatus ? 'star' : 'person'}</span>
-                {log.relatedGuest.fullName}
-                {log.relatedGuest.vipStatus && <span className="text-[8px] uppercase tracking-wider">VIP</span>}
-              </span>
-            )}
-          </div>
-
-          <div className="shrink-0 flex flex-col items-end gap-1.5">
-            {/* Priority badge */}
-            <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${priorityConfig.bg} ${priorityConfig.text} ${priorityConfig.border}`}>
-              <span className={`size-1.5 rounded-full ${priorityConfig.dot} ${priorityConfig.pulse ? 'animate-pulse' : ''}`} />
-              {priorityConfig.label}
-            </span>
-
-            {/* Time */}
-            <span className="text-[11px] text-slate-400 dark:text-slate-500" title={fmtDate(log.timestamp)}>
-              {timeAgo(log.timestamp)}
-            </span>
           </div>
         </div>
 
-        {/* Type + event location row */}
-        <div className="flex items-center gap-3 mt-1.5">
-          <span className={`text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${typeConfig.bg} ${typeConfig.color}`}>
-            {getTypeConfig(log.type).label}
-          </span>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-bold ${type.chip}`}>{type.label}</span>
+
+          {log.event?.name && (
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="material-symbols-outlined text-[14px]">event</span>
+              {log.event.name}
+            </span>
+          )}
           {log.event?.venue && (
-            <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
-              <span className="material-symbols-outlined text-[10px]">location_on</span>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="material-symbols-outlined text-[14px]">location_on</span>
               {log.event.venue}
             </span>
           )}
+          {log.relatedGuest?.fullName && (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                log.relatedGuest.vipStatus
+                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[13px]" style={log.relatedGuest.vipStatus ? { fontVariationSettings: "'FILL' 1" } : undefined}>
+                {log.relatedGuest.vipStatus ? 'star' : 'person'}
+              </span>
+              {log.relatedGuest.fullName}
+              {log.relatedGuest.vipStatus && <span className="text-[9px] uppercase tracking-wider">VIP</span>}
+            </span>
+          )}
           {log.relatedStaff?.name && (
-            <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
-              <span className="material-symbols-outlined text-[10px]">badge</span>
+            <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+              <span className="material-symbols-outlined text-[14px]">badge</span>
               {log.relatedStaff.name}
             </span>
           )}
@@ -173,39 +191,55 @@ function LogRow({ log, isNew = false }) {
   );
 }
 
-function EmptyState({ filtered }) {
+function SkeletonRow() {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-      <div className="size-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-        <span className="material-symbols-outlined text-3xl text-slate-300 dark:text-slate-600">
-          {filtered ? 'filter_alt_off' : 'notifications_off'}
-        </span>
+    <div className="flex items-start gap-4 border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+      <Skeleton className="size-10 shrink-0 rounded-xl" />
+      <div className="flex-1 space-y-2.5">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
       </div>
-      <p className="text-slate-700 dark:text-slate-300 font-bold text-lg">
-        {filtered ? 'No logs match these filters' : 'No activity yet'}
-      </p>
-      <p className="text-slate-400 text-sm mt-1">
-        {filtered ? 'Try adjusting your filters or date range.' : 'Activity will appear here as operations begin.'}
-      </p>
+      <Skeleton className="h-4 w-14" />
     </div>
   );
 }
 
-function SkeletonRow() {
+function EmptyState({ filtered, onClear }) {
   return (
-    <div className="flex items-start gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-      <div className="size-10 rounded-xl bg-slate-200 dark:bg-slate-700 animate-pulse shrink-0" />
-      <div className="flex-1 space-y-2">
-        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded animate-pulse w-3/4" />
-        <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded animate-pulse w-1/2" />
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+        <span className="material-symbols-outlined text-[24px]">{filtered ? 'filter_alt_off' : 'notifications_off'}</span>
       </div>
-      <div className="w-16 h-5 bg-slate-200 dark:bg-slate-700 rounded-full animate-pulse" />
+      <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{filtered ? 'No logs match these filters' : 'No activity yet'}</p>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+        {filtered ? 'Try adjusting your filters or date range.' : 'Activity will appear here as operations begin.'}
+      </p>
+      {filtered && (
+        <button onClick={onClear} className={`${BTN_SECONDARY} mt-5`}>
+          Clear filters
+        </button>
+      )}
     </div>
+  );
+}
+
+function Chip({ children, onRemove, icon }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 py-1 pl-2.5 pr-1 text-[11px] font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
+      {icon && <span className="material-symbols-outlined text-[13px]">{icon}</span>}
+      {children}
+      <button
+        onClick={onRemove}
+        aria-label="Remove filter"
+        className="flex size-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+      >
+        <span className="material-symbols-outlined text-[14px]">close</span>
+      </button>
+    </span>
   );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-
 function ActivityAndNotificationLogs() {
   // Data
   const [logs, setLogs] = useState([]);
@@ -226,118 +260,147 @@ function ActivityAndNotificationLogs() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
-  const LIMIT = 20;
 
-  const searchRef = useRef(null);
   const searchDebounce = useRef(null);
+  const toastTimer = useRef(null);
+  const loadedOnce = useRef(false);
+  const reqId = useRef(0);
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 3500);
   };
+  useEffect(
+    () => () => {
+      clearTimeout(toastTimer.current);
+      clearTimeout(searchDebounce.current);
+    },
+    []
+  );
 
   // ── Fetch logs ──────────────────────────────────────────────────────────
-  const fetchLogs = useCallback(async ({ quiet = false } = {}) => {
-    try {
-      if (!quiet) setLoading(true);
-      else setRefreshing(true);
-      setError(null);
+  const fetchLogs = useCallback(
+    async ({ quiet = false } = {}) => {
+      const id = ++reqId.current;
+      try {
+        if (!quiet && !loadedOnce.current) setLoading(true);
+        else setRefreshing(true);
+        setError(null);
 
-      const params = {
-        page,
-        limit: LIMIT,
-        ...(eventFilter && { eventId: eventFilter }),
-        ...(typeFilter !== 'all' && { type: typeFilter }),
-        ...(priorityFilter !== 'all' && { priority: priorityFilter }),
-        ...(search && { search }),
-        ...(startDate && { startDate }),
-        ...(endDate && { endDate }),
-      };
+        const params = {
+          page,
+          limit: LIMIT,
+          ...(eventFilter && { eventId: eventFilter }),
+          ...(typeFilter !== 'all' && { type: typeFilter }),
+          ...(priorityFilter !== 'all' && { priority: priorityFilter }),
+          ...(search && { search }),
+          ...(startDate && { startDate }),
+          ...(endDate && { endDate }),
+        };
 
-      const [logsRes, summaryRes] = await Promise.all([
-        getActivityLogs(params),
-        getActivitySummary(eventFilter || null),
-      ]);
+        const [logsRes, summaryRes] = await Promise.all([getActivityLogs(params), getActivitySummary(eventFilter || null)]);
+        if (id !== reqId.current) return;
 
-      if (logsRes.success) {
-        setLogs(logsRes.logs || []);
-        setTotal(logsRes.total || 0);
-        if (logsRes.events?.length) setUserEvents(logsRes.events);
-        setLastUpdated(new Date());
-      } else {
-        setError(logsRes.message || 'Failed to fetch logs');
+        if (logsRes.success) {
+          setLogs(logsRes.logs || []);
+          setTotal(logsRes.total || 0);
+          if (logsRes.events?.length) setUserEvents(logsRes.events);
+          setLastUpdated(new Date());
+          loadedOnce.current = true;
+        } else {
+          setError(logsRes.message || 'Failed to fetch logs');
+        }
+
+        if (summaryRes.success) {
+          setSummary(summaryRes.summary || {});
+        }
+      } catch (err) {
+        if (id !== reqId.current) return;
+        setError('Network error. Please check your connection.');
+      } finally {
+        if (id === reqId.current) {
+          setLoading(false);
+          setRefreshing(false);
+        }
       }
-
-      if (summaryRes.success) {
-        setSummary(summaryRes.summary || {});
-      }
-    } catch (err) {
-      setError('Network error. Please check your connection.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [page, eventFilter, typeFilter, priorityFilter, search, startDate, endDate]);
+    },
+    [page, eventFilter, typeFilter, priorityFilter, search, startDate, endDate]
+  );
 
   // ── Fetch available types ──────────────────────────────────────────────
   useEffect(() => {
-    getActivityTypes().then((res) => {
-      if (res.success) setAvailableTypes(res.types || []);
-    });
+    getActivityTypes()
+      .then((res) => {
+        if (res.success) setAvailableTypes(res.types || []);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     fetchLogs();
   }, [fetchLogs]);
 
-  // ── Auto refresh every 30s ─────────────────────────────────────────────
+  // ── Auto refresh every 30s (paused while the tab is hidden) ─────────────
   useEffect(() => {
-    const interval = setInterval(() => fetchLogs({ quiet: true }), 30000);
+    const interval = setInterval(() => {
+      if (!document.hidden) fetchLogs({ quiet: true });
+    }, 30000);
     return () => clearInterval(interval);
   }, [fetchLogs]);
 
   // ── Search debounce ────────────────────────────────────────────────────
   const handleSearchChange = (e) => {
     const val = e.target.value;
-    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    setSearchInput(val);
+    clearTimeout(searchDebounce.current);
     searchDebounce.current = setTimeout(() => {
       setPage(1);
-      setSearch(val);
+      setSearch(val.trim());
     }, 300);
   };
 
   const clearFilters = () => {
+    clearTimeout(searchDebounce.current);
     setEventFilter('');
     setTypeFilter('all');
     setPriorityFilter('all');
     setSearch('');
+    setSearchInput('');
     setStartDate('');
     setEndDate('');
     setPage(1);
-    if (searchRef.current) searchRef.current.value = '';
   };
 
-  const hasActiveFilters = eventFilter || typeFilter !== 'all' || priorityFilter !== 'all' || search || startDate || endDate;
-  const totalPages = Math.ceil(total / LIMIT);
+  const hasActiveFilters = !!(eventFilter || typeFilter !== 'all' || priorityFilter !== 'all' || search || startDate || endDate);
+  const totalPages = Math.max(1, Math.ceil(total / LIMIT));
+  const from = total === 0 ? 0 : (page - 1) * LIMIT + 1;
+  const to = Math.min(page * LIMIT, total);
+  const firstLoad = loading && !loadedOnce.current;
+  const eventName = userEvents.find((e) => e._id === eventFilter)?.name;
 
-  // ── CSV Export ─────────────────────────────────────────────────────────
+  // ── CSV Export (the entries on this page) ──────────────────────────────
   const handleExport = () => {
-    if (!logs.length) { showToast('No data to export', 'error'); return; }
+    if (!logs.length) {
+      showToast('No data to export', 'error');
+      return;
+    }
     const headers = ['Time', 'Event', 'Type', 'Priority', 'Message', 'Guest', 'Venue'];
     const rows = logs.map((l) => [
       fmtDate(l.timestamp),
-      `"${l.event?.name || ''}"`,
+      l.event?.name || '',
       l.type,
       l.priority,
-      `"${l.message || ''}"`,
-      `"${l.relatedGuest?.fullName || ''}"`,
-      `"${l.event?.venue || ''}"`,
+      l.message || '',
+      l.relatedGuest?.fullName || '',
+      l.event?.venue || '',
     ]);
-    const csv = [headers, ...rows].map((r) => r.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const csv = [headers, ...rows].map((r) => r.map(csvCell).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -347,268 +410,319 @@ function ActivityAndNotificationLogs() {
     showToast('CSV exported successfully');
   };
 
+  // Group the current page's rows by day for easy scanning
+  const grouped = [];
+  logs.forEach((log) => {
+    const key = dayKey(log.timestamp);
+    const last = grouped[grouped.length - 1];
+    if (last && last.key === key) last.items.push(log);
+    else grouped.push({ key, label: dayLabel(log.timestamp), items: [log] });
+  });
+
   return (
-    <div className="relative flex h-full min-h-screen w-full flex-col bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen w-full bg-[#f7f8fa] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="mx-auto w-full max-w-[1200px] space-y-5 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        {/* Toast */}
+        {toast && (
+          <div
+            role="status"
+            className={`fixed bottom-4 left-4 right-4 z-[80] flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+              toast.type === 'error' ? 'bg-red-600' : 'bg-emerald-600'
+            }`}
+          >
+            <span className="material-symbols-outlined text-[20px]">{toast.type === 'error' ? 'error' : 'check_circle'}</span>
+            <span className="min-w-0">{toast.msg}</span>
+          </div>
+        )}
 
-      {/* Toast */}
-      {toast && (
-        <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-semibold transition-all ${toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`}>
-          <span className="material-symbols-outlined text-lg">{toast.type === 'error' ? 'error' : 'check_circle'}</span>
-          {toast.msg}
-        </div>
-      )}
-
-      <div className="max-w-[1400px] mx-auto w-full p-6 space-y-5">
-
-        {/* ── Header ── */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        {/* Header */}
+        <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold text-primary uppercase tracking-widest mb-1">Operations Center</p>
-            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
-              Activity & Notification Logs
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">Operations center</p>
+            <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50 md:text-[32px]">
+              Activity &amp; notification logs
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              Live audit trail of all operational events across your events.
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+              Audit trail of operational events across all your events.
               {lastUpdated && (
-                <span className="ml-2 text-slate-400">
-                  Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <span className="ml-1.5 text-slate-400 dark:text-slate-500">
+                  Updated {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · auto-refreshes every 30s
                 </span>
               )}
             </p>
           </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => fetchLogs({ quiet: true })}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
-            >
-              <span className={`material-symbols-outlined text-lg ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => fetchLogs({ quiet: true })} disabled={refreshing} className={BTN_SECONDARY}>
+              <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
-            <button
-              onClick={handleExport}
-              disabled={!logs.length}
-              className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary-600 transition-colors disabled:opacity-40 shadow-lg shadow-primary/20"
-            >
-              <span className="material-symbols-outlined text-lg">download</span>
-              Export CSV
+            <button onClick={handleExport} disabled={!logs.length} title="Exports the entries shown on this page" className={BTN_PRIMARY}>
+              <span className="material-symbols-outlined text-[18px]">download</span>
+              Export page
             </button>
           </div>
-        </div>
+        </header>
 
-        {/* ── Summary pills ── */}
-        <div className="flex flex-wrap gap-3">
-          <StatPill icon="history" label="Total Logs" value={summary.total?.toLocaleString() || 0} accent="slate" />
-          <StatPill icon="emergency" label="Critical / High" value={summary.criticalCount || 0} accent={summary.criticalCount > 0 ? 'red' : 'slate'} pulse={summary.criticalCount > 0} />
-          <StatPill icon="today" label="Today" value={summary.todayCount || 0} accent="blue" />
-          {userEvents.length > 0 && (
-            <StatPill icon="event" label="Events Tracked" value={userEvents.length} accent="green" />
-          )}
-        </div>
+        {/* Summary */}
+        <StatStrip
+          items={[
+            { icon: 'history', label: 'Total logs', value: summary.total?.toLocaleString() || 0, color: 'text-blue-700 dark:text-blue-300' },
+            {
+              icon: 'emergency',
+              label: 'Critical / high',
+              value: summary.criticalCount || 0,
+              color: summary.criticalCount > 0 ? 'text-red-700 dark:text-red-300' : 'text-slate-500 dark:text-slate-400',
+              pulse: summary.criticalCount > 0,
+            },
+            { icon: 'today', label: 'Today', value: summary.todayCount || 0, color: 'text-indigo-700 dark:text-indigo-300' },
+            { icon: 'event', label: 'Events tracked', value: userEvents.length || 0, color: 'text-emerald-700 dark:text-emerald-300' },
+          ]}
+        />
 
-        {/* ── Filters ── */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
-          <div className="flex flex-wrap items-center gap-3">
-
-            {/* Search */}
-            <div className="relative flex-1 min-w-[200px]">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+        {/* Filters */}
+        <section className={`p-4 sm:p-5 ${CARD}`}>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative flex-1">
+              <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
               <input
-                ref={searchRef}
+                value={searchInput}
                 onChange={handleSearchChange}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none dark:text-white placeholder:text-slate-400"
-                placeholder="Search messages, types…"
+                className={`${FIELD} w-full pl-10`}
+                placeholder="Search messages, guests, types…"
                 type="text"
               />
             </div>
 
-            {/* Event filter */}
-            <select
-              value={eventFilter}
-              onChange={(e) => { setEventFilter(e.target.value); setPage(1); }}
-              className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm text-slate-700 dark:text-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none min-w-[160px]"
-            >
-              <option value="">All Events</option>
-              {userEvents.map((ev) => (
-                <option key={ev._id} value={ev._id}>{ev.name}</option>
-              ))}
-            </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <select
+                  value={eventFilter}
+                  onChange={(e) => {
+                    setEventFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Event"
+                  className={`${FIELD} w-full min-w-[10rem] cursor-pointer appearance-none pr-9 sm:w-auto`}
+                >
+                  <option value="">All events</option>
+                  {userEvents.map((ev) => (
+                    <option key={ev._id} value={ev._id}>
+                      {ev.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">expand_more</span>
+              </div>
 
-            {/* Type filter */}
-            <select
-              value={typeFilter}
-              onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }}
-              className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm text-slate-700 dark:text-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none min-w-[140px]"
-            >
-              <option value="all">All Types</option>
-              {(availableTypes.length ? availableTypes : Object.keys(TYPE_CONFIG)).map((t) => (
-                <option key={t} value={t}>{getTypeConfig(t).label}</option>
-              ))}
-            </select>
+              <div className="relative">
+                <select
+                  value={typeFilter}
+                  onChange={(e) => {
+                    setTypeFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  aria-label="Type"
+                  className={`${FIELD} w-full min-w-[9rem] cursor-pointer appearance-none pr-9 sm:w-auto`}
+                >
+                  <option value="all">All types</option>
+                  {(availableTypes.length ? availableTypes : Object.keys(TYPE_CONFIG)).map((t) => (
+                    <option key={t} value={t}>
+                      {getTypeConfig(t).label}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">expand_more</span>
+              </div>
+            </div>
+          </div>
 
-            {/* Priority filter */}
-            <select
-              value={priorityFilter}
-              onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }}
-              className="bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm text-slate-700 dark:text-slate-300 px-4 py-2.5 focus:ring-2 focus:ring-primary/20 outline-none min-w-[140px]"
-            >
-              <option value="all">All Priorities</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="normal">Normal</option>
-            </select>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            {/* Priority */}
+            <div className="flex w-fit rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+              {[
+                ['all', 'All'],
+                ['critical', 'Critical'],
+                ['high', 'High'],
+                ['normal', 'Normal'],
+              ].map(([k, l]) => (
+                <button
+                  key={k}
+                  onClick={() => {
+                    setPriorityFilter(k);
+                    setPage(1);
+                  }}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                    priorityFilter === k
+                      ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                      : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
 
             {/* Date range */}
-            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2">
-              <span className="material-symbols-outlined text-slate-400 text-lg">calendar_month</span>
+            <div className="flex items-center gap-1.5">
               <input
                 type="date"
+                aria-label="Start date"
                 value={startDate}
-                onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
-                className="bg-transparent text-xs text-slate-700 dark:text-slate-300 outline-none w-28"
+                max={endDate || undefined}
+                onChange={(e) => {
+                  setStartDate(e.target.value);
+                  setPage(1);
+                }}
+                className={`${FIELD} h-9 text-xs`}
               />
-              <span className="text-slate-400 text-xs">→</span>
+              <span className="text-xs font-bold text-slate-400">–</span>
               <input
                 type="date"
+                aria-label="End date"
                 value={endDate}
-                onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
-                className="bg-transparent text-xs text-slate-700 dark:text-slate-300 outline-none w-28"
+                min={startDate || undefined}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  setPage(1);
+                }}
+                className={`${FIELD} h-9 text-xs`}
               />
             </div>
 
-            {/* Clear filters */}
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-              >
-                <span className="material-symbols-outlined text-sm">filter_alt_off</span>
-                Clear
+              <button onClick={clearFilters} className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline dark:text-blue-300 sm:ml-auto">
+                <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                Clear all
               </button>
             )}
           </div>
 
-          {/* Active filter chips */}
           {hasActiveFilters && (
-            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-              {eventFilter && userEvents.find((e) => e._id === eventFilter) && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary/10 text-primary px-2.5 py-1 rounded-full">
-                  <span className="material-symbols-outlined text-[11px]">event</span>
-                  {userEvents.find((e) => e._id === eventFilter)?.name}
-                  <button onClick={() => setEventFilter('')} className="ml-1 hover:text-red-500">✕</button>
-                </span>
+            <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+              {eventFilter && eventName && (
+                <Chip icon="event" onRemove={() => setEventFilter('')}>
+                  {eventName}
+                </Chip>
               )}
-              {typeFilter !== 'all' && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-2.5 py-1 rounded-full">
-                  {getTypeConfig(typeFilter).label}
-                  <button onClick={() => setTypeFilter('all')} className="ml-1 hover:text-red-500">✕</button>
-                </span>
-              )}
-              {priorityFilter !== 'all' && (
-                <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full ${getPriorityConfig(priorityFilter).bg} ${getPriorityConfig(priorityFilter).text}`}>
-                  {getPriorityConfig(priorityFilter).label}
-                  <button onClick={() => setPriorityFilter('all')} className="ml-1 hover:opacity-70">✕</button>
-                </span>
+              {typeFilter !== 'all' && <Chip onRemove={() => setTypeFilter('all')}>{getTypeConfig(typeFilter).label}</Chip>}
+              {priorityFilter !== 'all' && <Chip onRemove={() => setPriorityFilter('all')}>{getPriorityConfig(priorityFilter).label} priority</Chip>}
+              {search && (
+                <Chip icon="search" onRemove={() => { setSearch(''); setSearchInput(''); }}>
+                  “{search}”
+                </Chip>
               )}
               {(startDate || endDate) && (
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2.5 py-1 rounded-full">
-                  <span className="material-symbols-outlined text-[11px]">date_range</span>
+                <Chip
+                  icon="date_range"
+                  onRemove={() => {
+                    setStartDate('');
+                    setEndDate('');
+                  }}
+                >
                   {startDate || '…'} → {endDate || '…'}
-                  <button onClick={() => { setStartDate(''); setEndDate(''); }} className="ml-1 hover:text-red-500">✕</button>
-                </span>
+                </Chip>
               )}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* ── Error ── */}
+        {/* Error */}
         {error && (
-          <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-xl text-red-700 dark:text-red-400">
-            <span className="material-symbols-outlined">error</span>
-            <p className="text-sm font-semibold flex-1">{error}</p>
-            <button onClick={() => fetchLogs()} className="text-xs font-bold underline hover:no-underline">Retry</button>
-            <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600">✕</button>
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="material-symbols-outlined text-[19px]">warning</span>
+              <span className="text-sm font-medium">{error}</span>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <button onClick={() => fetchLogs()} className="text-xs font-bold underline underline-offset-2 hover:no-underline">
+                Retry
+              </button>
+              <button onClick={() => setError(null)} aria-label="Dismiss" className="flex">
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ── Logs list ── */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-
-          {/* List header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
-            <div className="flex items-center gap-3">
-              <h2 className="font-display text-card-h3 text-slate-900 dark:text-white">
-                Activity Feed
-              </h2>
-              <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
-                <span className="size-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                Live
-              </span>
+        {/* Feed */}
+        <section className={`overflow-hidden ${CARD}`}>
+          <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800 sm:px-6">
+            <div>
+              <h2 className="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">Activity feed</h2>
+              <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">Newest first</p>
             </div>
-            <p className="text-xs text-slate-400">
-              {loading ? 'Loading…' : `${total.toLocaleString()} ${total === 1 ? 'entry' : 'entries'}`}
+            <p className="text-xs font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+              {firstLoad ? 'Loading…' : `${total.toLocaleString()} ${total === 1 ? 'entry' : 'entries'}`}
             </p>
           </div>
 
-          {/* Rows */}
-          {loading ? (
+          {firstLoad ? (
             <div>
-              {[...Array(6)].map((_, i) => <SkeletonRow key={i} />)}
+              {[...Array(6)].map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
             </div>
           ) : logs.length === 0 ? (
-            <EmptyState filtered={hasActiveFilters} />
+            <EmptyState filtered={hasActiveFilters} onClear={clearFilters} />
           ) : (
-            <div>
-              {logs.map((log) => (
-                <LogRow key={log._id} log={log} />
+            <div aria-busy={refreshing} className={`transition-opacity ${refreshing ? 'opacity-60' : ''}`}>
+              {grouped.map((group) => (
+                <div key={group.key}>
+                  <div className="border-b border-slate-100 bg-slate-50/80 px-5 py-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-400 sm:px-6">
+                    {group.label}
+                  </div>
+                  {group.items.map((log) => (
+                    <LogRow key={log._id} log={log} />
+                  ))}
+                </div>
               ))}
             </div>
           )}
 
           {/* Pagination */}
-          {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-              <p className="text-xs text-slate-500">
-                Page {page} of {totalPages} · {total.toLocaleString()} total logs
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  ← Previous
-                </button>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-3 py-1.5 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  Next →
-                </button>
-              </div>
+          {!firstLoad && logs.length > 0 && (
+            <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-3.5 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+              <span>
+                Showing <strong className="text-slate-700 dark:text-slate-200">{from}–{to}</strong> of{' '}
+                <strong className="text-slate-700 dark:text-slate-200">{total.toLocaleString()}</strong>
+              </span>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                    Previous
+                  </button>
+                  <span className="px-1 font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    Next
+                    <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                  </button>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* ── Priority legend ── */}
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 dark:text-slate-500 px-1">
-          <span className="font-bold uppercase tracking-wider">Legend:</span>
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <span className="text-[11px] font-bold uppercase tracking-[0.1em]">Priority</span>
           {Object.entries(PRIORITY_CONFIG).map(([key, cfg]) => (
             <span key={key} className="flex items-center gap-1.5">
               <span className={`size-2.5 rounded-full ${cfg.dot}`} />
-              {cfg.label} priority
-            </span>
-          ))}
-          <span className="ml-4 font-bold uppercase tracking-wider">Types:</span>
-          {Object.entries(TYPE_CONFIG).map(([key, cfg]) => (
-            <span key={key} className={`flex items-center gap-1 ${cfg.color}`}>
-              <span className="material-symbols-outlined text-[13px]">{cfg.icon}</span>
               {cfg.label}
             </span>
           ))}
         </div>
-
       </div>
     </div>
   );
