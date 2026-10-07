@@ -194,7 +194,7 @@ export default function Landingpage() {
            )}
             <Link to="/login" className="ec-signin">Sign in</Link>
             <Link to="/login" className="ec-btn ec-btn-dark ec-btn-small">
-              Sign up for beta access <span className="material-symbols-outlined">arrow_forward</span>
+              Sign up<span className="material-symbols-outlined">arrow_forward</span>
             </Link>
           </div>
         </div>
