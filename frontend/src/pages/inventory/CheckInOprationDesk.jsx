@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   getArrivingToday,
@@ -8,6 +8,113 @@ import {
   checkOutGuest,
   getCheckInSummary,
 } from '../../api/checkInApi'
+
+// ─── Shared styles (same system as the rest of the event workspace) ───────────
+const CARD =
+  'rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none'
+
+const COLUMN_TONE = {
+  blue: {
+    chip: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
+    count: 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300',
+  },
+  emerald: {
+    chip: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
+    count: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300',
+  },
+  amber: {
+    chip: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+    count: 'bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300',
+  },
+}
+
+function Skeleton({ className = '' }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />
+}
+
+function StatStrip({ items }) {
+  return (
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-800 dark:shadow-none lg:grid-cols-4">
+      {items.map((it) => (
+        <div key={it.label} className="bg-white p-4 dark:bg-slate-900 sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            <span className={`material-symbols-outlined text-[16px] ${it.color}`}>{it.icon}</span>
+            {it.label}
+          </p>
+          <p className="mt-2 text-2xl font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50 sm:text-[28px]">
+            {it.value}
+          </p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Column({ icon, title, count, tone, children }) {
+  const t = COLUMN_TONE[tone]
+  return (
+    <section className={`flex min-h-[26rem] min-w-0 flex-col overflow-hidden lg:h-[calc(100vh-8rem)] ${CARD}`}>
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-100 px-4 py-3.5 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className={`flex size-9 items-center justify-center rounded-xl ${t.chip}`}>
+            <span className="material-symbols-outlined text-[19px]">{icon}</span>
+          </div>
+          <h2 className="text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+        </div>
+        <span className={`min-w-[28px] rounded-full px-2.5 py-1 text-center text-xs font-extrabold tabular-nums ${t.count}`}>
+          {count}
+        </span>
+      </header>
+      <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50/50 p-3 dark:bg-slate-950/30">{children}</div>
+    </section>
+  )
+}
+
+function ColumnEmpty({ icon, message }) {
+  return (
+    <div className="mt-2 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 px-4 py-10 text-center dark:border-slate-800">
+      <div className="mb-3 flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+        <span className="material-symbols-outlined text-[22px]">{icon}</span>
+      </div>
+      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">{message}</p>
+    </div>
+  )
+}
+
+function VipBadge() {
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+      <span className="material-symbols-outlined text-[11px]">star</span>
+      VIP
+    </span>
+  )
+}
+
+function Spinner({ dark }) {
+  return (
+    <span
+      className={`size-4 animate-spin rounded-full border-2 ${
+        dark
+          ? 'border-slate-400/30 border-t-slate-500'
+          : 'border-white/30 border-t-white dark:border-slate-900/30 dark:border-t-slate-900'
+      }`}
+    />
+  )
+}
+
+function InfoLine({ icon, children }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+      <span className="material-symbols-outlined text-[15px]">{icon}</span>
+      {children}
+    </span>
+  )
+}
+
+const PRIMARY_BTN =
+  'flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200'
+const SECONDARY_BTN =
+  'flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
 
 function CheckInOprationDesk({ eventId: propEventId }) {
   const { eventId: paramEventId } = useParams()
@@ -21,15 +128,20 @@ function CheckInOprationDesk({ eventId: propEventId }) {
 
   // UI states
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState(null)
   const [actionLoadingId, setActionLoadingId] = useState(null)
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' })
+  const [search, setSearch] = useState('')
+  const toastTimer = useRef(null)
 
   // Toast helper
   const showToast = (message, type = 'info', duration = 4000) => {
     setToast({ show: true, message, type })
-    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration)
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration)
   }
+  useEffect(() => () => clearTimeout(toastTimer.current), [])
 
   // Fetch all columns
   const fetchAll = async ({ quiet = false } = {}) => {
@@ -39,6 +151,7 @@ function CheckInOprationDesk({ eventId: propEventId }) {
         return
       }
       if (!quiet) setLoading(true)
+      else setRefreshing(true)
       setError(null)
 
       const [arrivingRes, checkedInRes, pendingRes, summaryRes] = await Promise.all([
@@ -73,7 +186,8 @@ function CheckInOprationDesk({ eventId: propEventId }) {
       }
       setError(errorMsg)
     } finally {
-      if (!quiet) setLoading(false)
+      setLoading(false)
+      setRefreshing(false)
     }
   }
 
@@ -87,15 +201,14 @@ function CheckInOprationDesk({ eventId: propEventId }) {
       setActionLoadingId(guestId)
       const res = await checkInGuest(guestId)
       if (res.success) {
-        showToast(`✓ ${guestName} checked in successfully`, 'success')
+        showToast(`${guestName} checked in successfully`, 'success')
         await fetchAll({ quiet: true })
       } else {
         showToast(res.message || 'Failed to check in guest', 'error')
       }
     } catch (err) {
       console.error('Check-in error:', err)
-      const msg = err.message || 'Failed to check in guest'
-      showToast(msg, 'error')
+      showToast(err.message || 'Failed to check in guest', 'error')
     } finally {
       setActionLoadingId(null)
     }
@@ -107,15 +220,14 @@ function CheckInOprationDesk({ eventId: propEventId }) {
       setActionLoadingId(guestId)
       const res = await checkOutGuest(guestId)
       if (res.success) {
-        showToast(`✓ ${guestName} checked out successfully`, 'success')
+        showToast(`${guestName} checked out successfully`, 'success')
         await fetchAll({ quiet: true })
       } else {
         showToast(res.message || 'Failed to check out guest', 'error')
       }
     } catch (err) {
       console.error('Check-out error:', err)
-      const msg = err.message || 'Failed to check out guest'
-      showToast(msg, 'error')
+      showToast(err.message || 'Failed to check out guest', 'error')
     } finally {
       setActionLoadingId(null)
     }
@@ -140,370 +252,321 @@ function CheckInOprationDesk({ eventId: propEventId }) {
   // Get initials from name
   const getInitials = (name) => {
     if (!name) return '?'
-    return name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)
+    return name.split(' ').filter(Boolean).map((w) => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
-  // Loading state
+  // Search across all three columns
+  const q = search.trim().toLowerCase()
+  const match = (g) =>
+    !q ||
+    (g.fullName || '').toLowerCase().includes(q) ||
+    (g.groupName || '').toLowerCase().includes(q) ||
+    String(g.room?.number || '').toLowerCase().includes(q)
+  const arrivingList = arriving.filter(match)
+  const checkedInList = checkedIn.filter(match)
+  const pendingList = pending.filter(match)
+
+  // ── Loading ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <main className="max-w-[1600px] mx-auto p-6">
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center">
-            <div className="relative w-12 h-12 mx-auto mb-4">
-              <div className="absolute inset-0 rounded-full border-2 border-slate-200"></div>
-              <div className="absolute inset-0 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-            </div>
-            <p className="text-slate-600 font-medium">Loading check-in desk...</p>
-            <p className="text-slate-400 text-sm mt-1">Fetching guest data</p>
-          </div>
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-80 max-w-full" />
         </div>
-      </main>
+        <Skeleton className="h-24 w-full rounded-2xl" />
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className={`h-96 p-4 ${CARD}`}>
+              <Skeleton className="mb-4 h-9 w-40" />
+              <Skeleton className="mb-3 h-28 w-full" />
+              <Skeleton className="h-28 w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
     )
   }
 
-  // Error state (full page)
+  // ── Full error ─────────────────────────────────────────────────────────────
   if (error && arriving.length === 0 && checkedIn.length === 0 && pending.length === 0) {
     return (
-      <main className="max-w-[1600px] mx-auto p-6">
-        <div className="flex items-center justify-center py-32">
-          <div className="text-center max-w-md">
-            <span className="material-symbols-outlined text-6xl text-red-300 block mb-4">error</span>
-            <p className="text-red-700 font-bold text-lg mb-2">Unable to load check-in desk</p>
-            <p className="text-slate-500 text-sm mb-6">{error}</p>
-            <button
-              onClick={() => fetchAll()}
-              className="flex items-center gap-2 mx-auto px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-colors"
-            >
-              <span className="material-symbols-outlined text-lg">refresh</span>
-              Try Again
-            </button>
-          </div>
+      <div className="mx-auto mt-6 max-w-md rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm dark:border-red-500/30 dark:bg-slate-900">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+          <span className="material-symbols-outlined text-[25px]">error</span>
         </div>
-      </main>
+        <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">Unable to load check-in desk</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{error}</p>
+        <button
+          onClick={() => fetchAll()}
+          className="mt-6 inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-5 text-sm font-bold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+        >
+          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          Try again
+        </button>
+      </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Toast Notification */}
+    <div className="space-y-5">
+      {/* Toast */}
       {toast.show && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-slide-in ${
-          toast.type === 'success' ? 'bg-green-500' :
-          toast.type === 'error' ? 'bg-red-500' :
-          toast.type === 'warning' ? 'bg-yellow-500' :
-          'bg-primary-500'
-        }`}>
-          <div className="flex items-center gap-2">
-            {toast.type === 'success' && <span className="material-symbols-outlined">check_circle</span>}
-            {toast.type === 'error' && <span className="material-symbols-outlined">error</span>}
-            {toast.type === 'warning' && <span className="material-symbols-outlined">warning</span>}
-            {toast.type === 'info' && <span className="material-symbols-outlined">info</span>}
-            <span>{toast.message}</span>
-          </div>
+        <div
+          role="status"
+          className={`fixed bottom-4 left-4 right-4 z-[60] flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+            toast.type === 'success'
+              ? 'bg-emerald-600'
+              : toast.type === 'error'
+                ? 'bg-red-600'
+                : toast.type === 'warning'
+                  ? 'bg-amber-600'
+                  : 'bg-slate-800'
+          }`}
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            {toast.type === 'success' ? 'check_circle' : toast.type === 'error' ? 'error' : toast.type === 'warning' ? 'warning' : 'info'}
+          </span>
+          <span className="min-w-0">{toast.message}</span>
         </div>
       )}
 
-      {/* Error Banner (non-blocking) */}
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">
+            Operations
+          </p>
+          <h2 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50">
+            Check-in desk
+          </h2>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Check guests in on arrival and check them out when they leave.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="relative">
+            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">
+              search
+            </span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search name, group or room…"
+              className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-10 pr-3 text-sm font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/60 dark:focus:ring-blue-500/20 sm:w-64"
+            />
+          </div>
+          <button
+            onClick={() => fetchAll({ quiet: true })}
+            disabled={refreshing}
+            className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+            {refreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
+      </div>
+
+      {/* Error banner (non-blocking) */}
       {error && (
-        <div className="max-w-[1600px] mx-auto px-6 pt-4">
-          <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <span className="material-symbols-outlined text-red-600 flex-shrink-0">error</span>
-            <div className="flex-1">
-              <p className="text-red-800 font-medium">{error}</p>
-            </div>
-            <button
-              onClick={() => fetchAll()}
-              className="flex items-center gap-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm rounded font-medium transition-colors whitespace-nowrap"
-            >
-              <span className="material-symbols-outlined text-sm">refresh</span>
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="material-symbols-outlined text-[19px]">warning</span>
+            <span className="text-sm font-medium">{error}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <button onClick={() => fetchAll()} className="text-xs font-bold underline underline-offset-2 hover:no-underline">
               Retry
             </button>
-            <button onClick={() => setError(null)} className="text-red-600 hover:text-red-800 font-medium">✕</button>
+            <button onClick={() => setError(null)} aria-label="Dismiss" className="flex">
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
           </div>
         </div>
       )}
 
-      <main className="max-w-[1600px] w-full mx-auto p-6 h-[calc(100vh-64px)] overflow-y-auto">
-        {/* Dashboard Operations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+      <StatStrip
+        items={[
+          { icon: 'group', label: 'Total guests', value: summary.totalGuests, color: 'text-blue-700 dark:text-blue-300' },
+          { icon: 'schedule', label: 'Arriving today', value: summary.arrivingToday, color: 'text-indigo-700 dark:text-indigo-300' },
+          { icon: 'how_to_reg', label: 'Checked in', value: summary.checkedIn, color: 'text-emerald-700 dark:text-emerald-300' },
+          { icon: 'pending_actions', label: 'Pending', value: summary.pending, color: 'text-amber-700 dark:text-amber-300' },
+        ]}
+      />
 
-          {/* Column 1: Arriving Today */}
-          <section className="flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">schedule</span>
-                <h2 className="font-display text-card-h3 text-slate-800 dark:text-slate-100">Arriving Today</h2>
-              </div>
-              <span className="bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold px-2.5 py-1 rounded-full">
-                {summary.arrivingToday}
-              </span>
-            </header>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              {arriving.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl mt-4">
-                  <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">event_available</span>
-                  <p className="text-sm font-medium text-slate-400">No guests arriving today</p>
-                </div>
-              ) : (
-                arriving.map((g) => (
-                  <div key={g._id} className="group p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-primary/50 hover:shadow-md transition-all">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary-100 text-primary font-bold rounded-full size-9 flex items-center justify-center text-xs">
-                          {getInitials(g.fullName)}
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            {g.fullName}
-                            {g.vipStatus && (
-                              <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded uppercase font-black">VIP</span>
-                            )}
-                          </h3>
-                          {g.groupName && <p className="text-xs text-slate-500 font-medium">{g.groupName}</p>}
-                        </div>
-                      </div>
-                      {g.arrivalDatetime && (
-                        <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">
-                          {formatTime(g.arrivalDatetime)}
-                        </span>
-                      )}
+      {/* Operations grid */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* Arriving today */}
+        <Column icon="schedule" title="Arriving today" count={arrivingList.length} tone="blue">
+          {arrivingList.length === 0 ? (
+            <ColumnEmpty icon="event_available" message={q ? 'No matching guests' : 'No guests arriving today'} />
+          ) : (
+            arrivingList.map((g) => (
+              <div
+                key={g._id}
+                className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:shadow-[0_6px_18px_rgba(15,23,42,0.06)] dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600 dark:hover:shadow-none"
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-xs font-extrabold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                      {getInitials(g.fullName)}
                     </div>
-                    {g.room?.number && (
-                      <p className="text-xs text-slate-500 mb-3">
-                        <span className="material-symbols-outlined text-[14px] align-middle mr-1">meeting_room</span>
-                        Room {g.room.number}
-                      </p>
-                    )}
-                    <button
-                      onClick={() => handleCheckIn(g._id, g.fullName)}
-                      disabled={actionLoadingId === g._id}
-                      className="w-full bg-primary hover:bg-primary-600 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
-                    >
-                      {actionLoadingId === g._id ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          Checking in...
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined text-[20px]">how_to_reg</span>
-                          Check-in
-                        </>
-                      )}
-                    </button>
+                    <div className="min-w-0">
+                      <h3 className="flex items-center gap-2 text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                        <span className="truncate">{g.fullName}</span>
+                        {g.vipStatus && <VipBadge />}
+                      </h3>
+                      {g.groupName && <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{g.groupName}</p>}
+                    </div>
                   </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Column 2: Currently Checked-in */}
-          <section className="flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-emerald-50/30 dark:bg-emerald-900/10">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-500">check_circle</span>
-                <h2 className="font-display text-card-h3 text-slate-800 dark:text-slate-100">Checked-in</h2>
-              </div>
-              <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-full">
-                {summary.checkedIn}
-              </span>
-            </header>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-slate-50/30 dark:bg-slate-900/30">
-              {checkedIn.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl mt-4">
-                  <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">how_to_reg</span>
-                  <p className="text-sm font-medium text-slate-400">No guests checked in yet</p>
+                  {g.arrivalDatetime && (
+                    <span className="shrink-0 rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold tabular-nums text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                      {formatTime(g.arrivalDatetime)}
+                    </span>
+                  )}
                 </div>
-              ) : (
-                checkedIn.map((g) => (
-                  <div key={g._id} className="group p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-slate-300 transition-all">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-emerald-100 text-emerald-700 font-bold rounded-full size-9 flex items-center justify-center text-xs">
-                          {getInitials(g.fullName)}
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                            {g.fullName}
-                            {g.vipStatus && (
-                              <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded uppercase font-black">VIP</span>
-                            )}
-                          </h3>
-                          {g.groupName && <p className="text-xs text-slate-500 font-medium">{g.groupName}</p>}
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40 px-2 py-1 rounded">
-                        ON-SITE
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 mb-3 text-xs text-slate-500">
-                      {g.room?.number && (
-                        <span>
-                          <span className="material-symbols-outlined text-[14px] align-middle mr-1">meeting_room</span>
-                          Room {g.room.number}
-                        </span>
-                      )}
-                      {g.checkedInAt && (
-                        <span>
-                          <span className="material-symbols-outlined text-[14px] align-middle mr-1">login</span>
-                          In at {formatTime(g.checkedInAt)}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => handleCheckOut(g._id, g.fullName)}
-                      disabled={actionLoadingId === g._id}
-                      className="w-full border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 dark:text-slate-300 font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
-                    >
-                      {actionLoadingId === g._id ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin"></div>
-                          Checking out...
-                        </>
-                      ) : (
-                        <>
-                          <span className="material-symbols-outlined text-[20px]">logout</span>
-                          Check-out
-                        </>
-                      )}
-                    </button>
+                {g.room?.number && (
+                  <div className="mb-3">
+                    <InfoLine icon="meeting_room">Room {g.room.number}</InfoLine>
                   </div>
-                ))
-              )}
-            </div>
-          </section>
-
-          {/* Column 3: Pending Arrivals */}
-          <section className="flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <header className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-amber-50/30 dark:bg-amber-900/10">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-amber-500">warning</span>
-                <h2 className="font-display text-card-h3 text-slate-800 dark:text-slate-100">Pending Arrivals</h2>
+                )}
+                <button onClick={() => handleCheckIn(g._id, g.fullName)} disabled={actionLoadingId === g._id} className={PRIMARY_BTN}>
+                  {actionLoadingId === g._id ? (
+                    <>
+                      <Spinner />
+                      Checking in…
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[19px]">how_to_reg</span>
+                      Check in
+                    </>
+                  )}
+                </button>
               </div>
-              <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-xs font-bold px-2.5 py-1 rounded-full">
-                {summary.pending}
-              </span>
-            </header>
-            <div className="flex-1 overflow-y-auto p-3 space-y-3">
-              {pending.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl mt-4">
-                  <span className="material-symbols-outlined text-slate-300 text-4xl mb-2">info</span>
-                  <p className="text-sm font-medium text-slate-400">No more pending<br/>urgent arrivals</p>
+            ))
+          )}
+        </Column>
+
+        {/* Checked in */}
+        <Column icon="check_circle" title="Checked in" count={checkedInList.length} tone="emerald">
+          {checkedInList.length === 0 ? (
+            <ColumnEmpty icon="how_to_reg" message={q ? 'No matching guests' : 'No guests checked in yet'} />
+          ) : (
+            checkedInList.map((g) => (
+              <div
+                key={g._id}
+                className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600"
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-extrabold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                      {getInitials(g.fullName)}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="flex items-center gap-2 text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                        <span className="truncate">{g.fullName}</span>
+                        {g.vipStatus && <VipBadge />}
+                      </h3>
+                      {g.groupName && <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{g.groupName}</p>}
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                    On-site
+                  </span>
                 </div>
-              ) : (
-                pending.map((g) => {
-                  const late = isLate(g.arrivalDatetime)
-                  return (
-                    <div
-                      key={g._id}
-                      className={`group p-4 rounded-lg transition-all ${
-                        late
-                          ? 'bg-amber-50/40 dark:bg-amber-900/5 border border-amber-200 dark:border-amber-900/30'
-                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`font-bold rounded-full size-9 flex items-center justify-center text-xs ${
-                            late ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            {getInitials(g.fullName)}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                              {g.fullName}
-                              {late && <span className="material-symbols-outlined text-amber-500 text-[16px]">priority_high</span>}
-                              {g.vipStatus && (
-                                <span className="bg-primary/10 text-primary text-[10px] px-1.5 py-0.5 rounded uppercase font-black">VIP</span>
-                              )}
-                            </h3>
-                            {g.groupName && <p className="text-xs text-slate-500 font-medium">{g.groupName}</p>}
-                          </div>
-                        </div>
-                        {late ? (
-                          <span className="text-[10px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded">LATE</span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded">PENDING</span>
-                        )}
-                      </div>
-                      {g.room?.number && (
-                        <p className="text-xs text-slate-500 mb-3">
-                          <span className="material-symbols-outlined text-[14px] align-middle mr-1">meeting_room</span>
-                          Room {g.room.number}
-                        </p>
-                      )}
-                      <button
-                        onClick={() => handleCheckIn(g._id, g.fullName)}
-                        disabled={actionLoadingId === g._id}
-                        className="w-full bg-primary hover:bg-primary-600 disabled:bg-primary/50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-lg text-sm flex items-center justify-center gap-2 transition-colors"
+                <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                  {g.room?.number && <InfoLine icon="meeting_room">Room {g.room.number}</InfoLine>}
+                  {g.checkedInAt && <InfoLine icon="login">In at {formatTime(g.checkedInAt)}</InfoLine>}
+                </div>
+                <button onClick={() => handleCheckOut(g._id, g.fullName)} disabled={actionLoadingId === g._id} className={SECONDARY_BTN}>
+                  {actionLoadingId === g._id ? (
+                    <>
+                      <Spinner dark />
+                      Checking out…
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-[19px]">logout</span>
+                      Check out
+                    </>
+                  )}
+                </button>
+              </div>
+            ))
+          )}
+        </Column>
+
+        {/* Pending arrivals */}
+        <Column icon="warning" title="Pending arrivals" count={pendingList.length} tone="amber">
+          {pendingList.length === 0 ? (
+            <ColumnEmpty icon="task_alt" message={q ? 'No matching guests' : 'No pending arrivals'} />
+          ) : (
+            pendingList.map((g) => {
+              const late = isLate(g.arrivalDatetime)
+              return (
+                <div
+                  key={g._id}
+                  className={`rounded-xl border p-4 transition ${
+                    late
+                      ? 'border-amber-200 bg-amber-50/50 dark:border-amber-500/30 dark:bg-amber-500/5'
+                      : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:hover:border-slate-600'
+                  }`}
+                >
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className={`flex size-9 shrink-0 items-center justify-center rounded-full text-xs font-extrabold ${
+                          late
+                            ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'
+                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                        }`}
                       >
-                        {actionLoadingId === g._id ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Checking in...
-                          </>
-                        ) : (
-                          <>
-                            <span className="material-symbols-outlined text-[20px]">how_to_reg</span>
-                            Check-in
-                          </>
-                        )}
-                      </button>
+                        {getInitials(g.fullName)}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="flex items-center gap-2 text-sm font-extrabold text-slate-900 dark:text-slate-100">
+                          <span className="truncate">{g.fullName}</span>
+                          {g.vipStatus && <VipBadge />}
+                        </h3>
+                        {g.groupName && <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{g.groupName}</p>}
+                      </div>
                     </div>
-                  )
-                })
-              )}
-            </div>
-          </section>
-
-        </div>
-      </main>
-
-      {/* Operational Footer */}
-      <footer className="shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-t border-slate-200 dark:border-slate-800 py-2 px-6">
-        <div className="max-w-[1600px] mx-auto flex flex-wrap gap-3 justify-between items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1">
-              Total: <span className="text-slate-600">{summary.totalGuests}</span>
-            </span>
-            <span className="flex items-center gap-1">
-              Checked-in: <span className="text-emerald-500">{summary.checkedIn}</span>
-            </span>
-            <span className="flex items-center gap-1">
-              Pending: <span className="text-amber-500">{summary.pending}</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => fetchAll({ quiet: true })}
-              className="flex items-center gap-1 hover:text-primary transition-colors cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-sm">refresh</span>
-              Refresh
-            </button>
-            <span className="flex items-center gap-1 text-emerald-500">
-              <span className="size-2 bg-emerald-500 rounded-full animate-pulse"></span>
-              System Online
-            </span>
-          </div>
-        </div>
-      </footer>
-
-      <style>{`
-        @keyframes slide-in {
-          from {
-            transform: translateX(400px);
-            opacity: 0;
-          }
-          to {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
-        }
-      `}</style>
+                    {late ? (
+                      <span className="shrink-0 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
+                        Late
+                      </span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        Pending
+                      </span>
+                    )}
+                  </div>
+                  {g.room?.number && (
+                    <div className="mb-3">
+                      <InfoLine icon="meeting_room">Room {g.room.number}</InfoLine>
+                    </div>
+                  )}
+                  <button onClick={() => handleCheckIn(g._id, g.fullName)} disabled={actionLoadingId === g._id} className={PRIMARY_BTN}>
+                    {actionLoadingId === g._id ? (
+                      <>
+                        <Spinner />
+                        Checking in…
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined text-[19px]">how_to_reg</span>
+                        Check in
+                      </>
+                    )}
+                  </button>
+                </div>
+              )
+            })
+          )}
+        </Column>
+      </div>
     </div>
   )
 }

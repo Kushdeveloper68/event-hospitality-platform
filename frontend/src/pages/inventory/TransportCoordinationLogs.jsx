@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   getTransports,
@@ -7,6 +7,75 @@ import {
   updateTransportStatus,
 } from "../../api/transportCoordiAPi";
 import TransportEntryForm from "../forms/TransportEntryForm";
+
+// ─── Shared styles ────────────────────────────────────────────────────────────
+const CARD =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none";
+const BTN_PRIMARY =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200";
+const BTN_SECONDARY =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+
+const csvCell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+
+const STATUS_CONFIG = {
+  scheduled: {
+    label: "Scheduled",
+    cls: "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300",
+    dot: "bg-slate-400",
+  },
+  in_transit: {
+    label: "In transit",
+    cls: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+    dot: "bg-blue-500 animate-pulse",
+  },
+  arrived: {
+    label: "Arrived",
+    cls: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+    dot: "bg-emerald-500",
+  },
+  cancelled: {
+    label: "Cancelled",
+    cls: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300",
+    dot: "bg-red-500",
+  },
+};
+
+function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />;
+}
+
+function StatStrip({ items }) {
+  return (
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-800 dark:shadow-none lg:grid-cols-4">
+      {items.map((it) => (
+        <div key={it.label} className="bg-white p-4 dark:bg-slate-900 sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            <span className={`material-symbols-outlined text-[16px] ${it.color}`}>{it.icon}</span>
+            {it.label}
+          </p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <p className="text-2xl font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50 sm:text-[28px]">
+              {it.value}
+            </p>
+            {it.sub && <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{it.sub}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatusBadge({ status }) {
+  const c = STATUS_CONFIG[status];
+  if (!c) return <span className="text-xs font-semibold text-slate-500">{status}</span>;
+  return (
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${c.cls}`}>
+      <span className={`size-1.5 rounded-full ${c.dot}`} />
+      {c.label}
+    </span>
+  );
+}
 
 function TransportCoordinationLogs({ eventId }) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,69 +90,99 @@ function TransportCoordinationLogs({ eventId }) {
     arrived: 0,
     cancelled: 0,
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "info",
-  });
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const [filterTab, setFilterTab] = useState("all"); // all, scheduled, in_transit, arrived
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const LIMIT = 20;
+
   // Delete modal state
   const [deleteId, setDeleteId] = useState(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Status dropdown state
-  const [statusMenuId, setStatusMenuId] = useState(null);
+  // Row menu state
+  const [menu, setMenu] = useState(null); // { id, top, right }
+  const menuRef = useRef(null);
+  const loadedOnce = useRef(false);
+  const reqId = useRef(0);
+  const toastTimer = useRef(null);
 
   const showToast = (message, type = "info", duration = 3000) => {
     setToast({ show: true, message, type });
-    setTimeout(
-      () => setToast({ show: false, message: "", type: "info" }),
-      duration,
-    );
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast({ show: false, message: "", type: "info" }), duration);
   };
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const loadData = async () => {
     if (!eventId) return;
+    const id = ++reqId.current;
     setLoading(true);
     setError(null);
     try {
-      const transRes = await getTransports(
-        eventId,
-        filterTab,
-        currentPage,
-        LIMIT,
-      );
+      const transRes = await getTransports(eventId, filterTab, currentPage, LIMIT);
+      if (id !== reqId.current) return;
       if (transRes.success) {
         setTransports(transRes.transports);
         setTotalPages(transRes.totalPages || 1);
         setTotalCount(transRes.total || 0);
-      } else setError(transRes.message || "Failed to load transports");
+        loadedOnce.current = true;
+      } else {
+        setError(transRes.message || "Failed to load transports");
+      }
 
       const sumRes = await getTransportSummary(eventId);
+      if (id !== reqId.current) return;
       if (sumRes.success) setSummary(sumRes);
       else setError(sumRes.message || "Failed to load summary");
     } catch (err) {
+      if (id !== reqId.current) return;
       console.error("Error fetching transport data:", err);
       setError("Error communicating with server");
     } finally {
-      setLoading(false);
+      if (id === reqId.current) setLoading(false);
     }
   };
 
-useEffect(() => {
-  loadData();
-}, [eventId, filterTab, currentPage]);
+  useEffect(() => {
+    loadData();
+  }, [eventId, filterTab, currentPage]);
 
-const setFilterTabAndReset = (tab) => {
-  setFilterTab(tab);
-  setCurrentPage(1);
-};
+  const setFilterTabAndReset = (tab) => {
+    setFilterTab(tab);
+    setCurrentPage(1);
+  };
+
+  // Close row menu on outside click, scroll, resize or Escape
+  useEffect(() => {
+    if (!menu) return undefined;
+    const close = () => setMenu(null);
+    const onDown = (e) => {
+      if (menuRef.current?.contains(e.target)) return;
+      if (e.target.closest?.("[data-menu-trigger]")) return;
+      close();
+    };
+    const onKey = (e) => e.key === "Escape" && close();
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [menu]);
+
+  const toggleMenu = (e, id) => {
+    if (menu?.id === id) return setMenu(null);
+    const r = e.currentTarget.getBoundingClientRect();
+    setMenu({ id, top: r.bottom + 6, right: window.innerWidth - r.right });
+  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -123,11 +222,7 @@ const setFilterTabAndReset = (tab) => {
       t.status || "",
     ]);
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
-    ].join("\n");
-
+    const csvContent = [headers.map(csvCell).join(","), ...rows.map((row) => row.map(csvCell).join(","))].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -142,7 +237,7 @@ const setFilterTabAndReset = (tab) => {
 
   const handleStatusUpdate = async (id, newStatus) => {
     try {
-      setStatusMenuId(null);
+      setMenu(null);
       const res = await updateTransportStatus(id, newStatus);
       if (res.success) {
         showToast("Status updated successfully", "success");
@@ -158,63 +253,10 @@ const setFilterTabAndReset = (tab) => {
 
   const formatTime = (isoString) => {
     if (!isoString) return "Not set";
-    return new Date(isoString).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return new Date(isoString).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
-  const getStatusDisplay = (status) => {
-    switch (status) {
-      case "in_transit":
-        return {
-          badge: "In Transit",
-          bg: "bg-primary/10",
-          text: "text-primary",
-          progBg: "bg-primary",
-          color: "primary",
-          width: "75%",
-        };
-      case "arrived":
-        return {
-          badge: "Arrived",
-          bg: "bg-emerald-100",
-          text: "text-emerald-600",
-          progBg: "bg-emerald-500",
-          color: "emerald",
-          width: "100%",
-        };
-      case "scheduled":
-        return {
-          badge: "Scheduled",
-          bg: "bg-slate-100",
-          text: "text-slate-500",
-          progBg: "bg-slate-300",
-          color: "slate",
-          width: "0%",
-        };
-      case "cancelled":
-        return {
-          badge: "Cancelled",
-          bg: "bg-red-100",
-          text: "text-red-600",
-          progBg: "bg-red-500",
-          color: "red",
-          width: "100%",
-        };
-      default:
-        return {
-          badge: status,
-          bg: "bg-slate-100",
-          text: "text-slate-500",
-          progBg: "bg-slate-300",
-          color: "slate",
-          width: "0%",
-        };
-    }
-  };
-
-  // Render form if action is passed securely
+  // Render form if action is passed
   if (action === "addTransport" || action === "editTransport") {
     return (
       <TransportEntryForm
@@ -229,600 +271,400 @@ const setFilterTabAndReset = (tab) => {
     );
   }
 
+  const firstLoad = loading && !loadedOnce.current;
+  const menuItem = menu ? transports.find((t) => t._id === menu.id) : null;
+  const activeCount = (summary.inTransit || 0) + (summary.scheduled || 0);
+  const pctOf = (n) => (summary.total ? `${Math.round((n / summary.total) * 100)}%` : "0%");
+
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
-      {/* Toast Notification */}
+    <div className="space-y-5">
+      {/* Toast */}
       {toast.show && (
         <div
-          className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in ${
-            toast.type === "success"
-              ? "bg-emerald-500 text-white"
-              : toast.type === "error"
-                ? "bg-red-500 text-white"
-                : "bg-slate-900 text-white"
+          role="status"
+          className={`fixed bottom-4 left-4 right-4 z-[80] flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+            toast.type === "success" ? "bg-emerald-600" : toast.type === "error" ? "bg-red-600" : "bg-slate-800"
           }`}
         >
-          <span className="material-symbols-outlined">
-            {toast.type === "success"
-              ? "check_circle"
-              : toast.type === "error"
-                ? "error"
-                : "info"}
+          <span className="material-symbols-outlined text-[20px]">
+            {toast.type === "success" ? "check_circle" : toast.type === "error" ? "error" : "info"}
           </span>
-          <p className="font-semibold">{toast.message}</p>
+          <span className="min-w-0">{toast.message}</span>
         </div>
       )}
 
-      {/* Delete Modal */}
+      {/* Delete modal */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                  <span className="material-symbols-outlined text-red-600">
-                    warning
-                  </span>
-                </div>
-                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
-                  Delete Transport?
-                </h3>
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/50 p-4 backdrop-blur-[2px] sm:items-center"
+          onClick={() => !deleting && setDeleteId(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                <span className="material-symbols-outlined text-[24px]">warning</span>
               </div>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
-                Are you sure you want to delete this transport entry? This
-                action cannot be undone.
-              </p>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Delete this transport?</h3>
+                <p className="mt-1.5 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  Are you sure you want to delete this transport entry? This action cannot be undone.
+                </p>
+              </div>
             </div>
-            <div className="flex gap-3 border-t border-slate-200 dark:border-slate-800 p-6">
-              <button
-                onClick={() => setDeleteId(null)}
-                disabled={deleting}
-                className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
-              >
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button onClick={() => setDeleteId(null)} disabled={deleting} className={BTN_SECONDARY}>
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 disabled:opacity-50 flex justify-center gap-2"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-60"
               >
-                {deleting ? "Deleting..." : "Delete"}
+                {deleting && <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
+                {deleting ? "Deleting…" : "Delete transport"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="layout-container flex h-full grow flex-col">
-        <main className="flex flex-1 flex-col items-center py-8">
-          <div className="layout-content-container flex flex-col w-full max-w-[1200px] px-6">
-            {/* Page Header Area */}
-            <div className="flex flex-wrap justify-between items-end gap-4 mb-8">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-primary mb-1">
-                  <span className="material-symbols-outlined text-sm">
-                    schedule
-                  </span>
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    Live Monitoring
-                  </span>
-                </div>
-                <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
-                  Transport Coordination Log
-                </h1>
-                <p className="text-slate-500 text-base font-normal">
-                  Tracking{" "}
-                  <span className="text-primary font-bold">
-                    {summary.inTransit + summary.scheduled} active
-                  </span>{" "}
-                  movements today.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={handleExportCSV}
-                  className="flex items-center gap-2 rounded-lg h-11 px-6 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
-                >
-                  <span className="material-symbols-outlined">download</span>
-                  <span>Export</span>
-                </button>
-                <button
-                  onClick={() => setSearchParams({ action: "addTransport" })}
-                  className="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-600 transition-all"
-                >
-                  <span className="material-symbols-outlined">add</span>
-                  <span>Add Transport</span>
-                </button>
-              </div>
-            </div>
+      {/* Row menu (fixed so the table never clips it) */}
+      {menu && menuItem && (
+        <div
+          ref={menuRef}
+          role="menu"
+          style={{ position: "fixed", top: menu.top, right: menu.right }}
+          className="z-[65] w-52 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        >
+          <p className="px-3.5 pb-1.5 pt-1 text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            Update status
+          </p>
+          {[
+            ["scheduled", "schedule", "Scheduled", "hover:bg-slate-50 dark:hover:bg-slate-800"],
+            ["in_transit", "airport_shuttle", "In transit", "hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-blue-500/10 dark:hover:text-blue-300"],
+            ["arrived", "check_circle", "Arrived", "hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300"],
+            ["cancelled", "cancel", "Cancelled", "hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-500/10 dark:hover:text-red-300"],
+          ].map(([s, icon, label, hover]) => (
+            <button
+              key={s}
+              role="menuitem"
+              disabled={menuItem.status === s}
+              onClick={() => handleStatusUpdate(menuItem._id, s)}
+              className={`flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold text-slate-700 transition disabled:cursor-default disabled:opacity-40 dark:text-slate-300 ${hover}`}
+            >
+              <span className="material-symbols-outlined text-[18px]">{icon}</span>
+              {label}
+            </button>
+          ))}
+          <div className="my-1.5 h-px bg-slate-100 dark:bg-slate-800" />
+          <button
+            role="menuitem"
+            onClick={() => {
+              setSearchParams({ action: "editTransport", id: menuItem._id });
+              setMenu(null);
+            }}
+            className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <span className="material-symbols-outlined text-[18px]">edit</span>
+            Edit
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => {
+              setDeleteId(menuItem._id);
+              setMenu(null);
+            }}
+            className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+          >
+            <span className="material-symbols-outlined text-[18px]">delete</span>
+            Delete
+          </button>
+        </div>
+      )}
 
-            {error && (
-              <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2 border border-red-200">
-                <span className="material-symbols-outlined">error</span>
-                <p className="font-semibold">{error}</p>
-              </div>
-            )}
-
-            {/* Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-500 text-xs font-bold uppercase">
-                  Total Deployments
-                </span>
-                <div className="flex items-end justify-between">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white">
-                    {summary.total}
-                  </span>
-                  <span className="material-symbols-outlined text-slate-400">
-                    local_shipping
-                  </span>
-                </div>
-              </div>
-              <div className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-500 text-xs font-bold uppercase">
-                  Scheduled
-                </span>
-                <div className="flex items-end justify-between">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white">
-                    {summary.scheduled}
-                  </span>
-                  <span className="material-symbols-outlined text-slate-400">
-                    schedule
-                  </span>
-                </div>
-              </div>
-              <div className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-500 text-xs font-bold uppercase">
-                  In Transit
-                </span>
-                <div className="flex items-end justify-between">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white">
-                    {summary.inTransit}
-                  </span>
-                  <span className="material-symbols-outlined text-primary">
-                    airport_shuttle
-                  </span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full mt-1">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{
-                      width: summary.total
-                        ? `${(summary.inTransit / summary.total) * 100}%`
-                        : "0%",
-                    }}
-                  ></div>
-                </div>
-              </div>
-              <div className="bg-white dark:bg-slate-900/50 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-2 shadow-sm">
-                <span className="text-slate-500 text-xs font-bold uppercase">
-                  Completed Today
-                </span>
-                <div className="flex items-end justify-between">
-                  <span className="text-2xl font-black text-slate-900 dark:text-white">
-                    {summary.arrived}
-                  </span>
-                  <span className="material-symbols-outlined text-emerald-500">
-                    check_circle
-                  </span>
-                </div>
-                <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full mt-1">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{
-                      width: summary.total
-                        ? `${(summary.arrived / summary.total) * 100}%`
-                        : "0%",
-                    }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="bg-white dark:bg-slate-900 rounded-t-xl border-x border-t border-slate-200 dark:border-slate-800 px-4">
-              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 overflow-x-auto hide-scrollbar">
-                <div className="flex gap-8">
-                  {[
-                    { id: "all", label: "All Trips", count: summary.total },
-                    {
-                      id: "scheduled",
-                      label: "Scheduled",
-                      count: summary.scheduled,
-                    },
-                    {
-                      id: "in_transit",
-                      label: "In Transit",
-                      count: summary.inTransit,
-                    },
-                    { id: "arrived", label: "Arrived", count: summary.arrived },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setFilterTabAndReset(tab.id)}
-                      className={`flex items-center gap-2 py-4 text-sm font-bold border-b-2 transition-colors shrink-0 ${
-                        filterTab === tab.id
-                          ? "border-primary text-primary"
-                          : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300"
-                      }`}
-                    >
-                      <span>{tab.label}</span>
-                      <span
-                        className={`text-[10px] px-2 rounded-full ${
-                          filterTab === tab.id
-                            ? "bg-primary/10 text-primary"
-                            : "bg-slate-100 dark:bg-slate-800 text-slate-500"
-                        }`}
-                      >
-                        {tab.count}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-3 shrink-0 ml-4 py-2">
-                  <button
-                    onClick={loadData}
-                    className="flex items-center gap-1 text-slate-500 text-sm font-medium hover:text-primary transition-colors"
-                  >
-                    <span
-                      className={`material-symbols-outlined text-lg ${loading ? "animate-spin" : ""}`}
-                    >
-                      sync
-                    </span>
-                    <span className="hidden sm:inline">Refresh</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-b-xl overflow-x-auto shadow-sm">
-              <table className="w-full text-left border-collapse min-w-[800px]">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-                  <tr>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-64">
-                      Guest / Entry
-                    </th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Route Details
-                    </th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-48">
-                      Driver & Vehicle
-                    </th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-40">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-32 text-right">
-                      Timing
-                    </th>
-                    <th className="px-4 py-4 w-12 text-center"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {transports.length === 0 && !loading && (
-                    <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center">
-                        <span className="material-symbols-outlined text-5xl text-slate-300 mb-2">
-                          no_crash
-                        </span>
-                        <p className="font-semibold text-slate-700 dark:text-slate-300">
-                          No transport records found
-                        </p>
-                        <p className="text-sm text-slate-500">
-                          Click "Add Transport" to schedule one.
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-                  {loading && transports.length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="px-6 py-12 text-center">
-                        <span className="material-symbols-outlined text-4xl text-primary animate-spin">
-                          hourglass_top
-                        </span>
-                        <p className="mt-2 text-slate-500">
-                          Loading records...
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-
-                  {transports.map((t) => {
-                    const statusConfig = getStatusDisplay(t.status);
-
-                    return (
-                      <tr
-                        key={t._id}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group"
-                      >
-                        <td className="px-6 py-5">
-                          {t.guest ? (
-                            <div className="flex items-center gap-3">
-                              <div className="size-9 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold text-sm">
-                                {t.guest.fullName.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-slate-900 dark:text-white leading-none flex items-center gap-1">
-                                  {t.guest.fullName}
-                                  {t.guest.vipStatus && (
-                                    <span
-                                      className="material-symbols-outlined text-[14px] text-amber-500"
-                                      title="VIP Guest"
-                                    >
-                                      star
-                                    </span>
-                                  )}
-                                </p>
-                                <p className="text-[11px] text-slate-500 mt-1 truncate max-w-[150px]">
-                                  {t.guest.groupName || "Individual"}
-                                </p>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-3">
-                              <div className="size-9 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full flex items-center justify-center font-bold text-sm">
-                                <span className="material-symbols-outlined text-lg">
-                                  groups
-                                </span>
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-slate-900 dark:text-white leading-none">
-                                  General / Group
-                                </p>
-                                <p className="text-[11px] text-slate-500 mt-1">
-                                  No specific guest
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </td>
-
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-start gap-2">
-                              <span className="material-symbols-outlined text-[14px] text-slate-400 mt-0.5">
-                                trip_origin
-                              </span>
-                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 line-clamp-1">
-                                {t.pickupLocation}
-                              </span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <span className="material-symbols-outlined text-[14px] text-primary mt-0.5">
-                                place
-                              </span>
-                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 line-clamp-1">
-                                {t.dropoffLocation}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col gap-1.5">
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[16px] text-slate-400">
-                                person
-                              </span>
-                              <p className="text-sm text-slate-700 dark:text-slate-300 font-medium truncate">
-                                {t.driverName || "Unassigned"}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[16px] text-slate-400">
-                                directions_car
-                              </span>
-                              <p className="text-[11px] text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded w-fit truncate">
-                                {t.vehicleId || "Pending Vehicle"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-5">
-                          <div className="flex flex-col gap-2">
-                            <span
-                              className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit ${statusConfig.bg} ${statusConfig.text}`}
-                            >
-                              {statusConfig.badge}
-                            </span>
-                            <div className="flex items-center gap-3">
-                              <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full ${statusConfig.progBg}`}
-                                  style={{ width: statusConfig.width }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="px-6 py-5 text-right">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white">
-                            {formatTime(t.scheduledTime)}
-                          </p>
-                          <p className="text-[10px] text-slate-500 font-medium mt-0.5">
-                            {t.scheduledTime
-                              ? new Date(t.scheduledTime).toLocaleDateString()
-                              : ""}
-                          </p>
-                        </td>
-
-                        <td className="px-4 py-5 text-center relative">
-                          <button
-                            onClick={() =>
-                              setStatusMenuId(
-                                statusMenuId === t._id ? null : t._id,
-                              )
-                            }
-                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors"
-                          >
-                            <span className="material-symbols-outlined">
-                              more_vert
-                            </span>
-                          </button>
-
-                          {/* Action Dropdown */}
-                          {statusMenuId === t._id && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-10"
-                                onClick={() => setStatusMenuId(null)}
-                              ></div>
-                              <div className="absolute right-8 top-10 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-20 py-2 overflow-hidden animate-slide-in">
-                                <p className="text-[10px] font-bold text-slate-400 px-4 pb-2 uppercase tracking-wider">
-                                  Update Status
-                                </p>
-                                <button
-                                  onClick={() =>
-                                    handleStatusUpdate(t._id, "scheduled")
-                                  }
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
-                                >
-                                  Scheduled
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleStatusUpdate(t._id, "in_transit")
-                                  }
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
-                                >
-                                  In Transit
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleStatusUpdate(t._id, "arrived")
-                                  }
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
-                                >
-                                  Arrived
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleStatusUpdate(t._id, "cancelled")
-                                  }
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-red-600 block border-b border-slate-100 dark:border-slate-700"
-                                >
-                                  Cancelled
-                                </button>
-
-                                <p className="text-[10px] font-bold text-slate-400 px-4 py-2 uppercase tracking-wider mt-1">
-                                  Actions
-                                </p>
-                                <button
-                                  onClick={() => {
-                                    setSearchParams({
-                                      action: "editTransport",
-                                      id: t._id,
-                                    });
-                                    setStatusMenuId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-primary flex items-center gap-2"
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">
-                                    edit
-                                  </span>{" "}
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setDeleteId(t._id);
-                                    setStatusMenuId(null);
-                                  }}
-                                  className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 flex items-center gap-2"
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">
-                                    delete
-                                  </span>{" "}
-                                  Delete
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <div className="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">
-                  Showing {transports.length} transports
-                </span>
-              </div>
-              {/* Pagination Controls */}
-{totalPages > 1 && (
-  <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl mt-4">
-    <p className="text-sm text-slate-500">
-      Showing {(currentPage - 1) * LIMIT + 1}–
-      {Math.min(currentPage * LIMIT, totalCount)} of {totalCount} transports
-    </p>
-
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-        disabled={currentPage === 1}
-        className="px-4 py-2 text-sm dark:text-amber-50 font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-      >
-        Previous
-      </button>
-
-      <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
-        Page {currentPage} of {totalPages}
-      </span>
-
-      <button
-        onClick={() =>
-          setCurrentPage((p) => Math.min(totalPages, p + 1))
-        }
-        disabled={currentPage === totalPages}
-        className="px-4 py-2 text-sm font-bold border dark:text-amber-50 border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-      >
-        Next
-      </button>
-    </div>
-  </div>
-)}
-            </div>
-
-            {/* Map Placeholder */}
-            <div className="mt-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col md:flex-row items-center gap-6 shadow-sm">
-              <div className="size-20 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden shrink-0">
-                <span className="material-symbols-outlined text-primary text-3xl">
-                  map
-                </span>
-              </div>
-              <div className="flex-1 text-center md:text-left">
-                <h4 className="text-slate-900 dark:text-white font-bold text-lg leading-tight">
-                  Interactive Fleet Map
-                </h4>
-                <p className="text-slate-500 text-sm mt-1">
-                  GPS tracking is simulated in this environment. Configure live
-                  integration in settings.
-                </p>
-              </div>
-              <button
-                disabled
-                className="px-5 py-2.5 bg-slate-900 dark:bg-slate-800 text-white font-bold rounded-lg text-sm transition-all flex items-center gap-2 opacity-50 cursor-not-allowed"
-              >
-                <span>View Live Map</span>
-                <span className="material-symbols-outlined text-sm">
-                  open_in_new
-                </span>
-              </button>
-            </div>
-          </div>
-        </main>
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">Transport</p>
+          <h2 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50">
+            Transport coordination log
+          </h2>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Tracking <strong className="font-extrabold text-blue-700 dark:text-blue-300">{activeCount} active</strong> movements (scheduled and in transit).
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button onClick={handleExportCSV} className={BTN_SECONDARY} title="Export the listed transports to CSV">
+            <span className="material-symbols-outlined text-[19px]">download</span>
+            Export CSV
+          </button>
+          <button onClick={() => setSearchParams({ action: "addTransport" })} className={BTN_PRIMARY}>
+            <span className="material-symbols-outlined text-[19px]">add</span>
+            Add transport
+          </button>
+        </div>
       </div>
 
-      <style>{`
-        @keyframes slide-in-top {
-          from { transform: translateY(-10px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-in { animation: slide-in-top 0.2s ease-out; }
-      `}</style>
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="material-symbols-outlined text-[19px]">warning</span>
+            <span className="text-sm font-medium">{error}</span>
+          </div>
+          <button onClick={loadData} className="shrink-0 text-xs font-bold underline underline-offset-2 hover:no-underline">
+            Retry
+          </button>
+        </div>
+      )}
+
+      <StatStrip
+        items={[
+          { icon: "local_shipping", label: "Total deployments", value: summary.total, color: "text-blue-700 dark:text-blue-300" },
+          { icon: "schedule", label: "Scheduled", value: summary.scheduled, color: "text-slate-600 dark:text-slate-300" },
+          { icon: "airport_shuttle", label: "In transit", value: summary.inTransit, sub: pctOf(summary.inTransit), color: "text-indigo-700 dark:text-indigo-300" },
+          { icon: "check_circle", label: "Arrived", value: summary.arrived, sub: pctOf(summary.arrived), color: "text-emerald-700 dark:text-emerald-300" },
+        ]}
+      />
+
+      {/* Table card */}
+      <section className={`overflow-hidden ${CARD}`}>
+        {/* Toolbar */}
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 dark:border-slate-800 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+          <div className="flex w-fit max-w-full overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            {[
+              { id: "all", label: "All trips", count: summary.total },
+              { id: "scheduled", label: "Scheduled", count: summary.scheduled },
+              { id: "in_transit", label: "In transit", count: summary.inTransit },
+              { id: "arrived", label: "Arrived", count: summary.arrived },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterTabAndReset(tab.id)}
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  filterTab === tab.id
+                    ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                }`}
+              >
+                {tab.label}
+                <span className="rounded-full bg-slate-200/70 px-1.5 text-[10px] tabular-nums dark:bg-slate-600/60">{tab.count}</span>
+              </button>
+            ))}
+          </div>
+          <button onClick={loadData} disabled={loading} className="inline-flex h-9 items-center gap-1.5 self-start rounded-lg border border-slate-200 px-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 sm:self-auto">
+            <span className={`material-symbols-outlined text-[18px] ${loading ? "animate-spin" : ""}`}>sync</span>
+            Refresh
+          </button>
+        </div>
+
+        {firstLoad ? (
+          <div className="space-y-3 p-5">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-16 w-full" />
+            ))}
+          </div>
+        ) : transports.length === 0 && !loading ? (
+          <div className="px-4 py-16 text-center">
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+              <span className="material-symbols-outlined text-[24px]">no_crash</span>
+            </div>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">No transport records found</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {filterTab === "all" ? "Add a transport to schedule one." : "Nothing matches this status yet."}
+            </p>
+            {filterTab === "all" ? (
+              <button onClick={() => setSearchParams({ action: "addTransport" })} className={`${BTN_PRIMARY} mt-5`}>
+                <span className="material-symbols-outlined text-[19px]">add</span>
+                Add transport
+              </button>
+            ) : (
+              <button onClick={() => setFilterTabAndReset("all")} className={`${BTN_SECONDARY} mt-5`}>
+                Show all trips
+              </button>
+            )}
+          </div>
+        ) : (
+          <div aria-busy={loading} className={`overflow-x-auto transition-opacity ${loading ? "opacity-60" : ""}`}>
+            <table className="w-full min-w-[860px] text-left">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-800/40">
+                  {[
+                    ["Guest / entry", ""],
+                    ["Route", ""],
+                    ["Driver & vehicle", ""],
+                    ["Status", ""],
+                    ["Timing", "text-right"],
+                    ["", ""],
+                  ].map(([h, a], i) => (
+                    <th key={i} className={`px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 ${a}`}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {transports.map((t) => (
+                  <tr key={t._id} className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                    <td className="px-5 py-4">
+                      {t.guest ? (
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-extrabold text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                            {(t.guest.fullName || "?").charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="flex items-center gap-1 text-sm font-bold text-slate-900 dark:text-slate-100">
+                              <span className="max-w-[160px] truncate">{t.guest.fullName}</span>
+                              {t.guest.vipStatus && (
+                                <span className="material-symbols-outlined text-[15px] text-amber-500" style={{ fontVariationSettings: "'FILL' 1" }} title="VIP guest">
+                                  star
+                                </span>
+                              )}
+                            </p>
+                            <p className="mt-0.5 max-w-[170px] truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                              {t.guest.groupName || "Individual"}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                            <span className="material-symbols-outlined text-[19px]">groups</span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">General / group</p>
+                            <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">No specific guest</p>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-start gap-2">
+                          <span className="material-symbols-outlined mt-0.5 text-[15px] text-slate-400">trip_origin</span>
+                          <span className="line-clamp-1 max-w-[220px] text-sm font-medium text-slate-700 dark:text-slate-300">{t.pickupLocation}</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="material-symbols-outlined mt-0.5 text-[15px] text-blue-600 dark:text-blue-400">place</span>
+                          <span className="line-clamp-1 max-w-[220px] text-sm font-medium text-slate-700 dark:text-slate-300">{t.dropoffLocation}</span>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px] text-slate-400">person</span>
+                          <p className={`max-w-[150px] truncate text-sm font-medium ${t.driverName ? "text-slate-700 dark:text-slate-300" : "text-slate-400 dark:text-slate-500"}`}>
+                            {t.driverName || "Unassigned"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px] text-slate-400">directions_car</span>
+                          <p className="w-fit max-w-[150px] truncate rounded-md bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                            {t.vehicleId || "Pending vehicle"}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <StatusBadge status={t.status} />
+                    </td>
+
+                    <td className="whitespace-nowrap px-5 py-4 text-right">
+                      <p className="text-sm font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{formatTime(t.scheduledTime)}</p>
+                      <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                        {t.scheduledTime ? new Date(t.scheduledTime).toLocaleDateString() : ""}
+                      </p>
+                    </td>
+
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        data-menu-trigger
+                        onClick={(e) => toggleMenu(e, t._id)}
+                        aria-label="More actions"
+                        aria-haspopup="menu"
+                        aria-expanded={menu?.id === t._id}
+                        className={`inline-flex size-8 items-center justify-center rounded-lg transition ${
+                          menu?.id === t._id
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                            : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Footer + pagination */}
+        {!firstLoad && transports.length > 0 && (
+          <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-3.5 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              Showing{" "}
+              <strong className="text-slate-700 dark:text-slate-200">
+                {(currentPage - 1) * LIMIT + 1}–{Math.min(currentPage * LIMIT, totalCount)}
+              </strong>{" "}
+              of <strong className="text-slate-700 dark:text-slate-200">{totalCount}</strong> transports
+            </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                  Previous
+                </button>
+                <span className="px-1 font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Next
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* Fleet map — future feature (disabled) */}
+      <div className={`flex flex-col items-center gap-5 p-5 opacity-80 sm:flex-row sm:p-6 ${CARD}`}>
+        <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+          <span className="material-symbols-outlined text-[28px]">map</span>
+        </div>
+        <div className="flex-1 text-center sm:text-left">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+            <h4 className="text-[15px] font-extrabold text-slate-900 dark:text-slate-100">Live fleet map</h4>
+            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              Coming soon
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Real-time vehicle tracking on a map will be available once GPS integration is added.
+          </p>
+        </div>
+        <button disabled className={`${BTN_SECONDARY} w-full sm:w-auto`}>
+          View live map
+          <span className="material-symbols-outlined text-[17px]">open_in_new</span>
+        </button>
+      </div>
     </div>
   );
 }

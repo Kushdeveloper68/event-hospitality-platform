@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import TeamMemberEntryForm from "../forms/TeamMemberEntryForm";
 import {
@@ -20,6 +20,90 @@ const TEAM_CSV_SAMPLE_ROWS = [
   { name: "Diya Kapoor", email: "diya@eventcure.in", role: "Housekeeping" },
 ];
 
+const ROLES = [
+  "Event Director",
+  "Event Lead",
+  "Event Coordinator",
+  "Logistics",
+  "Floor Staff",
+  "Technical Support",
+  "Guest Relations",
+  "Catering Head",
+  "Transport Manager",
+  "Security Lead",
+  "Housekeeping Supervisor",
+  "Front Desk",
+  "Media/AV Lead",
+  "Operations Manager",
+  "Photographer",
+  "Decor & Setup",
+  "Admin",
+];
+
+// ─── Shared styles ────────────────────────────────────────────────────────────
+const CARD =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none";
+const FIELD =
+  "h-10 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500/60 dark:focus:bg-slate-900 dark:focus:ring-blue-500/20";
+const BTN_PRIMARY =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200";
+const BTN_SECONDARY =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
+
+const ROLE_TONE = {
+  Admin: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  "Event Director": "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  "Event Lead": "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  Logistics: "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+  "Transport Manager": "bg-orange-50 text-orange-700 dark:bg-orange-500/10 dark:text-orange-300",
+  "Catering Head": "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  "Security Lead": "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  "Guest Relations": "bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300",
+  "Front Desk": "bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300",
+}
+const ROLE_DEFAULT = "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
+
+const getTimeAgo = (dateStr) => {
+  if (!dateStr) return "Never";
+  const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + " years ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + " months ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + "d ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "h ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "m ago";
+  return "just now";
+};
+
+function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />;
+}
+
+function StatStrip({ items }) {
+  return (
+    <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-800 dark:shadow-none sm:grid-cols-3">
+      {items.map((it) => (
+        <div key={it.label} className="bg-white p-4 dark:bg-slate-900 sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            <span className={`material-symbols-outlined text-[16px] ${it.color}`}>{it.icon}</span>
+            {it.label}
+          </p>
+          <div className="mt-2 flex items-baseline gap-2">
+            <p className="text-2xl font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50 sm:text-[28px]">
+              {it.value}
+            </p>
+            {it.sub && <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{it.sub}</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TeamMemberManagement({ eventId }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const action = searchParams.get("action");
@@ -30,7 +114,7 @@ function TeamMemberManagement({ eventId }) {
   const LIMIT = 20;
   const [members, setMembers] = useState([]);
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Filters
@@ -38,54 +122,56 @@ function TeamMemberManagement({ eventId }) {
   const [roleFilter, setRoleFilter] = useState("All Roles");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  // Toast and Modals
+  // Toast and modals
   const [showImportModal, setShowImportModal] = useState(false);
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    type: "info",
-  });
+  const [toast, setToast] = useState({ show: false, message: "", type: "info" });
   const [deleteId, setDeleteId] = useState(null);
-  const [actionMenuId, setActionMenuId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [menu, setMenu] = useState(null); // { id, top, right }
+  const menuRef = useRef(null);
+  const loadedOnce = useRef(false);
+  const reqId = useRef(0);
+  const toastTimer = useRef(null);
 
   const showToast = (message, type = "info") => {
     setToast({ show: true, message, type });
-    setTimeout(() => setToast({ show: false }), 3000);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast({ show: false, message: "", type: "info" }), 3000);
   };
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
 
   const loadData = async () => {
     if (!eventId) return;
+    const id = ++reqId.current;
     setLoading(true);
+    setError(null);
     try {
-      const filters = {
-        role: roleFilter,
-        status: statusFilter,
-        search: searchTerm,
-      };
+      const filters = { role: roleFilter, status: statusFilter, search: searchTerm };
 
-      const membersRes = await getTeamMembers(eventId, {
-        ...filters,
-        page: currentPage,
-        limit: LIMIT,
-      });
+      const membersRes = await getTeamMembers(eventId, { ...filters, page: currentPage, limit: LIMIT });
+      if (id !== reqId.current) return;
       if (membersRes.success) {
         setMembers(membersRes.teamMembers);
         setTotalPages(membersRes.totalPages || 1);
         setTotalCount(membersRes.total || 0);
-      } else setError(membersRes.message);
+        loadedOnce.current = true;
+      } else {
+        setError(membersRes.message || "Failed to load team members");
+      }
 
       const summaryRes = await getTeamSummary(eventId);
+      if (id !== reqId.current) return;
       if (summaryRes.success) setSummary(summaryRes.summary);
     } catch (err) {
+      if (id !== reqId.current) return;
       console.error(err);
       setError("Error loading team data");
     } finally {
-      setLoading(false);
+      if (id === reqId.current) setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Only refresh when filters are applied immediately (without submit)
     const timeout = setTimeout(() => {
       loadData();
     }, 300); // debounce search
@@ -93,8 +179,37 @@ function TeamMemberManagement({ eventId }) {
     // eslint-disable-next-line
   }, [eventId, roleFilter, statusFilter, searchTerm, currentPage]);
 
+  // Close row menu on outside click, scroll, resize or Escape
+  useEffect(() => {
+    if (!menu) return undefined;
+    const close = () => setMenu(null);
+    const onDown = (e) => {
+      if (menuRef.current?.contains(e.target)) return;
+      if (e.target.closest?.("[data-menu-trigger]")) return;
+      close();
+    };
+    const onKey = (e) => e.key === "Escape" && close();
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [menu]);
+
+  const toggleMenu = (e, id) => {
+    if (menu?.id === id) return setMenu(null);
+    const r = e.currentTarget.getBoundingClientRect();
+    setMenu({ id, top: r.bottom + 6, right: window.innerWidth - r.right });
+  };
+
   const handleDelete = async () => {
     if (!deleteId) return;
+    setDeleting(true);
     try {
       const res = await deleteTeamMember(deleteId);
       if (res.success) {
@@ -106,12 +221,13 @@ function TeamMemberManagement({ eventId }) {
     } catch (err) {
       showToast("Error deleting member", "error");
     } finally {
+      setDeleting(false);
       setDeleteId(null);
     }
   };
 
   const handleStatusToggle = async (id, currentStatus) => {
-    setActionMenuId(null);
+    setMenu(null);
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     try {
       const res = await updateTeamMemberStatus(id, newStatus);
@@ -126,44 +242,11 @@ function TeamMemberManagement({ eventId }) {
     }
   };
 
-  const getRoleBadgeColor = (role) => {
-    switch (role) {
-      case "Admin":
-        return "bg-primary-50 dark:bg-primary-900/30 text-primary";
-      case "Event Director":
-      case "Event Lead":
-        return "bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400";
-      case "Logistics":
-      case "Transport Manager":
-        return "bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400";
-      case "Catering Head":
-        return "bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400";
-      case "Security Lead":
-        return "bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400";
-      case "Guest Relations":
-      case "Front Desk":
-        return "bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400";
-      case "Floor Staff":
-        return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
-      default:
-        return "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300";
-    }
-  };
-
-  const getTimeAgo = (dateStr) => {
-    if (!dateStr) return "Never";
-    const seconds = Math.floor((new Date() - new Date(dateStr)) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " years ago";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " months ago";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + "d ago";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + "h ago";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + "m ago";
-    return Math.floor(seconds) + "s ago";
+  const clearFilters = () => {
+    setSearchTerm("");
+    setRoleFilter("All Roles");
+    setStatusFilter("All");
+    setCurrentPage(1);
   };
 
   if (action === "addTeam" || action === "editTeam") {
@@ -180,448 +263,359 @@ function TeamMemberManagement({ eventId }) {
     );
   }
 
+  const firstLoad = loading && !loadedOnce.current;
+  const hasFilters = !!searchTerm || roleFilter !== "All Roles" || statusFilter !== "All";
+  const menuMember = menu ? members.find((m) => m._id === menu.id) : null;
+  const activePct = summary.total > 0 ? Math.round((summary.active / summary.total) * 100) : 0;
+
   return (
-    <div className="relative flex h-full overflow-hidden flex-col">
-      {/* Toast Notification */}
+    <div className="space-y-5">
+      {/* Toast */}
       {toast.show && (
         <div
-          className={`fixed bottom-6 right-6 px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 animate-slide-in ${
-            toast.type === "success"
-              ? "bg-emerald-500 text-white"
-              : "bg-red-500 text-white"
+          role="status"
+          className={`fixed bottom-4 left-4 right-4 z-[80] flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm ${
+            toast.type === "success" ? "bg-emerald-600" : "bg-red-600"
           }`}
         >
-          <span className="material-symbols-outlined">
-            {toast.type === "success" ? "check_circle" : "error"}
-          </span>
-          <p className="font-semibold">{toast.message}</p>
+          <span className="material-symbols-outlined text-[20px]">{toast.type === "success" ? "check_circle" : "error"}</span>
+          <span className="min-w-0">{toast.message}</span>
         </div>
       )}
 
-      {/* Delete Modal */}
+      {showImportModal && (
+        <CsvImportModal
+          title="Import Team Members"
+          columns={TEAM_CSV_COLUMNS}
+          sampleRows={TEAM_CSV_SAMPLE_ROWS}
+          importFn={bulkImportTeamMembers}
+          eventId={eventId}
+          onClose={() => setShowImportModal(false)}
+          onSuccess={() => loadData()}
+        />
+      )}
+
+      {/* Remove-member modal */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full">
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
-                  <span className="material-symbols-outlined text-red-600">
-                    warning
-                  </span>
-                </div>
-                <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">
-                  Remove Member
-                </h3>
+        <div
+          className="fixed inset-0 z-[70] flex items-end justify-center bg-slate-950/50 p-4 backdrop-blur-[2px] sm:items-center"
+          onClick={() => !deleting && setDeleteId(null)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+          >
+            <div className="flex items-start gap-4">
+              <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                <span className="material-symbols-outlined text-[24px]">warning</span>
               </div>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
-                Are you sure you want to remove this staff member from the
-                event? Security revokes will happen instantly.
-              </p>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">Remove this member?</h3>
+                <p className="mt-1.5 text-sm leading-6 text-slate-500 dark:text-slate-400">
+                  Are you sure you want to remove this staff member from the event? Their access is revoked instantly.
+                </p>
+              </div>
             </div>
-            <div className="flex gap-3 border-t border-slate-200 dark:border-slate-800 p-6">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-              >
+            <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button onClick={() => setDeleteId(null)} disabled={deleting} className={BTN_SECONDARY}>
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white hover:bg-red-700 flex justify-center gap-2"
+                disabled={deleting}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 text-sm font-bold text-white transition hover:bg-red-700 disabled:opacity-60"
               >
-                Remove
+                {deleting && <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />}
+                Remove member
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Container */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        <div className="p-8 pb-32">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-            <div>
-              <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
-                Team Members
-              </h1>
-              <p className="text-slate-500 mt-1">
-                Manage and assign roles for your hospitality operations team.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={loadData}
-                className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                <span
-                  className={`material-symbols-outlined text-lg ${loading ? "animate-spin" : ""}`}
-                >
-                  sync
-                </span>
-                Refresh
-              </button>
-              <button
-                onClick={() => setShowImportModal(true)}
-                className="flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                <span className="material-symbols-outlined text-lg">upload_file</span>
-                Import CSV
-              </button>
-              <button
-                onClick={() => setSearchParams({ action: "addTeam" })}
-                className="flex items-center gap-2 rounded-lg h-10 px-5 bg-primary text-white font-bold shadow-lg shadow-primary/25 hover:bg-primary-600 transition-all text-sm"
-              >
-                <span className="material-symbols-outlined text-lg">add</span>
-                Add Member
-              </button>
-            </div>
-          </div>
-
-          {showImportModal && (
-            <CsvImportModal
-              title="Import Team Members"
-              columns={TEAM_CSV_COLUMNS}
-              sampleRows={TEAM_CSV_SAMPLE_ROWS}
-              importFn={bulkImportTeamMembers}
-              eventId={eventId}
-              onClose={() => setShowImportModal(false)}
-              onSuccess={() => loadData()}
-            />
-          )}
-  {/* <!-- Footer Summary --> */}
-          <div className="mt-8 mb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                Total Members
-              </p>
-              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
-                {summary.total}
-              </h4>
-              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">
-                  groups
-                </span>
-                <span>Assigned to event</span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                Active Now
-              </p>
-              <h4 className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
-                {summary.active}
-              </h4>
-              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">bolt</span>
-                <span>
-                  {summary.total > 0
-                    ? Math.round((summary.active / summary.total) * 100)
-                    : 0}
-                  % of total team
-                </span>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800">
-              <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
-                Off Duty / Inactive
-              </p>
-              <h4 className="text-2xl font-black text-slate-900 dark:text-white">
-                {summary.inactive}
-              </h4>
-              <div className="mt-2 flex items-center gap-1 text-slate-500 text-xs font-bold">
-                <span className="material-symbols-outlined text-sm">
-                  bedtime
-                </span>
-                <span>No live access right now</span>
-              </div>
-            </div>
-          </div>
-          {error && (
-            <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2 border border-red-200">
-              <span className="material-symbols-outlined">error</span>
-              <p className="font-semibold">{error}</p>
-            </div>
-          )}
-
-          {/* Filters Area */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-t-xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1 group">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
-                search
-              </span>
-              <input
-                value={searchTerm}
-                onChange={(e) =>{ setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 transition-all dark:text-white outline-none"
-                placeholder="Search members by name or email..."
-                type="text"
-              />
-            </div>
-            <div className="flex gap-3">
-              <select
-                value={roleFilter}
-                onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); } }
-                className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-600 dark:text-slate-300 py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20 outline-none"
-              >
-                <option>All Roles</option>
-                <option>Event Director</option>
-                <option>Event Lead</option>
-                <option>Event Coordinator</option>
-                <option>Logistics</option>
-                <option>Floor Staff</option>
-                <option>Technical Support</option>
-                <option>Guest Relations</option>
-                <option>Catering Head</option>
-                <option>Transport Manager</option>
-                <option>Security Lead</option>
-                <option>Housekeeping Supervisor</option>
-                <option>Front Desk</option>
-                <option>Media/AV Lead</option>
-                <option>Operations Manager</option>
-                <option>Photographer</option>
-                <option>Decor & Setup</option>
-                <option>Admin</option>
-              </select>
-              <select
-                value={statusFilter}
-                onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-                className="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-600 dark:text-slate-300 py-2 pl-3 pr-10 focus:ring-2 focus:ring-primary/20 outline-none"
-              >
-                <option value="All">All Statuses</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Table Container */}
-          <div className="bg-white dark:bg-slate-900 border-x border-b border-slate-200 dark:border-slate-800 rounded-b-xl overflow-hidden shadow-sm">
-            <div className="overflow-x-auto min-h-[300px]">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
-                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                      Member
-                    </th>
-                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                      Email
-                    </th>
-                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                      Role
-                    </th>
-                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-                      Last Active
-                    </th>
-                    <th className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 text-right">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {loading && members.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="px-6 py-12 text-center text-slate-500"
-                      >
-                        <span className="material-symbols-outlined text-4xl animate-spin text-primary">
-                          hourglass_top
-                        </span>
-                        <p className="mt-2 text-sm font-medium">
-                          Loading roster...
-                        </p>
-                      </td>
-                    </tr>
-                  )}
-
-                  {!loading && members.length === 0 && (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="px-6 py-12 text-center text-slate-500"
-                      >
-                        <span className="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700 bg-slate-100 dark:bg-slate-800 p-4 rounded-full mb-3">
-                          badge
-                        </span>
-                        <p className="font-semibold text-slate-900 dark:text-white">
-                          No team members found
-                        </p>
-                        <p className="text-sm mt-1 mb-4">
-                          You haven't added anyone matching these filters.
-                        </p>
-                        <button
-                          onClick={() => {
-                            setSearchTerm("");
-                            setRoleFilter("All Roles");
-                            setStatusFilter("All");
-                          }}
-                          className="text-primary font-bold text-sm hover:underline"
-                        >
-                          Clear Filters
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-
-                  {members.map((member) => (
-                    <tr
-                      key={member._id}
-                      className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-500 text-sm shrink-0">
-                            {member.name.charAt(0).toUpperCase()}
-                          </div>
-                          <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {member.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
-                        {member.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 rounded text-[11px] font-bold uppercase tracking-tight ${getRoleBadgeColor(member.role)}`}
-                        >
-                          {member.role || "Unassigned"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`flex items-center gap-1.5 text-xs font-semibold ${member.status === "active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500"}`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${member.status === "active" ? "bg-emerald-500" : "bg-slate-400"}`}
-                          ></span>
-                          {member.status === "active" ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {getTimeAgo(member.lastActive)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right relative">
-                        <button
-                          onClick={() =>
-                            setActionMenuId(
-                              actionMenuId === member._id ? null : member._id,
-                            )
-                          }
-                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-primary"
-                        >
-                          <span className="material-symbols-outlined">
-                            more_vert
-                          </span>
-                        </button>
-
-                        {/* Dropdown menu */}
-                        {actionMenuId === member._id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setActionMenuId(null)}
-                            ></div>
-                            <div className="absolute right-8 top-10 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-20 py-2 animate-slide-in text-left">
-                              <button
-                                onClick={() => {
-                                  setSearchParams({
-                                    action: "editTeam",
-                                    id: member._id,
-                                  });
-                                  setActionMenuId(null);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2"
-                              >
-                                <span className="material-symbols-outlined text-[16px]">
-                                  edit
-                                </span>{" "}
-                                Edit Details
-                              </button>
-
-                              <button
-                                onClick={() =>
-                                  handleStatusToggle(member._id, member.status)
-                                }
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center gap-2"
-                              >
-                                <span className="material-symbols-outlined text-[16px]">
-                                  {member.status === "active"
-                                    ? "power_settings_new"
-                                    : "bolt"}
-                                </span>
-                                {member.status === "active"
-                                  ? "Mark Inactive"
-                                  : "Mark Active"}
-                              </button>
-
-                              <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 w-full"></div>
-
-                              <button
-                                onClick={() => {
-                                  setDeleteId(member._id);
-                                  setActionMenuId(null);
-                                }}
-                                className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 flex items-center gap-2"
-                              >
-                                <span className="material-symbols-outlined text-[16px]">
-                                  delete
-                                </span>{" "}
-                                Remove Access
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {/* <!-- Pagination Header (Stat Info) --> */}
-            <div className="flex items-center justify-between w-full">
-  <span className="text-xs font-medium text-slate-500">
-    Showing {members.length} of {totalCount} members
-  </span>
-  {totalPages > 1 && (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-        disabled={currentPage === 1}
-        className="px-3 py-1 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-      >
-        Previous
-      </button>
-      <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
-        {currentPage} / {totalPages}
-      </span>
-      <button
-        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-        disabled={currentPage === totalPages}
-        className="px-3 py-1 text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-lg disabled:opacity-40 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-      >
-        Next
-      </button>
-    </div>
-  )}
-</div>
-          </div>
-
-        
+      {/* Row menu (fixed so the table never clips it) */}
+      {menu && menuMember && (
+        <div
+          ref={menuRef}
+          role="menu"
+          style={{ position: "fixed", top: menu.top, right: menu.right }}
+          className="z-[65] w-52 rounded-xl border border-slate-200 bg-white py-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-900"
+        >
+          <button
+            role="menuitem"
+            onClick={() => {
+              setSearchParams({ action: "editTeam", id: menuMember._id });
+              setMenu(null);
+            }}
+            className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <span className="material-symbols-outlined text-[18px]">edit</span>
+            Edit details
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => handleStatusToggle(menuMember._id, menuMember.status)}
+            className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              {menuMember.status === "active" ? "power_settings_new" : "bolt"}
+            </span>
+            {menuMember.status === "active" ? "Mark inactive" : "Mark active"}
+          </button>
+          <div className="my-1.5 h-px bg-slate-100 dark:bg-slate-800" />
+          <button
+            role="menuitem"
+            onClick={() => {
+              setDeleteId(menuMember._id);
+              setMenu(null);
+            }}
+            className="flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+          >
+            <span className="material-symbols-outlined text-[18px]">delete</span>
+            Remove access
+          </button>
         </div>
-      </main>
+      )}
 
-      <style>{`
-        @keyframes slide-in-top {
-          from { transform: translateY(-5px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
-        }
-        .animate-slide-in { animation: slide-in-top 0.15s ease-out forwards; }
-      `}</style>
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">Team</p>
+          <h2 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50">Team members</h2>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Manage and assign roles for your hospitality operations team.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button onClick={loadData} disabled={loading} className={BTN_SECONDARY}>
+            <span className={`material-symbols-outlined text-[19px] ${loading ? "animate-spin" : ""}`}>sync</span>
+            Refresh
+          </button>
+          <button onClick={() => setShowImportModal(true)} className={BTN_SECONDARY}>
+            <span className="material-symbols-outlined text-[19px]">upload_file</span>
+            Import CSV
+          </button>
+          <button onClick={() => setSearchParams({ action: "addTeam" })} className={BTN_PRIMARY}>
+            <span className="material-symbols-outlined text-[19px]">add</span>
+            Add member
+          </button>
+        </div>
+      </div>
+
+      <StatStrip
+        items={[
+          { icon: "groups", label: "Total members", value: summary.total, sub: "assigned to event", color: "text-blue-700 dark:text-blue-300" },
+          { icon: "bolt", label: "Active now", value: summary.active, sub: `${activePct}% of team`, color: "text-emerald-700 dark:text-emerald-300" },
+          { icon: "bedtime", label: "Off duty / inactive", value: summary.inactive, sub: "no live access", color: "text-slate-600 dark:text-slate-300" },
+        ]}
+      />
+
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="material-symbols-outlined text-[19px]">warning</span>
+            <span className="text-sm font-medium">{error}</span>
+          </div>
+          <button onClick={loadData} className="shrink-0 text-xs font-bold underline underline-offset-2 hover:no-underline">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Table card */}
+      <section className={`overflow-hidden ${CARD}`}>
+        {/* Toolbar */}
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 dark:border-slate-800 sm:p-5 lg:flex-row lg:items-center">
+          <div className="relative w-full lg:max-w-sm lg:flex-1">
+            <span className="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-slate-400">search</span>
+            <input
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className={`${FIELD} w-full pl-10`}
+              placeholder="Search by name or email…"
+              type="text"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <select
+              value={roleFilter}
+              onChange={(e) => {
+                setRoleFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              aria-label="Role"
+              className={`${FIELD} cursor-pointer`}
+            >
+              <option>All Roles</option>
+              {ROLES.map((r) => (
+                <option key={r}>{r}</option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              aria-label="Status"
+              className={`${FIELD} cursor-pointer`}
+            >
+              <option value="All">All statuses</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            {hasFilters && (
+              <button onClick={clearFilters} className="text-xs font-bold text-blue-700 hover:underline dark:text-blue-300">
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {firstLoad ? (
+          <div className="space-y-3 p-5">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : members.length === 0 && !loading ? (
+          <div className="px-4 py-16 text-center">
+            <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+              <span className="material-symbols-outlined text-[24px]">badge</span>
+            </div>
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              {hasFilters ? "No team members match these filters" : "No team members yet"}
+            </p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {hasFilters ? "Try a different search or clear the filters." : "Add the people who'll run this event with you."}
+            </p>
+            {hasFilters ? (
+              <button onClick={clearFilters} className={`${BTN_SECONDARY} mt-5`}>
+                Clear filters
+              </button>
+            ) : (
+              <button onClick={() => setSearchParams({ action: "addTeam" })} className={`${BTN_PRIMARY} mt-5`}>
+                <span className="material-symbols-outlined text-[19px]">add</span>
+                Add member
+              </button>
+            )}
+          </div>
+        ) : (
+          <div aria-busy={loading} className={`overflow-x-auto transition-opacity ${loading ? "opacity-60" : ""}`}>
+            <table className="w-full min-w-[760px] text-left">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-800/40">
+                  {[
+                    ["Member", ""],
+                    ["Role", ""],
+                    ["Status", ""],
+                    ["Last active", ""],
+                    ["", "text-right"],
+                  ].map(([h, a], i) => (
+                    <th key={i} className={`px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400 ${a}`}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {members.map((member) => (
+                  <tr key={member._id} className="transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-800/40">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                          {(member.name || "?").charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="max-w-[220px] truncate text-sm font-bold text-slate-900 dark:text-slate-100">{member.name}</p>
+                          <p className="max-w-[240px] truncate text-xs font-medium text-slate-500 dark:text-slate-400">{member.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${ROLE_TONE[member.role] || ROLE_DEFAULT}`}
+                      >
+                        {member.role || "Unassigned"}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5">
+                      {member.status === "active" ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+                          <span className="size-1.5 rounded-full bg-emerald-500" />
+                          Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                          <span className="size-1.5 rounded-full bg-slate-400" />
+                          Inactive
+                        </span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      {getTimeAgo(member.lastActive)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                      <button
+                        data-menu-trigger
+                        onClick={(e) => toggleMenu(e, member._id)}
+                        aria-label={`Actions for ${member.name}`}
+                        aria-haspopup="menu"
+                        aria-expanded={menu?.id === member._id}
+                        className={`inline-flex size-8 items-center justify-center rounded-lg transition ${
+                          menu?.id === member._id
+                            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                            : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Footer */}
+        {!firstLoad && members.length > 0 && (
+          <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-3.5 text-xs font-medium text-slate-500 dark:border-slate-800 dark:bg-slate-800/30 dark:text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              Showing <strong className="text-slate-700 dark:text-slate-200">{members.length}</strong> of{" "}
+              <strong className="text-slate-700 dark:text-slate-200">{totalCount}</strong> members
+            </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <span className="material-symbols-outlined text-[16px]">chevron_left</span>
+                  Previous
+                </button>
+                <span className="px-1 font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  Next
+                  <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

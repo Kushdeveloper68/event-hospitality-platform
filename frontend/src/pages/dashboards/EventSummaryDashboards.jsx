@@ -3,117 +3,238 @@ import { useParams, Link } from "react-router-dom";
 import { getEventSummary, getEventKPIs } from "../../api/specificEventSummaryApi";
 import { EventContext } from "../../context/EventContext";
 
-// ─── Small helpers ────────────────────────────────────────────────────────────
+// ─── Shared styles ────────────────────────────────────────────────────────────
+const CARD =
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none";
+const BTN_PRIMARY =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200";
+const BTN_SECONDARY =
+  "inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800";
 
-function StatCard({ icon, label, value, sub, accent = "primary", pulse = false }) {
-  const accentMap = {
-    primary: "bg-primary/10 text-primary",
-    green: "bg-emerald-100 text-emerald-600",
-    amber: "bg-amber-100 text-amber-600",
-    red: "bg-red-100 text-red-600",
-    purple: "bg-purple-100 text-purple-600",
-    indigo: "bg-indigo-100 text-indigo-600",
-  };
+const TONE_CHIP = {
+  blue: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300",
+  emerald: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
+  amber: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+  red: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300",
+  violet: "bg-violet-50 text-violet-700 dark:bg-violet-500/10 dark:text-violet-300",
+  indigo: "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300",
+  teal: "bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300",
+  slate: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+};
+
+const TONE_TEXT = {
+  blue: "text-blue-700 dark:text-blue-300",
+  emerald: "text-emerald-700 dark:text-emerald-300",
+  amber: "text-amber-700 dark:text-amber-300",
+  red: "text-red-700 dark:text-red-300",
+  violet: "text-violet-700 dark:text-violet-300",
+  indigo: "text-indigo-700 dark:text-indigo-300",
+  slate: "text-slate-600 dark:text-slate-300",
+};
+
+const TONE_BAR = {
+  blue: "bg-blue-600 dark:bg-blue-500",
+  emerald: "bg-emerald-500",
+  amber: "bg-amber-500",
+  yellow: "bg-yellow-400",
+  violet: "bg-violet-500",
+  rose: "bg-rose-500",
+  slate: "bg-slate-300 dark:bg-slate-600",
+};
+
+const SERVICE_TYPE_LABEL = {
+  housekeeping: "Housekeeping",
+  maintenance: "Maintenance",
+  fb: "Food & Beverage",
+  valet: "Valet",
+  other: "Other",
+};
+
+const SCHEDULE_STATUS = {
+  Confirmed: "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300",
+  Active: "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-300",
+  Pending: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300",
+  Cancelled: "border-red-200 bg-red-50 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300",
+};
+
+const WORKSTREAM_BORDER = {
+  "Main Sessions": "border-l-blue-600 dark:border-l-blue-400",
+  Transport: "border-l-amber-500",
+  Catering: "border-l-emerald-500",
+  Staffing: "border-l-violet-500",
+  "Media/AV": "border-l-rose-500",
+};
+
+const WORKSTREAM_BAR = {
+  "Main Sessions": "blue",
+  Transport: "amber",
+  Catering: "emerald",
+  Staffing: "violet",
+  "Media/AV": "rose",
+};
+
+const ACTIVITY_TYPES = {
+  "check-in": { icon: "how_to_reg", tone: "emerald" },
+  "check-out": { icon: "logout", tone: "slate" },
+  registration: { icon: "person_add", tone: "blue" },
+  service: { icon: "room_service", tone: "amber" },
+  transport: { icon: "local_shipping", tone: "indigo" },
+  "room-assignment": { icon: "meeting_room", tone: "violet" },
+  schedule: { icon: "schedule", tone: "teal" },
+};
+
+const fmtDate = (d) =>
+  d ? new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A";
+const fmtTime = (d) => (d ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "");
+const timeAgo = (ts) => {
+  const m = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
+  if (Number.isNaN(m)) return "";
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+};
+
+// ─── Building blocks ──────────────────────────────────────────────────────────
+function Skeleton({ className = "" }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />;
+}
+
+function Card({ icon, title, subtitle, action, children, className = "" }) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className={`size-10 rounded-lg flex items-center justify-center ${accentMap[accent]}`}>
-          <span className="material-symbols-outlined text-xl">{icon}</span>
+    <section className={`flex min-w-0 flex-col ${CARD} ${className}`}>
+      <div className="flex items-start justify-between gap-3 px-5 pt-5 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          {icon && (
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              <span className="material-symbols-outlined text-[19px]">{icon}</span>
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="truncate text-[15px] font-extrabold tracking-tight text-slate-900 dark:text-slate-100">{title}</h3>
+            {subtitle && <p className="mt-0.5 truncate text-xs font-medium text-slate-500 dark:text-slate-400">{subtitle}</p>}
+          </div>
         </div>
-        {pulse && (
-          <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 uppercase">
-            <span className="size-2 bg-emerald-500 rounded-full animate-pulse" />
+        {action}
+      </div>
+      <div className="flex-1 p-5 pt-4 sm:p-6 sm:pt-5">{children}</div>
+    </section>
+  );
+}
+
+function StatCard({ icon, label, value, sub, tone = "blue", live = false }) {
+  return (
+    <div className={`p-5 ${CARD}`}>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">{label}</p>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${TONE_CHIP[tone]}`}>
+          <span className="material-symbols-outlined text-[19px]">{icon}</span>
+        </div>
+      </div>
+      <div className="mt-3 flex items-baseline gap-2">
+        <p className="text-[32px] font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50">{value}</p>
+        {live && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
             Live
           </span>
         )}
       </div>
-      <div>
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</p>
-        <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{value}</p>
-        {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
-      </div>
+      {sub && <p className="mt-2 text-xs font-medium leading-5 text-slate-500 dark:text-slate-400">{sub}</p>}
     </div>
   );
 }
 
-function ProgressBar({ value, max, colorClass = "bg-primary" }) {
-  const pct = max > 0 ? Math.min(Math.round((value / max) * 100), 100) : 0;
+function StatStrip({ items, cols = 4 }) {
+  const colCls = cols === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
   return (
-    <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-      <div
-        className={`h-full rounded-full transition-all duration-700 ${colorClass}`}
-        style={{ width: `${pct}%` }}
-      />
-    </div>
-  );
-}
-
-function SectionHeader({ icon, title, subtitle, action }) {
-  return (
-    <div className="flex items-start justify-between mb-4">
-      <div className="flex items-center gap-3">
-        <span className="material-symbols-outlined text-primary text-xl">{icon}</span>
-        <div>
-          <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">{title}</h3>
-          {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
+    <div className={`grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-slate-200 bg-slate-200 shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-800 dark:shadow-none ${colCls}`}>
+      {items.map((it) => (
+        <div key={it.label} className="bg-white p-4 dark:bg-slate-900 sm:p-5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
+            {it.icon && <span className={`material-symbols-outlined text-[16px] ${TONE_TEXT[it.tone] || ""}`}>{it.icon}</span>}
+            {it.label}
+          </p>
+          <p className="mt-2 text-2xl font-extrabold leading-none tracking-tight tabular-nums text-slate-950 dark:text-slate-50 sm:text-[28px]">
+            {it.value}
+          </p>
+          {it.sub && <p className="mt-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">{it.sub}</p>}
         </div>
-      </div>
-      {action}
+      ))}
     </div>
   );
 }
 
-function Badge({ label, variant = "default" }) {
-  const variants = {
-    default: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
-    success: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-    warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    danger: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  };
+function ProgressRow({ label, value = 0, max = 0, tone = "blue", showPct = true }) {
+  const v = Math.max(Number(value) || 0, 0);
+  const pct = max > 0 ? Math.min(Math.round((v / max) * 100), 100) : 0;
   return (
-    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${variants[variant]}`}>
-      {label}
-    </span>
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between gap-3 text-sm">
+        <span className="truncate font-semibold text-slate-700 dark:text-slate-300">{label}</span>
+        <span className="shrink-0 font-extrabold tabular-nums text-slate-900 dark:text-slate-100">
+          {v}
+          {showPct && <span className="ml-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">{pct}%</span>}
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+        <div className={`h-full rounded-full transition-all duration-700 ${TONE_BAR[tone] || TONE_BAR.blue}`} style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({ icon, label, value, tone }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 py-2.5 text-sm last:border-0 dark:border-slate-800">
+      <span className="flex items-center gap-2 font-medium text-slate-600 dark:text-slate-400">
+        {icon && <span className="material-symbols-outlined text-[18px] text-slate-400">{icon}</span>}
+        {label}
+      </span>
+      <span className={`font-extrabold tabular-nums ${tone ? TONE_TEXT[tone] : "text-slate-900 dark:text-slate-100"}`}>{value}</span>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, tone = "slate" }) {
+  return (
+    <div className="rounded-xl bg-slate-50 p-3.5 text-center dark:bg-slate-800/60">
+      <p className={`text-xl font-extrabold tabular-nums ${TONE_TEXT[tone]}`}>{value}</p>
+      <p className="mt-0.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">{label}</p>
+    </div>
+  );
+}
+
+function EmptyState({ icon = "inbox", message, hint }) {
+  return (
+    <div className="flex flex-col items-center justify-center px-4 py-10 text-center">
+      <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+        <span className="material-symbols-outlined text-[24px]">{icon}</span>
+      </div>
+      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">{message}</p>
+      {hint && <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">{hint}</p>}
+    </div>
   );
 }
 
 function ActivityItem({ log }) {
-  const typeConfig = {
-    "check-in": { icon: "how_to_reg", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-    "check-out": { icon: "logout", color: "text-slate-500", bg: "bg-slate-100 dark:bg-slate-800" },
-    registration: { icon: "person_add", color: "text-primary", bg: "bg-primary/10" },
-    service: { icon: "room_service", color: "text-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20" },
-    transport: { icon: "local_shipping", color: "text-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/20" },
-    "room-assignment": { icon: "meeting_room", color: "text-purple-600", bg: "bg-purple-50 dark:bg-purple-900/20" },
-    schedule: { icon: "schedule", color: "text-teal-600", bg: "bg-teal-50 dark:bg-teal-900/20" },
-  };
-  const cfg = typeConfig[log.type] || { icon: "info", color: "text-slate-500", bg: "bg-slate-100 dark:bg-slate-800" };
-  const timeAgo = (ts) => {
-    const diff = Date.now() - new Date(ts).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1) return "just now";
-    if (m < 60) return `${m}m ago`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
-  };
-
+  const cfg = ACTIVITY_TYPES[log.type] || { icon: "info", tone: "slate" };
+  const critical = log.priority === "high" || log.priority === "critical";
   return (
-    <div className="flex gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-      <div className={`size-9 rounded-lg flex items-center justify-center shrink-0 ${cfg.bg}`}>
-        <span className={`material-symbols-outlined text-lg ${cfg.color}`}>{cfg.icon}</span>
+    <div className="flex gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+      <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${TONE_CHIP[cfg.tone]}`}>
+        <span className="material-symbols-outlined text-[19px]">{cfg.icon}</span>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-900 dark:text-white leading-tight line-clamp-1">
-          {log.message}
-        </p>
-        <div className="flex items-center gap-2 mt-1">
-          {log.priority === "high" || log.priority === "critical" ? (
-            <Badge label={log.priority} variant="danger" />
-          ) : null}
-          <span className="text-[11px] text-slate-400">{timeAgo(log.timestamp)}</span>
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-2 text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{log.message}</p>
+        <div className="mt-1 flex items-center gap-2">
+          {critical && (
+            <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+              {log.priority}
+            </span>
+          )}
+          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{timeAgo(log.timestamp)}</span>
         </div>
       </div>
     </div>
@@ -121,89 +242,60 @@ function ActivityItem({ log }) {
 }
 
 function ScheduleItem({ item }) {
-  const statusVariant = {
-    Confirmed: "success",
-    Active: "info",
-    Pending: "warning",
-    Cancelled: "danger",
-  };
-  const workstreamColors = {
-    "Main Sessions": "border-l-primary",
-    Transport: "border-l-amber-500",
-    Catering: "border-l-emerald-500",
-    Staffing: "border-l-purple-500",
-    "Media/AV": "border-l-rose-500",
-  };
-  const fmt = (d) =>
-    new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
   return (
-    <div className={`border-l-4 ${workstreamColors[item.workstream] || "border-l-slate-300"} pl-3 py-2`}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">{item.title}</p>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {fmt(item.startTime)} – {fmt(item.endTime)}
-            {item.location && ` • ${item.location}`}
+    <div className={`rounded-xl border border-slate-100 border-l-4 bg-slate-50/60 py-2.5 pl-3.5 pr-3 dark:border-slate-800 dark:bg-slate-800/30 ${WORKSTREAM_BORDER[item.workstream] || "border-l-slate-300"}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-1 text-sm font-bold text-slate-900 dark:text-slate-100">{item.title}</p>
+          <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+            {fmtTime(item.startTime)} – {fmtTime(item.endTime)}
+            {item.location && ` · ${item.location}`}
           </p>
         </div>
-        <Badge label={item.status} variant={statusVariant[item.status] || "default"} />
+        <span
+          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+            SCHEDULE_STATUS[item.status] || "border-slate-200 bg-slate-100 text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+          }`}
+        >
+          {item.status}
+        </span>
       </div>
     </div>
-  );
-}
-
-// ─── Skeleton loader ──────────────────────────────────────────────────────────
-function Skeleton({ className = "" }) {
-  return (
-    <div className={`animate-pulse bg-slate-200 dark:bg-slate-700 rounded ${className}`} />
   );
 }
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5">
-            <Skeleton className="size-10 rounded-lg mb-3" />
-            <Skeleton className="h-3 w-24 mb-2" />
-            <Skeleton className="h-7 w-16" />
+    <div className="space-y-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className={`h-36 p-5 ${CARD}`}>
+            <Skeleton className="mb-4 h-3 w-24" />
+            <Skeleton className="h-8 w-20" />
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-          <Skeleton className="h-5 w-40 mb-4" />
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex gap-3 mb-3">
-              <Skeleton className="size-9 rounded-lg shrink-0" />
-              <div className="flex-1">
-                <Skeleton className="h-4 w-3/4 mb-1" />
-                <Skeleton className="h-3 w-1/3" />
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-          <Skeleton className="h-5 w-32 mb-4" />
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="mb-4">
-              <Skeleton className="h-3 w-28 mb-1" />
-              <Skeleton className="h-2 w-full rounded-full" />
-            </div>
-          ))}
-        </div>
+      <Skeleton className="h-24 w-full rounded-2xl" />
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+        {[...Array(2)].map((_, i) => (
+          <div key={i} className={`h-80 p-6 ${CARD}`}>
+            <Skeleton className="mb-5 h-5 w-40" />
+            {[...Array(4)].map((__, j) => (
+              <Skeleton key={j} className="mb-3 h-10 w-full" />
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═════════════════════════════════════════════════════════════════════════════
 function EventSummaryDashboards() {
   const { eventId: paramEventId } = useParams();
   const { event: contextEvent } = useContext(EventContext) || {};
-
   const eventId = paramEventId || contextEvent?._id;
 
   const [data, setData] = useState(null);
@@ -227,7 +319,6 @@ function EventSummaryDashboards() {
         setError(null);
 
         const res = await getEventSummary(eventId);
-
         if (res.success) {
           setData(res);
           setLastUpdated(new Date());
@@ -249,12 +340,13 @@ function EventSummaryDashboards() {
   }, [fetchData]);
 
   // Auto-refresh KPIs every 60 seconds
+  const hasData = !!data;
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || !hasData) return undefined;
     const interval = setInterval(async () => {
       try {
         const res = await getEventKPIs(eventId);
-        if (res.success && data) {
+        if (res.success) {
           setData((prev) =>
             prev
               ? {
@@ -267,18 +359,9 @@ function EventSummaryDashboards() {
                       checkInRate: res.kpis.checkInRate,
                       total: res.kpis.totalGuests,
                     },
-                    services: {
-                      ...prev.summary.services,
-                      open: res.kpis.openServices,
-                    },
-                    transport: {
-                      ...prev.summary.transport,
-                      activeCount: res.kpis.activeTransports,
-                    },
-                    team: {
-                      ...prev.summary.team,
-                      active: res.kpis.activeStaff,
-                    },
+                    services: { ...prev.summary.services, open: res.kpis.openServices },
+                    transport: { ...prev.summary.transport, activeCount: res.kpis.activeTransports },
+                    team: { ...prev.summary.team, active: res.kpis.activeStaff },
                   },
                 }
               : prev
@@ -290,20 +373,7 @@ function EventSummaryDashboards() {
       }
     }, 60000);
     return () => clearInterval(interval);
-  }, [eventId, data]);
-
-  // ── helpers ──────────────────────────────────────────────────────────────
-  const fmtDate = (d) =>
-    d
-      ? new Date(d).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })
-      : "N/A";
-
-  const fmtTime = (d) =>
-    d ? new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+  }, [eventId, hasData]);
 
   const getEventStatus = (event) => {
     if (!event) return "unknown";
@@ -316,78 +386,6 @@ function EventSummaryDashboards() {
     return "active";
   };
 
-  const serviceTypeLabel = {
-    housekeeping: "Housekeeping",
-    maintenance: "Maintenance",
-    fb: "Food & Beverage",
-    valet: "Valet",
-    other: "Other",
-  };
-
-  // ── LOADING ──────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="p-6 max-w-[1440px] mx-auto">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="animate-spin rounded-full h-5 w-5 border-2 border-primary border-t-transparent" />
-          <span className="text-slate-500 font-medium">Loading event summary...</span>
-        </div>
-        <DashboardSkeleton />
-      </div>
-    );
-  }
-
-  // ── ERROR ────────────────────────────────────────────────────────────────
-  if (error) {
-    return (
-      <div className="p-6 max-w-[1440px] mx-auto">
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/40 rounded-xl p-8 flex flex-col items-center text-center gap-4">
-          <span className="material-symbols-outlined text-5xl text-red-400">error</span>
-          <div>
-            <h3 className="text-lg font-bold text-red-900 dark:text-red-200">Failed to load summary</h3>
-            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
-          </div>
-          <button
-            onClick={() => fetchData()}
-            className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
-          >
-            <span className="material-symbols-outlined text-lg">refresh</span>
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) return null;
-
-  const { event, summary } = data;
-  const status = getEventStatus(event);
-
-  const statusBadge = {
-    live: (
-      <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase">
-        <span className="size-2 bg-emerald-500 rounded-full animate-pulse" />
-        Live
-      </span>
-    ),
-    upcoming: (
-      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase">
-        Upcoming
-      </span>
-    ),
-    completed: (
-      <span className="px-3 py-1 rounded-full bg-slate-200 text-slate-600 text-xs font-bold uppercase">
-        Completed
-      </span>
-    ),
-    active: (
-      <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold uppercase">
-        Active
-      </span>
-    ),
-  };
-
   const tabs = [
     { key: "overview", icon: "dashboard", label: "Overview" },
     { key: "guests", icon: "group", label: "Guests" },
@@ -396,664 +394,435 @@ function EventSummaryDashboards() {
     { key: "activity", icon: "timeline", label: "Activity" },
   ];
 
-  // ── RENDER ────────────────────────────────────────────────────────────────
+  // ── Loading / error ──────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <div className="mx-auto mt-6 max-w-md rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm dark:border-red-500/30 dark:bg-slate-900">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400">
+          <span className="material-symbols-outlined text-[25px]">error</span>
+        </div>
+        <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100">Failed to load summary</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">{error}</p>
+        <button onClick={() => fetchData()} className={`${BTN_PRIMARY} mt-6`}>
+          <span className="material-symbols-outlined text-[18px]">refresh</span>
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { event, summary } = data;
+  const status = getEventStatus(event);
+  const g = summary.guests || {};
+  const sv = summary.services || {};
+  const tr = summary.transport || {};
+  const rm = summary.rooms || {};
+  const tm = summary.team || {};
+  const sc = summary.schedule || {};
+  const ac = summary.activity || {};
+  const trends = summary.trends || {};
+
+  const todaysItems = sc.todaysItems || [];
+  const recent = ac.recent || [];
+  const activityByType = ac.byType || {};
+  const hourly = trends.checkInByHour || [];
+  const maxHourly = Math.max(...hourly.map((x) => x.count), 1);
+  const notYetArrived = Math.max((g.notCheckedIn || 0) - (g.arrivingToday || 0), 0);
+  const transportRate = tr.total > 0 ? Math.round((tr.arrived / tr.total) * 100) : 0;
+
   return (
-    <div className="max-w-[1440px] mx-auto space-y-6 pb-12">
-      {/* ── Header ── */}
-      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">
-                {event?.name || "Event Summary"}
-              </h1>
-              {statusBadge[status]}
-            </div>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500">
-              {event?.venue && (
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-base">location_on</span>
-                  {event.venue}
-                </span>
-              )}
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">calendar_today</span>
-                {fmtDate(event?.startDate)}
-                {event?.endDate && ` – ${fmtDate(event.endDate)}`}
-              </span>
-              {event?.isPrivate && (
-                <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-base">lock</span>
-                  Private
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {eventId && (
-              <Link
-                to={`/reports/${eventId}`}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
-              >
-                <span className="material-symbols-outlined text-lg">analytics</span>
-                Get Full Report
-              </Link>
-            )}
-            {lastUpdated && (
-              <span className="text-xs text-slate-400">
-                Updated {fmtTime(lastUpdated)}
-              </span>
-            )}
-            <button
-              onClick={() => fetchData(true)}
-              disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <span className={`material-symbols-outlined text-lg ${refreshing ? "animate-spin" : ""}`}>
-                refresh
-              </span>
-              {refreshing ? "Refreshing…" : "Refresh"}
-            </button>
-          </div>
+    <div className="space-y-5 pb-4">
+      {/* Header */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">Reports</p>
+          <h2 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50">Event summary</h2>
+          <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+            Operational snapshot for {event?.name || "this event"}
+            {lastUpdated && <span className="text-slate-400 dark:text-slate-500"> · Updated {fmtTime(lastUpdated)}</span>}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button onClick={() => fetchData(true)} disabled={refreshing} className={BTN_SECONDARY}>
+            <span className={`material-symbols-outlined text-[19px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+          {eventId && (
+            <Link to={`/reports/${eventId}`} className={BTN_PRIMARY}>
+              <span className="material-symbols-outlined text-[19px]">analytics</span>
+              Get full report
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* ── Tabs ── */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="material-symbols-outlined text-[19px]">warning</span>
+            <span className="text-sm font-medium">{error}</span>
+          </div>
+          <button onClick={() => fetchData(true)} className="shrink-0 text-xs font-bold underline underline-offset-2 hover:no-underline">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Section switcher */}
+      <div className="flex w-fit max-w-full overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800" role="tablist" aria-label="Summary sections">
         {tabs.map((t) => (
           <button
             key={t.key}
+            role="tab"
+            aria-selected={activeTab === t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all flex-1 justify-center ${
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold transition ${
               activeTab === t.key
-                ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
-                : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                ? "bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100"
+                : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
-            <span className="material-symbols-outlined text-[18px]">{t.icon}</span>
-            <span className="hidden md:inline">{t.label}</span>
+            <span className="material-symbols-outlined text-[17px]">{t.icon}</span>
+            {t.label}
           </button>
         ))}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          OVERVIEW TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "overview" && (
-        <div className="space-y-6">
-          {/* Top KPI Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              icon="group"
-              label="Total Guests"
-              value={summary.guests.total}
-              sub={`${summary.guests.checkInRate}% checked in`}
-              accent="primary"
-              pulse={status === "live"}
-            />
-            <StatCard
-              icon="how_to_reg"
-              label="Checked In"
-              value={summary.guests.checkedIn}
-              sub={`${summary.guests.notCheckedIn} remaining`}
-              accent="green"
-            />
-            <StatCard
-              icon="pending_actions"
-              label="Open Services"
-              value={summary.services.open + summary.services.inProgress}
-              sub={`${summary.services.urgent} urgent`}
-              accent={summary.services.urgent > 0 ? "red" : "amber"}
-            />
-            <StatCard
-              icon="directions_car"
-              label="Active Transport"
-              value={summary.transport.activeCount}
-              sub={`${summary.transport.today} today`}
-              accent="indigo"
-            />
-          </div>
+      <div aria-busy={refreshing} className={`transition-opacity ${refreshing ? "opacity-60" : ""}`}>
+        {/* ═════════ OVERVIEW ═════════ */}
+        {activeTab === "overview" && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <StatCard icon="group" label="Total guests" value={g.total ?? 0} sub={`${g.checkInRate ?? 0}% checked in`} tone="blue" live={status === "live"} />
+              <StatCard icon="how_to_reg" label="Checked in" value={g.checkedIn ?? 0} sub={`${g.notCheckedIn ?? 0} remaining`} tone="emerald" />
+              <StatCard
+                icon="pending_actions"
+                label="Open services"
+                value={(sv.open || 0) + (sv.inProgress || 0)}
+                sub={`${sv.urgent || 0} urgent`}
+                tone={sv.urgent > 0 ? "red" : "amber"}
+              />
+              <StatCard icon="directions_car" label="Active transport" value={tr.activeCount ?? 0} sub={`${tr.today ?? 0} today`} tone="indigo" />
+            </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard
-              icon="meeting_room"
-              label="Rooms"
-              value={`${summary.rooms.occupied}/${summary.rooms.total}`}
-              sub={`${summary.rooms.occupancyRate}% occupancy`}
-              accent="purple"
+            <StatStrip
+              items={[
+                { icon: "meeting_room", label: "Rooms", value: `${rm.occupied ?? 0}/${rm.total ?? 0}`, sub: `${rm.occupancyRate ?? 0}% occupancy`, tone: "violet" },
+                { icon: "groups", label: "Active staff", value: tm.active ?? 0, sub: `${tm.total ?? 0} total`, tone: "emerald" },
+                { icon: "schedule", label: "Today's schedule", value: todaysItems.length, sub: `${sc.total ?? 0} total activities`, tone: "blue" },
+                { icon: "star", label: "VIP guests", value: g.vip ?? 0, sub: `of ${g.total ?? 0} total`, tone: "amber" },
+              ]}
             />
-            <StatCard
-              icon="groups"
-              label="Active Staff"
-              value={summary.team.active}
-              sub={`${summary.team.total} total`}
-              accent="green"
-            />
-            <StatCard
-              icon="schedule"
-              label="Today's Schedule"
-              value={summary.schedule.todaysItems.length}
-              sub={`${summary.schedule.total} total activities`}
-              accent="primary"
-            />
-            <StatCard
-              icon="star"
-              label="VIP Guests"
-              value={summary.guests.vip}
-              sub={`of ${summary.guests.total} total`}
-              accent="amber"
-            />
-          </div>
 
-          {/* Check-in progress */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-            <SectionHeader icon="how_to_reg" title="Check-in Progress" subtitle="Real-time guest arrival tracking" />
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  {summary.guests.checkedIn} of {summary.guests.total} guests checked in
+            <Card icon="how_to_reg" title="Check-in progress" subtitle="Guest arrival tracking">
+              <div className="mb-2 flex items-baseline justify-between text-sm">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  {g.checkedIn ?? 0} of {g.total ?? 0} guests checked in
                 </span>
-                <span className="font-bold text-primary">{summary.guests.checkInRate}%</span>
+                <span className="text-lg font-extrabold tabular-nums text-blue-700 dark:text-blue-300">{g.checkInRate ?? 0}%</span>
               </div>
-              <ProgressBar value={summary.guests.checkedIn} max={summary.guests.total} colorClass="bg-primary" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                {[
-                  { label: "Checked In", value: summary.guests.checkedIn, color: "text-emerald-600" },
-                  { label: "Pending", value: summary.guests.notCheckedIn, color: "text-amber-600" },
-                  { label: "Arriving Today", value: summary.guests.arrivingToday, color: "text-primary" },
-                  { label: "Departing Today", value: summary.guests.departingToday, color: "text-slate-600" },
-                ].map((item) => (
-                  <div key={item.label} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 text-center">
-                    <p className={`text-xl font-black ${item.color}`}>{item.value}</p>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Two-column: Activity + Today's Schedule */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Recent Activity */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader
-                icon="dynamic_feed"
-                title="Recent Activity"
-                subtitle="Latest operational events"
-                action={
-                  <div className="flex items-center gap-1">
-                    <span className="size-2 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Live</span>
-                  </div>
-                }
-              />
-              <div className="space-y-1 max-h-[320px] overflow-y-auto">
-                {summary.activity.recent.length > 0 ? (
-                  summary.activity.recent.map((log) => (
-                    <ActivityItem key={log._id} log={log} />
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                    <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
-                    <p className="text-sm font-medium">No activity yet</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Today's Schedule */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader
-                icon="today"
-                title="Today's Schedule"
-                subtitle={`${summary.schedule.todaysItems.length} items today`}
-              />
-              <div className="space-y-3 max-h-[320px] overflow-y-auto">
-                {summary.schedule.todaysItems.length > 0 ? (
-                  summary.schedule.todaysItems.map((item) => (
-                    <ScheduleItem key={item._id} item={item} />
-                  ))
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-10 text-slate-400">
-                    <span className="material-symbols-outlined text-4xl mb-2">event_busy</span>
-                    <p className="text-sm font-medium">No activities scheduled today</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          GUESTS TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "guests" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Guest Breakdown Card */}
-            <div className="md:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="group" title="Guest Breakdown" subtitle="Arrival & check-in status" />
-              <div className="space-y-4">
-                {[
-                  { label: "Checked In", value: summary.guests.checkedIn, max: summary.guests.total, color: "bg-emerald-500" },
-                  { label: "Not Yet Arrived", value: summary.guests.notCheckedIn - summary.guests.arrivingToday, max: summary.guests.total, color: "bg-slate-300 dark:bg-slate-600" },
-                  { label: "Arriving Today", value: summary.guests.arrivingToday, max: summary.guests.total, color: "bg-primary" },
-                  { label: "Departing Today", value: summary.guests.departingToday, max: summary.guests.total, color: "bg-amber-400" },
-                  { label: "VIP Guests", value: summary.guests.vip, max: summary.guests.total, color: "bg-yellow-400" },
-                ].map((item) => (
-                  <div key={item.label}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium text-slate-700 dark:text-slate-300">{item.label}</span>
-                      <span className="font-bold text-slate-900 dark:text-white">
-                        {item.value}
-                        <span className="text-slate-400 font-normal ml-1">
-                          ({item.max > 0 ? Math.round((Math.max(item.value,0) / item.max) * 100) : 0}%)
-                        </span>
-                      </span>
-                    </div>
-                    <ProgressBar value={Math.max(item.value, 0)} max={item.max} colorClass={item.color} />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Guest Summary Widget */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm flex flex-col gap-4">
-              <SectionHeader icon="bar_chart" title="Quick Stats" />
-              <div className="space-y-3">
-                {[
-                  { icon: "groups", label: "Total Registered", value: summary.guests.total, accent: "text-primary" },
-                  { icon: "how_to_reg", label: "Check-in Rate", value: `${summary.guests.checkInRate}%`, accent: "text-emerald-600" },
-                  { icon: "star", label: "VIP Count", value: summary.guests.vip, accent: "text-amber-500" },
-                  { icon: "flight_land", label: "Arriving Today", value: summary.guests.arrivingToday, accent: "text-primary" },
-                  { icon: "flight_takeoff", label: "Departing Today", value: summary.guests.departingToday, accent: "text-slate-600" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                      <span className="material-symbols-outlined text-base">{item.icon}</span>
-                      <span className="text-sm">{item.label}</span>
-                    </div>
-                    <span className={`text-sm font-black ${item.accent}`}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Check-in Trend (hourly) */}
-          {summary.trends.checkInByHour.length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="trending_up" title="Check-in Trend" subtitle="Arrivals by hour (last 12h)" />
-              <div className="flex items-end gap-1.5 h-32 mt-4">
-                {summary.trends.checkInByHour.map((item, i) => {
-                  const maxCount = Math.max(...summary.trends.checkInByHour.map((x) => x.count), 1);
-                  const heightPct = Math.round((item.count / maxCount) * 100);
-                  return (
-                    <div key={i} className="flex flex-col items-center gap-1 flex-1" title={`${item.hour}:00 — ${item.count} check-ins`}>
-                      <span className="text-[10px] font-bold text-slate-500">{item.count}</span>
-                      <div
-                        className="w-full bg-primary rounded-t transition-all duration-500"
-                        style={{ height: `${Math.max(heightPct, 4)}%` }}
-                      />
-                      <span className="text-[9px] text-slate-400">{String(item.hour).padStart(2, "0")}h</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          OPERATIONS TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "operations" && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Service Requests */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="room_service" title="Service Requests" subtitle="All request statuses" />
-              <div className="space-y-3 mt-2">
-                {[
-                  { label: "Open", value: summary.services.open, variant: "warning", icon: "fiber_new" },
-                  { label: "In Progress", value: summary.services.inProgress, variant: "info", icon: "run_circle" },
-                  { label: "Completed", value: summary.services.completed, variant: "success", icon: "check_circle" },
-                  { label: "Cancelled", value: summary.services.cancelled, variant: "default", icon: "cancel" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base text-slate-400">{item.icon}</span>
-                      <span className="text-sm text-slate-700 dark:text-slate-300">{item.label}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-black text-slate-900 dark:text-white">{item.value}</span>
-                      <Badge label={item.label} variant={item.variant} />
-                    </div>
-                  </div>
-                ))}
-                {summary.services.urgent > 0 && (
-                  <div className="mt-2 flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-900/30">
-                    <span className="material-symbols-outlined text-red-600 text-base">priority_high</span>
-                    <span className="text-sm font-bold text-red-700 dark:text-red-400">
-                      {summary.services.urgent} urgent request{summary.services.urgent !== 1 ? "s" : ""} need attention
-                    </span>
-                  </div>
-                )}
-              </div>
-              {/* Type Breakdown */}
-              {Object.keys(summary.services.typeBreakdown).length > 0 && (
-                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">By Type</p>
-                  <div className="space-y-2">
-                    {Object.entries(summary.services.typeBreakdown).map(([type, count]) => (
-                      <div key={type} className="flex items-center justify-between text-xs">
-                        <span className="text-slate-600 dark:text-slate-400">
-                          {serviceTypeLabel[type] || type}
-                        </span>
-                        <span className="font-bold text-slate-900 dark:text-white">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Transport */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="local_shipping" title="Transport" subtitle="Fleet coordination status" />
-              <div className="space-y-3 mt-2">
-                {[
-                  { label: "Scheduled", value: summary.transport.scheduled, icon: "schedule", color: "text-slate-500" },
-                  { label: "In Transit", value: summary.transport.inTransit, icon: "airport_shuttle", color: "text-primary" },
-                  { label: "Arrived", value: summary.transport.arrived, icon: "check_circle", color: "text-emerald-600" },
-                  { label: "Cancelled", value: summary.transport.cancelled, icon: "cancel", color: "text-slate-400" },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center justify-between py-2.5 border-b border-slate-100 dark:border-slate-800 last:border-0">
-                    <div className="flex items-center gap-2">
-                      <span className={`material-symbols-outlined text-base ${item.color}`}>{item.icon}</span>
-                      <span className="text-sm text-slate-700 dark:text-slate-300">{item.label}</span>
-                    </div>
-                    <span className="text-sm font-black text-slate-900 dark:text-white">{item.value}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <div className="flex justify-between text-xs text-slate-500 mb-1">
-                  <span>Completion Rate</span>
-                  <span className="font-bold">
-                    {summary.transport.total > 0
-                      ? Math.round((summary.transport.arrived / summary.transport.total) * 100)
-                      : 0}%
-                  </span>
-                </div>
-                <ProgressBar
-                  value={summary.transport.arrived}
-                  max={summary.transport.total}
-                  colorClass="bg-emerald-500"
+              <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div
+                  className="h-full rounded-full bg-blue-600 transition-all duration-700 dark:bg-blue-500"
+                  style={{ width: `${Math.min(g.checkInRate || 0, 100)}%` }}
                 />
               </div>
-            </div>
-
-            {/* Rooms */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="meeting_room" title="Room Inventory" subtitle="Occupancy overview" />
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col items-center justify-center py-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                  <p className="text-4xl font-black text-primary">{summary.rooms.occupancyRate}%</p>
-                  <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Occupancy Rate</p>
-                </div>
-                <div className="space-y-2">
-                  {[
-                    { label: "Total Rooms", value: summary.rooms.total },
-                    { label: "Occupied", value: summary.rooms.occupied },
-                    { label: "Available", value: summary.rooms.available },
-                    { label: "Total Capacity", value: summary.rooms.totalCapacity },
-                  ].map((item) => (
-                    <div key={item.label} className="flex justify-between text-sm border-b border-slate-100 dark:border-slate-800 pb-2 last:border-0">
-                      <span className="text-slate-600 dark:text-slate-400">{item.label}</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-                {Object.keys(summary.rooms.typeBreakdown).length > 0 && (
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">By Type</p>
-                    {Object.entries(summary.rooms.typeBreakdown).map(([type, count]) => (
-                      <div key={type} className="flex justify-between text-xs py-1">
-                        <span className="capitalize text-slate-600 dark:text-slate-400">{type}</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{count}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+              <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+                <MiniStat label="Checked in" value={g.checkedIn ?? 0} tone="emerald" />
+                <MiniStat label="Pending" value={g.notCheckedIn ?? 0} tone="amber" />
+                <MiniStat label="Arriving today" value={g.arrivingToday ?? 0} tone="blue" />
+                <MiniStat label="Departing today" value={g.departingToday ?? 0} tone="slate" />
               </div>
+            </Card>
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+              <Card icon="dynamic_feed" title="Recent activity" subtitle="Latest operational events">
+                <div className="-mx-2 max-h-[22rem] space-y-0.5 overflow-y-auto">
+                  {recent.length > 0 ? recent.map((log) => <ActivityItem key={log._id} log={log} />) : <EmptyState icon="inbox" message="No activity yet" />}
+                </div>
+              </Card>
+
+              <Card icon="today" title="Today's schedule" subtitle={`${todaysItems.length} item${todaysItems.length === 1 ? "" : "s"} today`}>
+                <div className="max-h-[22rem] space-y-2.5 overflow-y-auto">
+                  {todaysItems.length > 0 ? (
+                    todaysItems.map((item) => <ScheduleItem key={item._id} item={item} />)
+                  ) : (
+                    <EmptyState icon="event_busy" message="No activities scheduled today" />
+                  )}
+                </div>
+              </Card>
             </div>
           </div>
+        )}
 
-          {/* Team */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-            <SectionHeader icon="badge" title="Team Overview" subtitle="Staff on duty and role distribution" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-slate-700 dark:text-slate-300 font-medium">
-                    {summary.team.active} of {summary.team.total} staff active
-                  </span>
-                  <span className="font-bold text-emerald-600">{summary.team.activeRate}%</span>
+        {/* ═════════ GUESTS ═════════ */}
+        {activeTab === "guests" && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <Card icon="group" title="Guest breakdown" subtitle="Arrival and check-in status" className="lg:col-span-2">
+                <div className="space-y-4">
+                  <ProgressRow label="Checked in" value={g.checkedIn} max={g.total} tone="emerald" />
+                  <ProgressRow label="Not yet arrived" value={notYetArrived} max={g.total} tone="slate" />
+                  <ProgressRow label="Arriving today" value={g.arrivingToday} max={g.total} tone="blue" />
+                  <ProgressRow label="Departing today" value={g.departingToday} max={g.total} tone="amber" />
+                  <ProgressRow label="VIP guests" value={g.vip} max={g.total} tone="yellow" />
                 </div>
-                <ProgressBar value={summary.team.active} max={summary.team.total} colorClass="bg-emerald-500" />
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "Total Staff", value: summary.team.total, color: "text-slate-900 dark:text-white" },
-                    { label: "On Duty", value: summary.team.active, color: "text-emerald-600" },
-                    { label: "Off Duty", value: summary.team.inactive, color: "text-slate-400" },
-                  ].map((item) => (
-                    <div key={item.label} className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 text-center">
-                      <p className={`text-xl font-black ${item.color}`}>{item.value}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{item.label}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Top Roles</p>
-                {summary.team.roleDistribution.length > 0 ? (
-                  <div className="space-y-2">
-                    {summary.team.roleDistribution.map((item) => (
-                      <div key={item.role} className="flex items-center gap-2">
-                        <div className="flex-1">
-                          <div className="flex justify-between text-xs mb-1">
-                            <span className="text-slate-700 dark:text-slate-300">{item.role || "Unassigned"}</span>
-                            <span className="font-bold text-slate-900 dark:text-white">{item.count}</span>
-                          </div>
-                          <ProgressBar
-                            value={item.count}
-                            max={summary.team.total}
-                            colorClass="bg-primary"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-400">No role data available</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+              </Card>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          SCHEDULE TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "schedule" && (
-        <div className="space-y-6">
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {[
-              { label: "Total", value: summary.schedule.total, color: "text-slate-900 dark:text-white" },
-              { label: "Confirmed", value: summary.schedule.confirmed, color: "text-emerald-600" },
-              { label: "Active", value: summary.schedule.active, color: "text-primary" },
-              { label: "Pending", value: summary.schedule.pending, color: "text-amber-600" },
-              { label: "Cancelled", value: summary.schedule.cancelled, color: "text-slate-400" },
-            ].map((item) => (
-              <div key={item.label} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 text-center shadow-sm">
-                <p className={`text-2xl font-black ${item.color}`}>{item.value}</p>
-                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Today's full list */}
-            <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="today" title="Today's Activities" subtitle={`${summary.schedule.todaysItems.length} items scheduled`} />
-              {summary.schedule.todaysItems.length > 0 ? (
-                <div className="space-y-3">
-                  {summary.schedule.todaysItems.map((item) => (
-                    <ScheduleItem key={item._id} item={item} />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                  <span className="material-symbols-outlined text-5xl mb-3">event_available</span>
-                  <p className="font-medium">No activities scheduled for today</p>
-                </div>
-              )}
+              <Card icon="bar_chart" title="Quick stats">
+                <DetailRow icon="groups" label="Total registered" value={g.total ?? 0} tone="blue" />
+                <DetailRow icon="how_to_reg" label="Check-in rate" value={`${g.checkInRate ?? 0}%`} tone="emerald" />
+                <DetailRow icon="star" label="VIP count" value={g.vip ?? 0} tone="amber" />
+                <DetailRow icon="flight_land" label="Arriving today" value={g.arrivingToday ?? 0} tone="blue" />
+                <DetailRow icon="flight_takeoff" label="Departing today" value={g.departingToday ?? 0} />
+              </Card>
             </div>
 
-            {/* Workstream breakdown */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="category" title="Workstreams" subtitle="Activity distribution" />
-              {summary.schedule.workstreamBreakdown.length > 0 ? (
-                <div className="space-y-4 mt-2">
-                  {summary.schedule.workstreamBreakdown.map((item) => {
-                    const colorMap = {
-                      "Main Sessions": "bg-primary",
-                      Transport: "bg-amber-500",
-                      Catering: "bg-emerald-500",
-                      Staffing: "bg-purple-500",
-                      "Media/AV": "bg-rose-500",
-                    };
+            {hourly.length > 0 && (
+              <Card icon="trending_up" title="Check-in trend" subtitle="Arrivals by hour (last 12h)">
+                <div className="flex h-44 items-end gap-1.5 border-b border-slate-200 pt-4 dark:border-slate-800 sm:gap-2">
+                  {hourly.map((item, i) => {
+                    const heightPct = Math.round((item.count / maxHourly) * 100);
                     return (
-                      <div key={item.workstream}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="font-medium text-slate-700 dark:text-slate-300">{item.workstream}</span>
-                          <span className="font-bold text-slate-900 dark:text-white">{item.count}</span>
-                        </div>
-                        <ProgressBar
-                          value={item.count}
-                          max={summary.schedule.total}
-                          colorClass={colorMap[item.workstream] || "bg-slate-400"}
+                      <div
+                        key={i}
+                        className="group flex h-full flex-1 flex-col items-center justify-end gap-1"
+                        title={`${String(item.hour).padStart(2, "0")}:00 — ${item.count} check-ins`}
+                      >
+                        <span className="text-[11px] font-bold tabular-nums text-slate-600 dark:text-slate-300">{item.count}</span>
+                        <div
+                          className="w-full max-w-[44px] rounded-t-md bg-blue-600 transition-all duration-500 group-hover:bg-blue-700 dark:bg-blue-500 dark:group-hover:bg-blue-400"
+                          style={{ height: `${Math.max(heightPct, 3)}%` }}
                         />
                       </div>
                     );
                   })}
                 </div>
-              ) : (
-                <p className="text-sm text-slate-400 mt-4">No workstream data</p>
-              )}
+                <div className="mt-2 flex gap-1.5 sm:gap-2">
+                  {hourly.map((item, i) => (
+                    <span key={i} className="flex-1 text-center text-[11px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">
+                      {String(item.hour).padStart(2, "0")}h
+                    </span>
+                  ))}
+                </div>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* ═════════ OPERATIONS ═════════ */}
+        {activeTab === "operations" && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <Card icon="room_service" title="Service requests" subtitle="All request statuses">
+                <DetailRow icon="fiber_new" label="Open" value={sv.open ?? 0} tone="amber" />
+                <DetailRow icon="run_circle" label="In progress" value={sv.inProgress ?? 0} tone="blue" />
+                <DetailRow icon="check_circle" label="Completed" value={sv.completed ?? 0} tone="emerald" />
+                <DetailRow icon="cancel" label="Cancelled" value={sv.cancelled ?? 0} />
+                {sv.urgent > 0 && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-3 dark:border-red-500/30 dark:bg-red-500/10">
+                    <span className="material-symbols-outlined text-[18px] text-red-600 dark:text-red-400">priority_high</span>
+                    <span className="text-sm font-bold text-red-700 dark:text-red-300">
+                      {sv.urgent} urgent request{sv.urgent !== 1 ? "s" : ""} need attention
+                    </span>
+                  </div>
+                )}
+                {Object.keys(sv.typeBreakdown || {}).length > 0 && (
+                  <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">By type</p>
+                    {Object.entries(sv.typeBreakdown).map(([type, count]) => (
+                      <div key={type} className="flex items-center justify-between py-1 text-xs">
+                        <span className="font-medium text-slate-600 dark:text-slate-400">{SERVICE_TYPE_LABEL[type] || type}</span>
+                        <span className="font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              <Card icon="local_shipping" title="Transport" subtitle="Fleet coordination status">
+                <DetailRow icon="schedule" label="Scheduled" value={tr.scheduled ?? 0} />
+                <DetailRow icon="airport_shuttle" label="In transit" value={tr.inTransit ?? 0} tone="blue" />
+                <DetailRow icon="check_circle" label="Arrived" value={tr.arrived ?? 0} tone="emerald" />
+                <DetailRow icon="cancel" label="Cancelled" value={tr.cancelled ?? 0} />
+                <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                  <ProgressRow label="Completion rate" value={tr.arrived} max={tr.total} tone="emerald" />
+                </div>
+              </Card>
+
+              <Card icon="meeting_room" title="Room inventory" subtitle="Occupancy overview">
+                <div className="mb-4 rounded-xl bg-slate-50 py-5 text-center dark:bg-slate-800/60">
+                  <p className="text-4xl font-extrabold tracking-tight tabular-nums text-blue-700 dark:text-blue-300">{rm.occupancyRate ?? 0}%</p>
+                  <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">Occupancy rate</p>
+                </div>
+                <DetailRow label="Total rooms" value={rm.total ?? 0} />
+                <DetailRow label="Occupied" value={rm.occupied ?? 0} />
+                <DetailRow label="Available" value={rm.available ?? 0} tone="emerald" />
+                <DetailRow label="Total capacity" value={rm.totalCapacity ?? 0} />
+                {Object.keys(rm.typeBreakdown || {}).length > 0 && (
+                  <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">By type</p>
+                    {Object.entries(rm.typeBreakdown).map(([type, count]) => (
+                      <div key={type} className="flex items-center justify-between py-1 text-xs">
+                        <span className="font-medium capitalize text-slate-600 dark:text-slate-400">{type}</span>
+                        <span className="font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{count}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
             </div>
-          </div>
-        </div>
-      )}
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          ACTIVITY TAB
-      ══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === "activity" && (
-        <div className="space-y-6">
-          {/* Activity KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard icon="history" label="Total Logs" value={summary.activity.total} accent="primary" />
-            <StatCard
-              icon="priority_high"
-              label="Critical Today"
-              value={summary.activity.criticalToday}
-              accent={summary.activity.criticalToday > 0 ? "red" : "green"}
-            />
-            <StatCard
-              icon="how_to_reg"
-              label="Check-in Events"
-              value={summary.activity.byType?.["check-in"] || 0}
-              accent="green"
-            />
-            <StatCard
-              icon="room_service"
-              label="Service Events"
-              value={summary.activity.byType?.["service"] || 0}
-              accent="amber"
-            />
-          </div>
-
-          {/* Activity by type breakdown */}
-          {Object.keys(summary.activity.byType).length > 0 && (
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-              <SectionHeader icon="bar_chart" title="Activity by Type" subtitle="All recorded log categories" />
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                {Object.entries(summary.activity.byType).map(([type, count]) => {
-                  const typeIcons = {
-                    "check-in": { icon: "how_to_reg", accent: "green" },
-                    "check-out": { icon: "logout", accent: "primary" },
-                    registration: { icon: "person_add", accent: "primary" },
-                    service: { icon: "room_service", accent: "amber" },
-                    transport: { icon: "local_shipping", accent: "indigo" },
-                    "room-assignment": { icon: "meeting_room", accent: "purple" },
-                    schedule: { icon: "schedule", accent: "primary" },
-                  };
-                  const cfg = typeIcons[type] || { icon: "info", accent: "primary" };
-                  return (
-                    <StatCard
-                      key={type}
-                      icon={cfg.icon}
-                      label={type.replace(/-/g, " ")}
-                      value={count}
-                      accent={cfg.accent}
-                    />
-                  );
-                })}
+            <Card icon="badge" title="Team overview" subtitle="Staff on duty and role distribution">
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="flex items-baseline justify-between text-sm">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300">
+                      {tm.active ?? 0} of {tm.total ?? 0} staff active
+                    </span>
+                    <span className="font-extrabold tabular-nums text-emerald-700 dark:text-emerald-300">{tm.activeRate ?? 0}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div className="h-full rounded-full bg-emerald-500 transition-all duration-700" style={{ width: `${Math.min(tm.activeRate || 0, 100)}%` }} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <MiniStat label="Total staff" value={tm.total ?? 0} />
+                    <MiniStat label="On duty" value={tm.active ?? 0} tone="emerald" />
+                    <MiniStat label="Off duty" value={tm.inactive ?? 0} />
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">Top roles</p>
+                  {(tm.roleDistribution || []).length > 0 ? (
+                    <div className="space-y-3">
+                      {tm.roleDistribution.map((item) => (
+                        <ProgressRow key={item.role || "unassigned"} label={item.role || "Unassigned"} value={item.count} max={tm.total} tone="blue" showPct={false} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">No role data available</p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            </Card>
+          </div>
+        )}
 
-          {/* Full activity feed */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
-            <SectionHeader
+        {/* ═════════ SCHEDULE ═════════ */}
+        {activeTab === "schedule" && (
+          <div className="space-y-5">
+            <StatStrip
+              cols={5}
+              items={[
+                { icon: "event_note", label: "Total", value: sc.total ?? 0, tone: "blue" },
+                { icon: "check_circle", label: "Confirmed", value: sc.confirmed ?? 0, tone: "emerald" },
+                { icon: "play_circle", label: "Active", value: sc.active ?? 0, tone: "indigo" },
+                { icon: "pending", label: "Pending", value: sc.pending ?? 0, tone: "amber" },
+                { icon: "cancel", label: "Cancelled", value: sc.cancelled ?? 0, tone: "red" },
+              ]}
+            />
+
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              <Card icon="today" title="Today's activities" subtitle={`${todaysItems.length} item${todaysItems.length === 1 ? "" : "s"} scheduled`} className="lg:col-span-2">
+                {todaysItems.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {todaysItems.map((item) => (
+                      <ScheduleItem key={item._id} item={item} />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState icon="event_available" message="No activities scheduled for today" />
+                )}
+              </Card>
+
+              <Card icon="category" title="Workstreams" subtitle="Activity distribution">
+                {(sc.workstreamBreakdown || []).length > 0 ? (
+                  <div className="space-y-4">
+                    {sc.workstreamBreakdown.map((item) => (
+                      <ProgressRow key={item.workstream} label={item.workstream} value={item.count} max={sc.total} tone={WORKSTREAM_BAR[item.workstream] || "slate"} showPct={false} />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState icon="category" message="No workstream data" />
+                )}
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* ═════════ ACTIVITY ═════════ */}
+        {activeTab === "activity" && (
+          <div className="space-y-5">
+            <StatStrip
+              items={[
+                { icon: "history", label: "Total logs", value: ac.total ?? 0, tone: "blue" },
+                { icon: "priority_high", label: "Critical today", value: ac.criticalToday ?? 0, tone: ac.criticalToday > 0 ? "red" : "emerald" },
+                { icon: "how_to_reg", label: "Check-in events", value: activityByType["check-in"] || 0, tone: "emerald" },
+                { icon: "room_service", label: "Service events", value: activityByType["service"] || 0, tone: "amber" },
+              ]}
+            />
+
+            {Object.keys(activityByType).length > 0 && (
+              <Card icon="bar_chart" title="Activity by type" subtitle="All recorded log categories">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                  {Object.entries(activityByType).map(([type, count]) => {
+                    const cfg = ACTIVITY_TYPES[type] || { icon: "info", tone: "slate" };
+                    return (
+                      <div key={type} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-slate-800/30">
+                        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${TONE_CHIP[cfg.tone]}`}>
+                          <span className="material-symbols-outlined text-[19px]">{cfg.icon}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xl font-extrabold leading-none tabular-nums text-slate-950 dark:text-slate-50">{count}</p>
+                          <p className="mt-1 truncate text-[11px] font-semibold capitalize text-slate-500 dark:text-slate-400">{type.replace(/-/g, " ")}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            )}
+
+            <Card
               icon="timeline"
-              title="Activity Feed"
+              title="Activity feed"
               subtitle="Most recent 10 operational events"
               action={
                 <button
                   onClick={() => fetchData(true)}
                   disabled={refreshing}
-                  className="flex items-center gap-1 text-xs font-bold text-primary hover:underline disabled:opacity-50"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-[11px] font-bold text-blue-700 transition hover:bg-blue-50 disabled:opacity-50 dark:text-blue-300 dark:hover:bg-blue-500/10"
                 >
-                  <span className={`material-symbols-outlined text-base ${refreshing ? "animate-spin" : ""}`}>
-                    refresh
-                  </span>
+                  <span className={`material-symbols-outlined text-[16px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
                   Refresh
                 </button>
               }
-            />
-            <div className="space-y-1">
-              {summary.activity.recent.length > 0 ? (
-                summary.activity.recent.map((log) => (
-                  <ActivityItem key={log._id} log={log} />
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                  <span className="material-symbols-outlined text-5xl mb-3">timeline</span>
-                  <p className="font-medium">No activity recorded yet</p>
-                  <p className="text-sm mt-1">Activity will appear here as operations begin</p>
-                </div>
-              )}
-            </div>
+            >
+              <div className="-mx-2 space-y-0.5">
+                {recent.length > 0 ? (
+                  recent.map((log) => <ActivityItem key={log._id} log={log} />)
+                ) : (
+                  <EmptyState icon="timeline" message="No activity recorded yet" hint="Activity will appear here as operations begin." />
+                )}
+              </div>
+            </Card>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
