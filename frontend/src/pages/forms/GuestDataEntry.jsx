@@ -1,206 +1,236 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { createGuest, getGuestById, updateGuest } from '../../api/guestApi'
+
+// ─── Shared form styles (same system as the rest of the app) ──────────────────
+const INPUT_BASE =
+  'h-11 w-full rounded-xl border bg-slate-50 px-3.5 text-sm font-medium text-slate-900 outline-none transition placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:bg-slate-900 dark:[color-scheme:dark]'
+const INPUT_OK =
+  'border-slate-200 focus:border-blue-400 focus:ring-blue-100 dark:border-slate-700 dark:focus:border-blue-500/60 dark:focus:ring-blue-500/20'
+const INPUT_ERR =
+  'border-red-300 focus:border-red-400 focus:ring-red-100 dark:border-red-500/40 dark:focus:border-red-500/60 dark:focus:ring-red-500/20'
+const BTN_PRIMARY =
+  'inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200'
+const BTN_SECONDARY =
+  'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+
+const TRANSPORT_MODES = ['Private Car Service', 'Commercial Flight', 'Train / Rail', 'Corporate Shuttle', 'Own Transportation']
+
+const EMPTY_FORM = {
+  fullName: '',
+  email: '',
+  phoneNumber: '',
+  age: '',
+  groupName: '',
+  vipStatus: false,
+  checkedIn: false,
+  arrivalDatetime: '',
+  departureDatetime: '',
+  transportMode: '',
+  specialRequests: '',
+}
+
+const pad = (n) => String(n).padStart(2, '0')
+// ISO → value for <input type="datetime-local"> in the user's LOCAL time
+const toLocalInput = (d) => {
+  if (!d) return ''
+  const x = new Date(d)
+  if (Number.isNaN(x.getTime())) return ''
+  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}T${pad(x.getHours())}:${pad(x.getMinutes())}`
+}
+const parseLocalDateTime = (value) => {
+  if (!value) return null
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function Field({ label, htmlFor, required, optional, error, hint, className = '', children }) {
+  return (
+    <div className={className}>
+      <label htmlFor={htmlFor} className="mb-1.5 flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+        <span>
+          {label}
+          {required && <span className="ml-0.5 text-red-500">*</span>}
+        </span>
+        {optional && <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">Optional</span>}
+      </label>
+      {children}
+      {error ? (
+        <p className="mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400">
+          <span className="material-symbols-outlined text-[14px]">error</span>
+          {error}
+        </p>
+      ) : (
+        hint && <p className="mt-1.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">{hint}</p>
+      )}
+    </div>
+  )
+}
+
+function Skeleton({ className = '' }) {
+  return <div className={`animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800 ${className}`} />
+}
 
 function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, onCancel }) {
   const { eventId: paramEventId } = useParams()
   const eventId = propEventId || paramEventId
-  const [loading, setLoading] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState(null)
-  const [toast, setToast] = useState({ show: false, message: '', type: 'info' })
-  const [validationErrors, setValidationErrors] = useState({})
   const navigate = useNavigate()
+  const isEditing = !!propGuestId
 
-  // Toast notification helper
-  const showToast = (message, type = 'info', duration = 4000) => {
-    setToast({ show: true, message, type })
-    setTimeout(() => setToast({ show: false, message: '', type: 'info' }), duration)
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [loading, setLoading] = useState(isEditing)
+  const [saving, setSaving] = useState(null) // null | 'save' | 'another'
+  const [error, setError] = useState(null)
+  const [toast, setToast] = useState(null)
+  const [validationErrors, setValidationErrors] = useState({})
+  const nameRef = useRef(null)
+  const toastTimer = useRef(null)
+
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type })
+    clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 3500)
+  }
+  useEffect(() => () => clearTimeout(toastTimer.current), [])
+
+  // Load the guest when editing
+  useEffect(() => {
+    if (!propGuestId) return
+    setLoading(true)
+    setError(null)
+    getGuestById(propGuestId)
+      .then((res) => {
+        if (res && res.success === false) {
+          setError(res.message || 'Failed to load guest')
+          return
+        }
+        const g = res.guest || res
+        setForm({
+          fullName: g.fullName || '',
+          email: g.email || '',
+          phoneNumber: g.phoneNumber || '',
+          age: g.age || '',
+          groupName: g.groupName || '',
+          vipStatus: !!g.vipStatus,
+          checkedIn: !!g.checkedIn,
+          arrivalDatetime: toLocalInput(g.arrivalDatetime),
+          departureDatetime: toLocalInput(g.departureDatetime),
+          transportMode: g.transportMode || '',
+          specialRequests: g.specialRequests || '',
+        })
+      })
+      .catch((err) => {
+        console.error('Error loading guest:', err)
+        let msg = 'Failed to load guest'
+        if (err.response?.status === 404) msg = 'Guest not found. It may have been deleted.'
+        else if (err.response?.status === 401) msg = 'You do not have permission to view this guest.'
+        else if (err.response?.status === 500) msg = 'Server error. Please try again later.'
+        else if (err.message === 'Network Error') msg = 'Network error. Please check your connection.'
+        setError(msg)
+      })
+      .finally(() => setLoading(false))
+  }, [propGuestId])
+
+  // Focus the name field on a fresh form
+  useEffect(() => {
+    if (!isEditing) nameRef.current?.focus()
+  }, [isEditing])
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        if (name === 'arrivalDatetime' || name === 'departureDatetime') {
+          delete next.arrivalDatetime
+          delete next.departureDatetime
+        }
+        return next
+      })
+    }
   }
 
-  // Form validation
   const validateForm = () => {
     const errors = {}
     if (!form.fullName?.trim()) errors.fullName = 'Full name is required'
     if (!form.email?.trim()) errors.email = 'Email is required'
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      errors.email = 'Please enter a valid email address'
-    }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errors.email = 'Please enter a valid email address'
     if (!form.phoneNumber?.trim()) errors.phoneNumber = 'Phone number is required'
 
-    const arrivalDatetime = parseLocalDateTime(form.arrivalDatetime)
-    const departureDatetime = parseLocalDateTime(form.departureDatetime)
-
-    if (!form.arrivalDatetime) {
-      errors.arrivalDatetime = 'Arrival date is required'
-    } else if (!arrivalDatetime) {
-      errors.arrivalDatetime = 'Please enter a valid arrival date and time'
-    }
-
-    if (form.departureDatetime && !departureDatetime) {
-      errors.departureDatetime = 'Please enter a valid departure date and time'
-    }
-
-    if (arrivalDatetime && departureDatetime && departureDatetime <= arrivalDatetime) {
+    const arrival = parseLocalDateTime(form.arrivalDatetime)
+    const departure = parseLocalDateTime(form.departureDatetime)
+    if (!form.arrivalDatetime) errors.arrivalDatetime = 'Arrival date is required'
+    else if (!arrival) errors.arrivalDatetime = 'Please enter a valid arrival date and time'
+    if (form.departureDatetime && !departure) errors.departureDatetime = 'Please enter a valid departure date and time'
+    if (arrival && departure && departure <= arrival) {
       errors.arrivalDatetime = 'Arrival must be before departure'
       errors.departureDatetime = 'Departure must be after arrival'
     }
 
     setValidationErrors(errors)
+    const first = ['fullName', 'email', 'phoneNumber', 'arrivalDatetime', 'departureDatetime'].find((k) => errors[k])
+    if (first) document.getElementById(`guest-${first}`)?.focus()
     return Object.keys(errors).length === 0
   }
-  const [form, setForm] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
-    age: '',
-    groupName: '',
-    vipStatus: false,
-    checkedIn: false,
-    arrivalDatetime: '',
-    departureDatetime: '',
-    transportMode: '',
-    specialRequests: '',
-  })
 
-  const parseLocalDateTime = (value) => {
-    if (!value) return null
-    const date = new Date(value)
-    return Number.isNaN(date.getTime()) ? null : date
-  }
-
-  useEffect(() => {
-    // if guestId prop provided, load the guest
-    const id = propGuestId || propGuestId
-    if (id) {
-      setLoading(true)
-      setError(null)
-      getGuestById(id)
-        .then((res) => {
-          if (res && res.success === false) {
-            const errorMsg = res.message || 'Failed to load guest'
-            setError(errorMsg)
-            showToast(errorMsg, 'error')
-            return
-          }
-          const g = res.guest || res
-          setForm({
-            fullName: g.fullName || '',
-            email: g.email || '',
-            phoneNumber: g.phoneNumber || '',
-            age: g.age || '',
-            groupName: g.groupName || '',
-            vipStatus: !!g.vipStatus,
-            checkedIn: !!g.checkedIn,
-            arrivalDatetime: g.arrivalDatetime ? new Date(g.arrivalDatetime).toISOString().slice(0, 16) : '',
-            departureDatetime: g.departureDatetime ? new Date(g.departureDatetime).toISOString().slice(0, 16) : '',
-            transportMode: g.transportMode || '',
-            specialRequests: g.specialRequests || '',
-          })
-          showToast('Guest loaded successfully', 'success')
-        })
-        .catch((err) => {
-          console.error('Error loading guest:', err)
-          let errorMsg = 'Failed to load guest'
-          if (err.response?.status === 404) {
-            errorMsg = 'Guest not found. It may have been deleted.'
-          } else if (err.response?.status === 401) {
-            errorMsg = 'You do not have permission to view this guest.'
-          } else if (err.response?.status === 500) {
-            errorMsg = 'Server error. Please try again later.'
-          } else if (err.message === 'Network Error') {
-            errorMsg = 'Network error. Please check your connection.'
-          }
-          setError(errorMsg)
-          showToast(errorMsg, 'error')
-        })
-        .finally(() => setLoading(false))
-    }
-  }, [propGuestId])
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
-    setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }))
-    // Clear validation error for this field when user starts typing
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => {
-        const updated = { ...prev }
-        delete updated[name]
-        return updated
-      })
-    }
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    // Validate form before submission
-    if (!validateForm()) {
-      showToast('Please fix the errors below', 'warning')
-      return
-    }
-    
-    // Validate Event ID
+  const submit = async (addAnother = false) => {
+    if (!validateForm()) return
     if (!eventId) {
-      const errorMsg = 'Event ID is missing. Unable to save guest.'
-      setError(errorMsg)
-      showToast(errorMsg, 'error')
+      setError('Event ID is missing. Unable to save guest.')
       return
     }
-    
-    setSaving(true)
+
+    setSaving(addAnother ? 'another' : 'save')
     setError(null)
     try {
-      const payload = { ...form, event: eventId }
-      let res
-      const isUpdating = !!propGuestId
-      
-      if (isUpdating) {
-        res = await updateGuest(propGuestId, payload)
-      } else {
-        res = await createGuest(payload)
+      // datetime-local values are wall-clock; send real instants so the server never guesses a timezone
+      const payload = {
+        ...form,
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        phoneNumber: form.phoneNumber.trim(),
+        arrivalDatetime: parseLocalDateTime(form.arrivalDatetime).toISOString(),
+        departureDatetime: form.departureDatetime ? parseLocalDateTime(form.departureDatetime).toISOString() : '',
+        event: eventId,
       }
-      
+      const res = isEditing ? await updateGuest(propGuestId, payload) : await createGuest(payload)
+
       if (res.success === false) {
-        const errorMsg = res.message || 'Failed to save guest'
-        setError(errorMsg)
-        showToast(errorMsg, 'error')
+        setError(res.message || 'Failed to save guest')
         return
       }
-      
-      const successMsg = isUpdating ? 'Guest updated successfully!' : 'Guest created successfully!'
-      showToast(successMsg, 'success')
-      
-      // Redirect after short delay to show success message
-      setTimeout(() => {
-        if (onDone) {
-          onDone(res)
-        } else {
-          navigate(`/events/${eventId}/guests`)
-        }
-      }, 1500)
+
+      if (addAnother) {
+        showToast(`${payload.fullName} added — ready for the next guest`)
+        // keep what usually repeats for a group, clear what is personal
+        setForm((f) => ({
+          ...EMPTY_FORM,
+          groupName: f.groupName,
+          arrivalDatetime: f.arrivalDatetime,
+          departureDatetime: f.departureDatetime,
+          transportMode: f.transportMode,
+        }))
+        setValidationErrors({})
+        requestAnimationFrame(() => nameRef.current?.focus())
+        return
+      }
+
+      if (onDone) onDone(res)
+      else navigate(`/events/${eventId}/guests`)
     } catch (err) {
       console.error('Error saving guest:', err)
-      
-      let errorMsg = 'Failed to save guest'
-      if (err.response?.status === 400) {
-        errorMsg = 'Invalid data. Please check all fields and try again.'
-      } else if (err.response?.status === 401) {
-        errorMsg = 'You do not have permission to save guests.'
-      } else if (err.response?.status === 409) {
-        errorMsg = 'A guest with this email already exists.'
-      } else if (err.response?.status === 500) {
-        errorMsg = 'Server error. Please try again later.'
-      } else if (err.message === 'Network Error') {
-        errorMsg = 'Network error. Please check your connection.'
-      } else if (err.message?.includes('timeout')) {
-        errorMsg = 'Request timeout. Please try again.'
-      }
-      
-      setError(errorMsg)
-      showToast(errorMsg, 'error')
+      let msg = 'Failed to save guest'
+      if (err.response?.status === 400) msg = 'Invalid data. Please check all fields and try again.'
+      else if (err.response?.status === 401) msg = 'You do not have permission to save guests.'
+      else if (err.response?.status === 409) msg = 'A guest with this email already exists.'
+      else if (err.response?.status === 500) msg = 'Server error. Please try again later.'
+      else if (err.message === 'Network Error') msg = 'Network error. Please check your connection.'
+      else if (err.message?.includes('timeout')) msg = 'Request timeout. Please try again.'
+      setError(msg)
     } finally {
-      setSaving(false)
+      setSaving(null)
     }
   }
 
@@ -209,346 +239,289 @@ function GuestDataEntry({ eventId: propEventId, guestId: propGuestId, onDone, on
     navigate(`/events/${eventId}/guests`)
   }
 
+  const busy = !!saving || loading
+  const cls = (key) => `${INPUT_BASE} ${validationErrors[key] ? INPUT_ERR : INPUT_OK}`
+
   return (
-    <div className="relative flex min-h-screen flex-col">
-      {/* Toast Notification */}
-      {toast.show && (
-        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50 animate-slide-in ${
-          toast.type === 'success' ? 'bg-green-500' : 
-          toast.type === 'error' ? 'bg-red-500' : 
-          toast.type === 'warning' ? 'bg-yellow-500' : 
-          'bg-primary-500'
-        }`}>
-          <div className="flex items-center gap-2">
-            {toast.type === 'success' && <span className="material-symbols-outlined">check_circle</span>}
-                {validationErrors.departureDatetime && (
-                  <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">error</span>
-                    {validationErrors.departureDatetime}
-                  </p>
-                )}
-            {toast.type === 'error' && <span className="material-symbols-outlined">error</span>}
-            {toast.type === 'warning' && <span className="material-symbols-outlined">warning</span>}
-            {toast.type === 'info' && <span className="material-symbols-outlined">info</span>}
-            <span>{toast.message}</span>
-          </div>
+    <div className="mx-auto w-full max-w-3xl pb-6">
+      {/* Toast */}
+      {toast && (
+        <div
+          role="status"
+          className="fixed bottom-4 left-4 right-4 z-[80] flex items-center gap-2.5 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-xl sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
+        >
+          <span className="material-symbols-outlined text-[20px]">check_circle</span>
+          <span className="min-w-0">{toast.message}</span>
         </div>
       )}
 
-      {/* Loading Skeleton */}
-      {loading && (
-        <div className="fixed inset-0 bg-white/80 dark:bg-slate-900/80 flex items-center justify-center z-40 backdrop-blur-sm">
-          <div className="text-center">
-            <div className="relative w-16 h-16 mx-auto mb-4">
-              <div className="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-            </div>
-            <p className="text-slate-600 dark:text-slate-300 font-medium">Loading guest information...</p>
-            <p className="text-slate-400 text-sm mt-1">Please wait while we fetch the details.</p>
-          </div>
-        </div>
-      )}
+      {/* Header */}
+      <button
+        type="button"
+        onClick={handleCancel}
+        className="mb-4 inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+      >
+        <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+        Guest list
+      </button>
+      <div className="mb-6">
+        <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-400">Guests</p>
+        <h2 className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-slate-950 dark:text-slate-50">
+          {isEditing ? 'Edit guest' : 'Add guest'}
+        </h2>
+        <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">
+          {isEditing ? "Update this guest's details and travel plans." : 'Only the starred fields are required — everything else can be added later.'}
+        </p>
+      </div>
 
-    {/* <!-- Main Content Area --> */}
-    <main className="flex-1 max-w-[1200px] mx-auto w-full px-6 py-8">
-      {/* Error Alert with Retry */}
       {error && (
-        <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-lg">
-          <span className="material-symbols-outlined text-red-600 flex-shrink-0">error</span>
-          <div className="flex-1">
-            <p className="text-red-800 dark:text-red-200 font-medium">{error}</p>
-            <p className="text-red-700 dark:text-red-300 text-sm mt-1">Please check the details and try again.</p>
-          </div>
-          <button
-            onClick={() => setError(null)}
-            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium flex-shrink-0"
-          >
-            ✕
+        <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+          <span className="material-symbols-outlined mt-0.5 shrink-0 text-[20px]">error</span>
+          <p className="flex-1 text-sm font-medium">{error}</p>
+          <button onClick={() => setError(null)} aria-label="Dismiss" className="flex shrink-0">
+            <span className="material-symbols-outlined text-[18px]">close</span>
           </button>
         </div>
       )}
 
-      {/* Breadcrumbs & Header */}
-      <div className="mb-8">
-        <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-          <a className="hover:text-primary transition-colors" href="#">Guests</a>
-          <span className="material-symbols-outlined text-xs">chevron_right</span>
-          <span className="text-slate-900 dark:text-white font-medium">{propGuestId ? 'Edit Guest' : 'Add New Guest'}</span>
-        </nav>
-        <div className="flex justify-between items-end">
-          <div>
-            <h1 className="font-display text-page-h1 text-slate-900 dark:text-white">Add / Edit Guest</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Configure profile details and logistical requirements for
-              the upcoming event.</p>
-          </div>
+      {loading ? (
+        <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-11 w-full" />
+          ))}
         </div>
-      </div>
-      {/* <!-- Form Layout: Two Columns --> */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* <!-- Left Column: Personal Info --> */}
-        <section
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary">person</span>
-            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">Personal Information</h3>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Email <span className="text-red-500">*</span></label>
-              <input
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                disabled={loading}
-                className={`w-full h-12 rounded-lg dark:text-white bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
-                  validationErrors.email
-                    ? 'border-red-300 focus:border-red-500 border'
-                    : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
-                }`}
-                placeholder="guest@example.com"
-                type="email"
-              />
-              {validationErrors.email && (
-                <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">error</span>
-                  {validationErrors.email}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Full Name <span className="text-red-500">*</span></label>
-              <input
-                name="fullName"
-                value={form.fullName}
-                onChange={handleChange}
-                disabled={loading}
-                className={`w-full h-12 rounded-lg dark:text-white bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
-                  validationErrors.fullName
-                    ? 'border-red-300 focus:border-red-500 border'
-                    : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
-                }`}
-                placeholder="e.g. Johnathan Doe"
-                type="text"
-              />
-              {validationErrors.fullName && (
-                <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">error</span>
-                  {validationErrors.fullName}
-                </p>
-              )}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Phone Number <span className="text-red-500">*</span></label>
-                <input
-                  name="phoneNumber"
-                  value={form.phoneNumber}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className={`w-full h-12 rounded-lg dark:text-white bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 ${
-                    validationErrors.phoneNumber
-                      ? 'border-red-300 focus:border-red-500 border'
-                      : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
-                  }`}
-                  placeholder="+1 (555) 000-0000"
-                  type="tel"
-                />
-                {validationErrors.phoneNumber && (
-                  <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">error</span>
-                    {validationErrors.phoneNumber}
-                  </p>
-                )}
+      ) : (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            submit(false)
+          }}
+          noValidate
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+        >
+          <div className="space-y-8 p-5 sm:p-7">
+            {/* Guest details */}
+            <section>
+              <div className="mb-4 flex items-center gap-2.5">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+                  <span className="material-symbols-outlined text-[18px]">person</span>
+                </span>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Guest details</h3>
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Age</label>
-                <input
-                  name="age"
-                  value={form.age}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="w-full h-12 rounded-lg dark:text-white border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                  placeholder="25"
-                  type="number"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Group / Company Name</label>
-              <input
-                name="groupName"
-                value={form.groupName}
-                onChange={handleChange}
-                disabled={loading}
-                className="w-full h-12 rounded-lg border-slate-200 dark:text-white dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                placeholder="e.g. Acme Corporation"
-                type="text"
-              />
-            </div>
-            <div
-              className="pt-4 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                <div
-                  className="size-10 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center text-amber-600">
-                  <span className="material-symbols-outlined fill-1">star</span>
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">VIP Status</p>
-                  <p className="text-xs text-slate-500">Enable premium handling &amp; front-row seating</p>
-                </div>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                <input 
-                  className="sr-only peer" 
-                  type="checkbox" 
-                  name="vipStatus" 
-                  checked={form.vipStatus} 
-                  onChange={handleChange}
-                  disabled={loading}
-                />
-                <div
-                  className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 ${
-                    loading
-                      ? 'bg-slate-300 dark:bg-slate-600'
-                      : 'bg-slate-200 dark:bg-slate-700 peer-checked:bg-primary'
-                  }`}
-                >
-                </div>
-              </label>
-            </div>
-          </div>
-        </section>
-        {/* <!-- Right Column: Logistics --> */}
-        <section
-          className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <span className="material-symbols-outlined text-primary">local_shipping</span>
-            <h3 className="font-display text-card-h3 text-slate-900 dark:text-white">Logistics &amp; Arrival</h3>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Arrival Datetime <span className="text-red-500">*</span></label>
-                <input
-                  name="arrivalDatetime"
-                  value={form.arrivalDatetime}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className={`w-full h-12 rounded-lg bg-white dark:bg-slate-800 focus:ring-primary/20 transition-all px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-white ${
-                    validationErrors.arrivalDatetime
-                      ? 'border-red-300 focus:border-red-500 border'
-                      : 'border-slate-200 dark:border-slate-700 focus:border-primary border'
-                  }`}
-                  type="datetime-local"
-                />
-                {validationErrors.arrivalDatetime && (
-                  <p className="text-red-500 text-xs font-medium flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">error</span>
-                    {validationErrors.arrivalDatetime}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Departure Datetime</label>
-                <input
-                  name="departureDatetime"
-                  value={form.departureDatetime}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="w-full h-12 rounded-lg border-slate-200 dark:border-slate-700 dark:text-white bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 text-sm disabled:opacity-50 disabled:cursor-not-allowed placeholder:text-slate-400 dark:placeholder:text-slate-500"
-                  type="datetime-local"
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Transport Mode</label>
-              <div className="relative">
-                <select
-                  name="transportMode"
-                  value={form.transportMode}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="w-full h-12 appearance-none rounded-lg border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 pr-10 disabled:opacity-50 disabled:cursor-not-allowed border placeholder:text-slate-400 dark:placeholder:text-slate-500 text-slate-900 dark:text-white">
-                  <option value="">Select transport mode...</option>
-                  <option>Private Car Service</option>
-                  <option>Commercial Flight</option>
-                  <option>Train / Rail</option>
-                  <option>Corporate Shuttle</option>
-                  <option>Own Transportation</option>
-                </select>
-                <span
-                  className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">expand_more</span>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Special Requests / Notes</label>
-              <textarea
-                name="specialRequests"
-                value={form.specialRequests}
-                onChange={handleChange}
-                disabled={loading}
-                className="w-full placeholder:text-slate-400 dark:placeholder:text-slate-500 dark:text-white rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-primary focus:ring-primary/20 transition-all px-4 py-3 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="e.g. Dietary restrictions, accessibility needs, or preferred floor levels..."
-                rows="4"
-              />
-            </div>
-          </div>
-        </section>
-      </div>
-      {/* Sticky Footer for Actions */}
-      <form onSubmit={handleSubmit}>
-        <div className="mt-12 flex justify-end gap-4 p-6 bg-slate-100 dark:bg-slate-800/40 rounded-xl border border-slate-200 dark:border-slate-800">
-          <button 
-            type="button" 
-            onClick={handleCancel}
-            disabled={saving || loading}
-            className="px-6 py-3 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Cancel
-          </button>
-          <button 
-            type="submit" 
-            disabled={saving || loading}
-            className="px-8 py-3 text-sm font-bold text-white bg-primary rounded-lg shadow-md shadow-primary/20 hover:bg-primary-600 hover:shadow-lg disabled:bg-slate-300 disabled:cursor-not-allowed transition-all flex items-center gap-3"
-          >
-            {saving ? (
-              <>
-                <span className="material-symbols-outlined animate-spin">hourglass_bottom</span>
-                Saving...
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined">check_circle</span>
-                Confirm & Save Guest
-              </>
-            )}
-          </button>
-        </div>
-      </form>
-    </main>
-    {/* Footer Meta */}
-    <footer className="mt-auto px-8 py-6 border-t border-slate-200 dark:border-slate-800 text-center">
-      <p className="text-xs text-slate-400">© 2024 Event Hospitality Management Platform. All Guest data is encrypted and
-        managed according to GDPR standards.</p>
-    </footer>
 
-    <style>{`
-      @keyframes slide-in {
-        from {
-          transform: translateX(400px);
-          opacity: 0;
-        }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-      
-      .animate-slide-in {
-        animation: slide-in 0.3s ease-out;
-      }
-    `}</style>
-  </div>
+              <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+                <Field label="Full name" htmlFor="guest-fullName" required error={validationErrors.fullName} className="sm:col-span-2">
+                  <input
+                    ref={nameRef}
+                    id="guest-fullName"
+                    name="fullName"
+                    type="text"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    disabled={busy}
+                    autoComplete="off"
+                    className={cls('fullName')}
+                    placeholder="e.g. Johnathan Doe"
+                  />
+                </Field>
+
+                <Field label="Email" htmlFor="guest-email" required error={validationErrors.email}>
+                  <input
+                    id="guest-email"
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={busy}
+                    autoComplete="off"
+                    className={cls('email')}
+                    placeholder="guest@example.com"
+                  />
+                </Field>
+
+                <Field label="Phone number" htmlFor="guest-phoneNumber" required error={validationErrors.phoneNumber}>
+                  <input
+                    id="guest-phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    inputMode="tel"
+                    value={form.phoneNumber}
+                    onChange={handleChange}
+                    disabled={busy}
+                    autoComplete="off"
+                    className={cls('phoneNumber')}
+                    placeholder="+91 98765 43210"
+                  />
+                </Field>
+
+                <Field label="Group / company" htmlFor="guest-groupName" optional>
+                  <input
+                    id="guest-groupName"
+                    name="groupName"
+                    type="text"
+                    value={form.groupName}
+                    onChange={handleChange}
+                    disabled={busy}
+                    className={cls('groupName')}
+                    placeholder="e.g. Acme Corporation"
+                  />
+                </Field>
+
+                <Field label="Age" htmlFor="guest-age" optional>
+                  <input
+                    id="guest-age"
+                    name="age"
+                    type="number"
+                    inputMode="numeric"
+                    min="0"
+                    max="120"
+                    value={form.age}
+                    onChange={handleChange}
+                    disabled={busy}
+                    className={cls('age')}
+                    placeholder="25"
+                  />
+                </Field>
+              </div>
+
+              {/* VIP */}
+              <label
+                htmlFor="guest-vipStatus"
+                className="mt-5 flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4 transition hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-800/30 dark:hover:bg-slate-800/50"
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300">
+                    <span className="material-symbols-outlined text-[19px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">VIP guest</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Premium handling and priority attention</p>
+                  </div>
+                </div>
+                <span className="relative inline-flex shrink-0 items-center">
+                  <input
+                    id="guest-vipStatus"
+                    className="peer sr-only"
+                    type="checkbox"
+                    name="vipStatus"
+                    checked={form.vipStatus}
+                    onChange={handleChange}
+                    disabled={busy}
+                  />
+                  <span className="h-6 w-11 rounded-full bg-slate-300 transition-colors peer-checked:bg-blue-600 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-400 dark:bg-slate-600" />
+                  <span className="pointer-events-none absolute left-0.5 size-5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-5" />
+                </span>
+              </label>
+            </section>
+
+            {/* Arrival & travel */}
+            <section className="border-t border-slate-100 pt-7 dark:border-slate-800">
+              <div className="mb-4 flex items-center gap-2.5">
+                <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+                  <span className="material-symbols-outlined text-[18px]">flight_land</span>
+                </span>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Arrival &amp; travel</h3>
+              </div>
+
+              <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-2">
+                <Field label="Arrival" htmlFor="guest-arrivalDatetime" required error={validationErrors.arrivalDatetime}>
+                  <input
+                    id="guest-arrivalDatetime"
+                    name="arrivalDatetime"
+                    type="datetime-local"
+                    value={form.arrivalDatetime}
+                    onChange={handleChange}
+                    disabled={busy}
+                    className={cls('arrivalDatetime')}
+                  />
+                </Field>
+
+                <Field label="Departure" htmlFor="guest-departureDatetime" optional error={validationErrors.departureDatetime}>
+                  <input
+                    id="guest-departureDatetime"
+                    name="departureDatetime"
+                    type="datetime-local"
+                    value={form.departureDatetime}
+                    min={form.arrivalDatetime || undefined}
+                    onChange={handleChange}
+                    disabled={busy}
+                    className={cls('departureDatetime')}
+                  />
+                </Field>
+
+                <Field label="Transport mode" htmlFor="guest-transportMode" optional className="sm:col-span-2">
+                  <div className="flex flex-wrap gap-2">
+                    {TRANSPORT_MODES.map((mode) => {
+                      const active = form.transportMode === mode
+                      return (
+                        <button
+                          key={mode}
+                          type="button"
+                          disabled={busy}
+                          aria-pressed={active}
+                          onClick={() => setForm((f) => ({ ...f, transportMode: active ? '' : mode }))}
+                          className={`rounded-full border px-3.5 py-2 text-xs font-bold transition disabled:opacity-60 ${
+                            active
+                              ? 'border-blue-600 bg-blue-50 text-blue-700 dark:border-blue-500 dark:bg-blue-500/10 dark:text-blue-300'
+                              : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {mode}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </Field>
+
+                <Field label="Special requests / notes" htmlFor="guest-specialRequests" optional className="sm:col-span-2">
+                  <textarea
+                    id="guest-specialRequests"
+                    name="specialRequests"
+                    value={form.specialRequests}
+                    onChange={handleChange}
+                    disabled={busy}
+                    rows="3"
+                    className={`${INPUT_BASE} ${INPUT_OK} h-auto resize-none py-2.5`}
+                    placeholder="Dietary restrictions, accessibility needs, preferred floor…"
+                  />
+                </Field>
+              </div>
+            </section>
+          </div>
+
+          {/* Actions */}
+          <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2.5 border-t border-slate-100 bg-slate-50/95 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 sm:flex-row sm:items-center sm:justify-end sm:px-7">
+            <button type="button" onClick={handleCancel} disabled={busy} className={`${BTN_SECONDARY} sm:mr-auto`}>
+              Cancel
+            </button>
+            {!isEditing && (
+              <button type="button" onClick={() => submit(true)} disabled={busy} className={BTN_SECONDARY}>
+                {saving === 'another' ? (
+                  <span className="size-4 animate-spin rounded-full border-2 border-slate-400/30 border-t-slate-600 dark:border-t-slate-300" />
+                ) : (
+                  <span className="material-symbols-outlined text-[19px]">playlist_add</span>
+                )}
+                Save &amp; add another
+              </button>
+            )}
+            <button type="submit" disabled={busy} className={BTN_PRIMARY}>
+              {saving === 'save' ? (
+                <>
+                  <span className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white dark:border-slate-900/30 dark:border-t-slate-900" />
+                  Saving…
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-[19px]">check</span>
+                  {isEditing ? 'Save changes' : 'Save guest'}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      )}
+    </div>
   )
 }
 
