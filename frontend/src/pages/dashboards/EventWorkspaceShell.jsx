@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getEventById } from "../../api/eventApi";
 import { getOverviewData } from "../../api/overViewApi";
+import { getRooms } from "../../api/roomApi";
 import { exportEventWorkbook } from "../../api/eventAnalyticsReportsApi";
 import { EventContext } from "../../context/EventContext";
 // Pages shown in tabs
@@ -313,6 +314,8 @@ function EventWorkspaceShell() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [overviewData, setOverviewData] = useState(null);
+  // Room totals straight from the Rooms API — the same numbers the Rooms tab shows
+  const [roomStats, setRoomStats] = useState(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewError, setOverviewError] = useState(null);
   const [overviewSyncedAt, setOverviewSyncedAt] = useState(null);
@@ -351,8 +354,13 @@ function EventWorkspaceShell() {
     try {
       setOverviewLoading(true);
       setOverviewError(null);
-      const res = await getOverviewData(eventId);
+      const [res, roomsRes] = await Promise.all([
+        getOverviewData(eventId),
+        // limit 1: we only need the event-wide `stats`, not the room list
+        getRooms({ eventId, page: 1, limit: 1 }).catch(() => null),
+      ]);
       if (id !== overviewReq.current) return;
+      setRoomStats(roomsRes?.success && roomsRes.stats ? roomsRes.stats : null);
       if (res.success) {
         setOverviewData(res);
         setOverviewSyncedAt(new Date());
@@ -371,6 +379,7 @@ function EventWorkspaceShell() {
   useEffect(() => {
     if (eventId) {
       setOverviewData(null);
+      setRoomStats(null);
       loadEvent();
     }
   }, [eventId, loadEvent]);
@@ -457,9 +466,19 @@ function EventWorkspaceShell() {
   const m = overviewData?.metrics || {};
   const guests = m.guests || {};
   const checkInPct = guests.total > 0 ? Math.round(((guests.checkedIn || 0) / guests.total) * 100) : 0;
+  // Room numbers: prefer the Rooms API stats (same source as the Rooms tab); fall back to the overview metrics
+  const roomsTotal = roomStats ? roomStats.total || 0 : m.rooms?.total || 0;
+  const bedsTotal = roomStats?.totalCapacity || 0;
+  const bedsFilled = roomStats?.totalOccupancy || 0;
+  const occupancyPct = roomStats
+    ? bedsTotal > 0
+      ? Math.round((bedsFilled / bedsTotal) * 100)
+      : 0
+    : m.rooms?.occupancyRate || 0;
+  const roomMetrics = { ...m, rooms: { ...(m.rooms || {}), total: roomsTotal, occupancyRate: occupancyPct } };
   const setupIncomplete =
     !!overviewData &&
-    ((m.rooms?.total || 0) === 0 || (m.guests?.total || 0) === 0 || (m.staff?.active || 0) === 0);
+    (roomsTotal === 0 || (m.guests?.total || 0) === 0 || (m.staff?.active || 0) === 0);
   const activity = overviewData?.recentActivity || [];
   const pendingServices = m.services?.pending || 0;
 
@@ -657,7 +676,7 @@ function EventWorkspaceShell() {
                   aria-busy={overviewLoading}
                   className={`space-y-5 transition-opacity duration-300 ${overviewLoading ? "opacity-60" : "opacity-100"}`}
                 >
-                  {setupIncomplete && <SetupChecklist eventId={eventId} metrics={m} />}
+                  {setupIncomplete && <SetupChecklist eventId={eventId} metrics={roomMetrics} />}
 
                   {/* KPIs */}
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -673,10 +692,16 @@ function EventWorkspaceShell() {
                     <KpiCard
                       icon="meeting_room"
                       label="Room occupancy"
-                      value={`${m.rooms?.occupancyRate || 0}%`}
+                      value={`${occupancyPct}%`}
                       tone="blue"
-                      progress={m.rooms?.occupancyRate || 0}
-                      foot={(m.rooms?.total || 0) > 0 ? `${m.rooms.total} rooms in inventory` : "No rooms added yet"}
+                      progress={occupancyPct}
+                      foot={
+                        roomsTotal === 0
+                          ? "No rooms added yet"
+                          : roomStats
+                            ? `${bedsFilled} of ${bedsTotal} beds filled · ${roomsTotal} room${roomsTotal === 1 ? "" : "s"}`
+                            : `${roomsTotal} rooms in inventory`
+                      }
                     />
                     <KpiCard
                       icon="pending_actions"
