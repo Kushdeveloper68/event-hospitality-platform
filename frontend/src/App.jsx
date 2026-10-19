@@ -24,6 +24,7 @@ import { UserSignup, UserLogin, CreateNewEvent, ResetPassword } from "./pages";
 import { OragnizationSetting, PageNotFound , TermsAndConditions, PrivacyPolicy, UserManual, ImportGuide} from "./pages";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ScrollToTop } from "./components";
+import PWAManager from "./components/PWAManager";
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
       <ThemeProvider>
         <BrowserRouter>
         <ScrollToTop />
+          <PWAManager />
           <Routes>
             <Route path="/" element={<Landingpage />} />
             <Route path="/signup" element={<UserSignup />} />
