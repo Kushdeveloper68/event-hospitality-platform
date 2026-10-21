@@ -21,9 +21,12 @@ const handleCreateGuest = async (req, res) => {
     }
     // ensure the requesting user owns the event
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const event = await getEventById(guestData.event);
     const ownerId = event.createdBy?._id || event.createdBy;
-    if (userId && String(ownerId) !== String(userId)) {
+    if (String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this event' });
     }
     const newGuest = await createGuest(guestData);
@@ -112,10 +115,13 @@ const handleUpdateGuest = async (req, res) => {
     const updateData = req.body;
     // ensure owner
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const guest = await getGuestById(guestId);
     const ev = await getEventById(guest.event);
     const ownerId = ev.createdBy?._id || ev.createdBy;
-    if (userId && String(ownerId) !== String(userId)) {
+    if (String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this guest/event' });
     }
     const updated = await updateGuest(guestId, updateData);

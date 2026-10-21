@@ -16,8 +16,9 @@ See LICENSE for details. Unauthorized code copy and use or distribution is prohi
 [![JWT](https://img.shields.io/badge/Auth-JWT%20%2B%20Google%20OAuth-000000?style=flat-square&logo=jsonwebtokens)](https://jwt.io/)
 [![License](https://img.shields.io/badge/License-Proprietary-red?style=flat-square)]()
 [![Status](https://img.shields.io/badge/Status-Beta-orange?style=flat-square)]()
+[![PWA](https://img.shields.io/badge/PWA-Installable-5A0FC8?style=flat-square&logo=pwa&logoColor=white)](#-installable-app-pwa)
 
-[Live Site](https://eventcure.in) · [User Manual](https://eventcure.in/manual) · [CSV Import Guide](https://eventcure.in/import-guide) · [Report Bug](https://github.com/Kushdeveloper68/event-hospitality-platform/issues) · [Request Feature](https://github.com/Kushdeveloper68/event-hospitality-platform/issues) · [Contact](mailto:hello.eventcure@gmail.com)
+[Live Site](https://eventcure.in) · [User Manual](https://eventcure.in/manual) · [CSV Import Guide](https://eventcure.in/import-guide) · [Install as App](#-installable-app-pwa) · [Report Bug](https://github.com/Kushdeveloper68/event-hospitality-platform/issues) · [Request Feature](https://github.com/Kushdeveloper68/event-hospitality-platform/issues) · [Contact](mailto:hello.eventcure@gmail.com)
 
 ---
 
@@ -34,6 +35,7 @@ See LICENSE for details. Unauthorized code copy and use or distribution is prohi
 - [Who This Is For](#-who-this-is-for)
 - [Key Features](#-key-features)
 - [Bulk CSV Import](#-bulk-csv-import)
+- [Installable App (PWA)](#-installable-app-pwa)
 - [Module Breakdown](#-module-breakdown)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
@@ -63,6 +65,8 @@ It gives operations teams a **real-time command centre** — one place where gue
 > **The problem it solves:** Event operations teams waste hours every day switching between spreadsheets for guests, chat apps for service tickets, and manual logs for transport — all while trying to coordinate dozens of staff across a live event with zero room for error. EventCure replaces all of that with a single, live, purpose-built platform.
 
 **Built for real operations. Designed for speed. Live at [eventcure.in](https://eventcure.in).**
+
+EventCure is **mobile-friendly and installable** — open it on a phone, tablet or laptop and add it to the home screen / desktop as an app (see [Installable App](#-installable-app-pwa)). Floor staff can run check-in, service requests and room assignments straight from their phones.
 
 ---
 
@@ -95,7 +99,7 @@ It gives operations teams a **real-time command centre** — one place where gue
 - JWT-based session management with httpOnly cookies
 - **Google OAuth 2.0** (Passport.js) for one-click sign-in
 - Password reset via secure OTP email flow (3-step)
-- Per-event data isolation — ownership is verified on every event-scoped request, and checks **fail closed** (a request with no authenticated user is rejected, never waved through)
+- Per-event data isolation — ownership is verified on every event-scoped request; the guest, room and bulk-import handlers **fail closed** (a request with no authenticated user is rejected with `401`, never waved through)
 - `helmet` security headers, global rate limiting, and request-size limits (see [Security & Hardening](#-security--hardening))
 
 ### 📊 Operations Dashboard
@@ -129,6 +133,8 @@ It gives operations teams a **real-time command centre** — one place where gue
 - Status indicators: Available / Partial / Full
 - Room categories: Standard Single, Double, Executive Suite, Meeting Room, ADA Accessible
 - One-click guest assignment modal with list of unassigned guests
+- **Capacity is enforced on the server** — assigning a guest to a full room returns `409 Room 101 is full (2/2 guests)`; a re-check after saving rolls back the assignment if two staff grab the last bed at the same moment
+- Room edits can't shrink capacity below the number of guests already assigned, and guest create/update can't set `room` directly (assignment only goes through the assign endpoint)
 - **Event-wide stat cards** (Total Rooms, Total Capacity, Current Occupancy, Available) computed on the server across *all* rooms — they don't change when you move between pages
 - **Server-side search and Available / Occupied filters** that search every room in the event, not just the page on screen
 - "Export" downloads *every* room matching the current filter, not just the visible page
@@ -218,6 +224,9 @@ It gives operations teams a **real-time command centre** — one place where gue
 ### 📥 Bulk CSV Import
 Add guests, rooms or team members in bulk instead of filling forms one by one. See the dedicated [Bulk CSV Import](#-bulk-csv-import) section.
 
+### 📱 Installable App & Mobile
+Install EventCure on Android, iOS or desktop and launch it like a native app — standalone window, home-screen icon, shortcuts, and an in-app prompt when a new version is ready. See [Installable App (PWA)](#-installable-app-pwa).
+
 ### ⚙️ Settings
 - **Organization settings:** Profile, Organization info, Appearance/theme, Security (password change), Notifications
 - **Event settings:** Core info + URL slug + timezone, Access permissions (public registration, approval, self check-in, waitlist, max capacity), Notification preferences per event, Danger zone (archive / delete)
@@ -241,6 +250,53 @@ Available on the **Guests**, **Rooms** and **Team** tabs via the **Import CSV** 
 - **Limits:** up to 1000 rows per import; team emails must be unique per event.
 - **Templates:** ready-made files live in [`frontend/public/templates/`](frontend/public/templates) and are linked from the in-app **[CSV Import Guide](https://eventcure.in/import-guide)** page and the site footer.
 - **API:** `POST /api/guests/bulk-import`, `POST /api/rooms/bulk-import`, `POST /api/team/bulk-import` — body `{ "event": "<eventId>", "rows": [ ... ] }`, response `{ success, createdCount, failedCount, failed: [{ row, reason }] }`.
+
+---
+
+## 📱 Installable App (PWA)
+
+EventCure is a **Progressive Web App**: the same website, but installable and app-like on every platform — no app-store needed.
+
+### How users install it
+
+| Platform | How |
+|----------|-----|
+| **Android (Chrome / Edge)** | Open [eventcure.in](https://eventcure.in) → tap the in-app **Install** banner (or browser menu → *Install app*) |
+| **Desktop (Chrome / Edge)** | Click the **Install** banner or the install icon in the address bar |
+| **iPhone / iPad (Safari)** | Share → **Add to Home Screen** (iOS has no install event, so the app shows a short hint instead) |
+
+### What you get
+
+- Standalone window (no browser UI), home-screen / desktop icon, themed status bar (`#032f1e`)
+- Opens straight into `/dashboard`; long-press the icon for **Dashboard** and **Events** shortcuts
+- Install banner can be dismissed (it stays hidden for 7 days) and is never shown inside the installed app
+- **"New version available" prompt** — updates are *prompt-based* (`registerType: 'prompt'`) so a live check-in session is never reloaded under staff's feet; the app also checks for updates every hour
+
+### What is (and isn't) cached
+
+- **Cached:** the app shell only — JS, CSS, HTML, icons — plus Google Fonts, so repeat visits load fast
+- **Never cached:** `/api/*`, Google OAuth and auth callbacks. All data always comes live from the server, so check-in lists, rooms and guest counts are never stale
+- Large marketing images (e.g. `landing-page.png`) are deliberately excluded from the precache
+
+### Where it's configured
+
+| File | Purpose |
+|------|---------|
+| [`frontend/vite.config.js`](frontend/vite.config.js) | `vite-plugin-pwa` config: manifest, Workbox rules, cache exclusions |
+| [`frontend/src/components/PWAManager.jsx`](frontend/src/components/PWAManager.jsx) | Install banner (Android/desktop), iOS hint, update prompt — mounted once in `App.jsx` |
+| `frontend/public/pwa-192x192.png`, `pwa-512x512.png`, `pwa-maskable-512x512.png`, `apple-touch-icon.png` | App icons (incl. a maskable icon for Android) |
+
+### Testing the PWA locally
+
+The service worker is **disabled in `npm run dev`**. To test install and offline behaviour, build and preview:
+
+```bash
+cd frontend
+npm run build
+npm run preview      # serves the production build with the service worker
+```
+
+Then open DevTools → **Application** (manifest, service worker) and run a **Lighthouse** audit. Installability requires HTTPS, which Vercel provides in production (`localhost` also counts as secure).
 
 ---
 
@@ -309,9 +365,10 @@ EventCure
 |------------|---------|---------|
 | **React** | 19 | UI library with functional components and hooks |
 | **Vite** | 7 | Build tool and dev server |
-| **Tailwind CSS** | 4 | Utility-first styling with dark mode |
+| **Tailwind CSS** | 4 | Utility-first styling with dark mode (via `@tailwindcss/vite`) |
 | **React Router DOM** | 7 | Client-side routing with protected routes |
 | **Axios** | 1.x | HTTP client for all API requests |
+| **vite-plugin-pwa + workbox-window** | 2.x / 7.x | Manifest, service worker and update prompts (installable PWA) |
 | **Material Symbols** | Latest | Google icon system (variable font, FILL/wght axes) |
 | **Context API** | — | Global state: AuthContext, ThemeContext, EventContext |
 | **Vitest + Testing Library** | — | Frontend unit tests |
@@ -370,13 +427,15 @@ event-hospitality-platform/
 │   │   │   ├── guests-template.csv
 │   │   │   ├── rooms-template.csv
 │   │   │   └── team-template.csv
+│   │   ├── pwa-192x192.png         # PWA icons (+ pwa-512x512.png, pwa-maskable-512x512.png,
+│   │   │                           #   apple-touch-icon.png)
 │   │   ├── robots.txt              # Search engine crawl rules
 │   │   ├── sitemap.xml             # Public pages for Google Search Console
 │   │   └── (logos, landing-page.png, manual images)
 │   ├── src/
 │   │   ├── api/                    # Axios API service files (one per module)
 │   │   ├── components/             # Shared UI: Footer, Navbar, DashboardNavbar,
-│   │   │                           #   CsvImportModal, GoogleSignInButton, error boundaries
+│   │   │                           #   CsvImportModal, PWAManager, GoogleSignInButton, error boundaries
 │   │   ├── context/                # AuthContext, ThemeContext, EventContext, ProtectedRoute
 │   │   ├── layouts/                # DashboardLayout
 │   │   ├── pages/
@@ -400,7 +459,7 @@ event-hospitality-platform/
 │   │   ├── main.jsx
 │   │   └── index.css
 │   ├── vercel.json                 # SPA rewrites
-│   ├── vite.config.js
+│   ├── vite.config.js              # Vite + Tailwind + PWA (manifest & Workbox)
 │   └── package.json
 │
 └── backend/
@@ -416,7 +475,7 @@ event-hospitality-platform/
     ├── middlewares/                # authMiddleware, adminMiddleware, globalLimiter, rateLimiter
     ├── helpers/
     │   └── emailHelper.js          # OTP generation + email sending
-    ├── __tests__/                  # Jest suites (auth, events, middleware, password reset, export)
+    ├── __tests__/                  # Jest suites (auth, events, middleware, password reset, export, room capacity)
     ├── tests/helpers/              # Test app, in-memory DB and auth helpers
     ├── getGmailRefreshToken.js     # One-time script to mint the Gmail refresh token
     ├── server.js
@@ -486,6 +545,8 @@ npm run dev
 ### 6. Open in browser
 
 Navigate to `http://localhost:5173`, sign up, create an event, and follow the setup checklist. To try the importer with real-looking data, use the templates in `frontend/public/templates/`.
+
+> The service worker is off in dev. To test the installable app, run `npm run build && npm run preview` in `frontend/` — see [Installable App (PWA)](#-installable-app-pwa).
 
 ---
 
@@ -577,8 +638,10 @@ All API routes are prefixed with `/api`. Signup, login, Google OAuth and passwor
 | Resource | Base path | Notes |
 |----------|-----------|-------|
 | Guests | `/api/guests` | `POST /`, `GET /` (filters: `search`, `vip`, `status`, `page`, `limit`), `GET/PUT/DELETE /:guestId`, `POST /bulk-import` |
-| Rooms | `/api/rooms` | `POST /`, `GET /` (filters: `search`, `status`, `page`, `limit`; returns event-wide `stats`), `GET /export`, `GET/PUT/DELETE /:roomId`, `POST /:roomId/assign`, `POST /bulk-import` |
+| Rooms | `/api/rooms` | `POST /`, `GET /` (filters: `search`, `status`, `page`, `limit`; returns event-wide `stats`), `GET /export`, `GET/PUT/DELETE /:roomId`, `POST /:roomId/assign` (`409` if the room is full), `POST /bulk-import` |
 | Team | `/api/team` | `POST /`, `GET /`, `GET /summary`, `GET/PUT/DELETE /:memberId`, `POST /bulk-import` |
+
+> Room assignment is only possible through `POST /api/rooms/:roomId/assign`. `PUT/POST /api/guests` ignore any `room` (and, on update, `event`) in the request body; `PUT /api/rooms/:roomId` only accepts `number`, `capacity`, `type`, `notes`.
 
 ### Operations modules
 
@@ -689,11 +752,13 @@ Restricted guest lists (private events), VIP tagging with special request notes 
 
 ## 🛡️ Security & Hardening
 
-- **Fail-closed ownership checks** — every event-scoped controller verifies the signed-in user owns the event; a missing user is rejected with `401`, never skipped
+- **Ownership checks** — every event-scoped controller verifies the signed-in user owns the event. The guest, room, team and bulk-import handlers fail closed (a missing user is rejected with `401`, never skipped); remaining older handlers are being moved to the same pattern
+- **Capacity & mass-assignment guards** — room capacity is enforced server-side, and fields that must not be client-controlled (`room`, `event`) are stripped from guest/room updates
 - **Security headers** via `helmet`
 - **Rate limiting** — global limiter (1000 requests / 15 min per IP) plus stricter limiters on sensitive routes
 - **Request size cap** — JSON / URL-encoded bodies limited to 2 MB (enough for a full 1000-row import)
 - **Bulk import guardrails** — authenticated, ownership-verified, capped at 1000 rows, per-row validation; free-text search input is regex-escaped
+- **PWA safety** — the service worker never caches `/api/*` or auth routes, so sensitive data is always fetched live
 - **Single CORS origin** — only `CLIENT_URL` is allowed, with credentials
 - **Passwords** hashed with bcrypt; OTPs expire after 10 minutes
 - **Secrets** live only in environment variables (see `.env.example`); never commit real values
@@ -724,6 +789,7 @@ npm run test:coverage
 | Backend | Render → `api.eventcure.in` | Add a `CNAME` for `api` pointing at the Render service; set all backend env vars |
 | Database | MongoDB Atlas | Allow the Render service's IPs |
 | Auth / Mail | Google Cloud Console | Production redirect URI + origins added to the OAuth client; refresh token minted for the sender account |
+| PWA | Vercel (HTTPS) | Manifest + service worker are generated by `vite build`; after a deploy, installed apps show a *new version available* prompt |
 | SEO | Google Search Console | Verify via DNS TXT record, then submit `https://eventcure.in/sitemap.xml` |
 
 ---
@@ -753,6 +819,9 @@ npm run test:coverage
 - [x] **Bulk CSV import for guests, rooms and team**, with in-app Import Guide and downloadable templates
 - [x] Guided event setup checklist and direct redirect into the new event's workspace
 - [x] Rooms tab: server-side search/filter and event-wide stats; full-dataset export
+- [x] **Installable PWA** — install banner (Android/desktop), iOS add-to-home-screen hint, update prompt, app shortcuts; API calls never cached
+- [x] Mobile-first UI/UX refresh — the whole workspace is usable from a phone
+- [x] Server-side room capacity enforcement (409 on full rooms, race-safe) and guest/room mass-assignment guards
 - [x] Dark mode with system preference detection
 - [x] Event analytics with 8-tab drill-down
 - [x] Organization-level cross-event analytics

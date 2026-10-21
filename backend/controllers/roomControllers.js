@@ -125,16 +125,19 @@ const handleUpdateRoom = async (req, res) => {
     const updateData = req.body;
     const room = await getRoomById(roomId);
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const ev = await getEventById(room.event);
     const ownerId = ev.createdBy?._id || ev.createdBy;
-    if (userId && String(ownerId) !== String(userId)) {
+    if (String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this room/event' });
     }
     const updated = await updateRoom(roomId, updateData);
     return res.status(200).json({ success: true, room: updated });
   } catch (error) {
-    console.error("Error updating room", error);
-    return res.status(500).json({ success: false, message: error.message || "Failed to update room" });
+    if (!error.status) console.error("Error updating room", error);
+    return res.status(error.status || 500).json({ success: false, message: error.message || "Failed to update room" });
   }
 };
 
@@ -167,9 +170,12 @@ const handleAssignGuest = async (req, res) => {
     }
     const room = await getRoomById(roomId);
     const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Authentication required" });
+    }
     const ev = await getEventById(room.event);
     const ownerId = ev.createdBy?._id || ev.createdBy;
-    if (userId && String(ownerId) !== String(userId)) {
+    if (String(ownerId) !== String(userId)) {
       return res.status(403).json({ success: false, message: 'Forbidden: you do not own this room/event' });
     }
     const guest = await assignGuestToRoom(roomId, guestId);
@@ -185,8 +191,9 @@ const handleAssignGuest = async (req, res) => {
 
     return res.status(200).json({ success: true, guest });
   } catch (error) {
-    console.error("Error assigning guest", error);
-    return res.status(500).json({ success: false, message: error.message || "Failed to assign guest" });
+    // 409 = room full, 404 = room/guest missing, 400 = guest from another event
+    if (!error.status) console.error("Error assigning guest", error);
+    return res.status(error.status || 500).json({ success: false, message: error.message || "Failed to assign guest" });
   }
 };
 

@@ -30,9 +30,13 @@ const parseImportDate = (value, fieldLabel) => {
  * @param {Object} guestData
  * @returns {Promise}
  */
+// Room assignment must go through the assign endpoint (which enforces capacity),
+// so a client-supplied `room` is dropped here — otherwise PUT/POST /guests could
+// place a guest in any room and bypass the capacity check.
 const createGuest = async (guestData) => {
   try {
-    const newGuest = new GuestModel(guestData);
+    const { room, ...safeData } = guestData || {};
+    const newGuest = new GuestModel(safeData);
     const saved = await newGuest.save();
     return saved;
   } catch (error) {
@@ -118,10 +122,13 @@ const getGuestById = async (guestId) => {
 /**
  * Update a guest record
  */
+// `room` (assignment) and `event` (which event the guest belongs to) are not
+// editable through this endpoint — see createGuest above.
 const updateGuest = async (guestId, updateData) => {
   try {
-    const updated = await GuestModel.findByIdAndUpdate(guestId, updateData, {
-      new: true,
+    const { room, event, ...safeData } = updateData || {};
+    const updated = await GuestModel.findByIdAndUpdate(guestId, safeData, {
+      returnDocument: "after",
       runValidators: true,
     });
     if (!updated) {

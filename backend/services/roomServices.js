@@ -2,6 +2,15 @@ const mongoose = require("mongoose");
 const RoomModel = require("../models/roomModel");
 const GuestModel = require("../models/guestModel");
 
+// Error that carries an HTTP status, so controllers can answer 404 / 409 / 400
+// instead of a blanket 500.
+class HttpError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
+  }
+}
+
 // Escapes regex special characters so free-text search can't be used to
 // build an unintended (or catastrophically slow) regular expression.
 const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -143,14 +152,40 @@ const getRoomById = async (roomId) => {
 /**
  * Update a room
  */
-const updateRoom = async (roomId, updateData) => {
+// Only these fields can be changed through the room-edit endpoint. In particular
+// `event` must never be editable (it would move the room into another event).
+const ROOM_EDITABLE_FIELDS = ["number", "capacity", "type", "notes"];
+
+const updateRoom = async (roomId, updateData = {}) => {
+  const room = await RoomModel.findById(roomId);
+  if (!room) throw new HttpError(404, "Room not found");
+
+  const patch = {};
+  for (const key of ROOM_EDITABLE_FIELDS) {
+    if (updateData[key] !== undefined) patch[key] = updateData[key];
+  }
+
+  if (patch.capacity !== undefined) {
+    const capacity = Number(patch.capacity);
+    if (!Number.isInteger(capacity) || capacity < 1) {
+      throw new HttpError(400, "Capacity must be a whole number of at least 1");
+    }
+    // Never allow a room to be shrunk below the guests already in it.
+    const occupied = await GuestModel.countDocuments({ room: roomId });
+    if (capacity < occupied) {
+      throw new HttpError(
+        409,
+        `Can't reduce capacity to ${capacity}: ${occupied} guest(s) are already assigned to room ${room.number}`
+      );
+    }
+    patch.capacity = capacity;
+  }
+
   try {
-    const updated = await RoomModel.findByIdAndUpdate(roomId, updateData, {
-      new: true,
+    return await RoomModel.findByIdAndUpdate(roomId, patch, {
+      returnDocument: "after",
       runValidators: true,
     });
-    if (!updated) throw new Error("Room not found");
-    return updated;
   } catch (error) {
     throw new Error("Failed to update room: " + error.message);
   }
@@ -174,24 +209,55 @@ const deleteRoom = async (roomId) => {
 /**
  * Assign a guest to a room (must belong to same event)
  */
+/**
+ * Assign a guest to a room — refusing if the room is already at capacity.
+ *
+ * Occupancy isn't a stored counter; it's the number of guests whose `room`
+ * points at this room, so the check is a count. Because two requests could
+ * both pass that count at the same moment (two staff members assigning the
+ * last bed), the count is re-checked after the save and the assignment is
+ * rolled back if the room ended up over capacity. In that rare collision both
+ * requests may be rolled back — it fails safe (nobody is over-assigned) and
+ * the user can simply retry.
+ */
 const assignGuestToRoom = async (roomId, guestId) => {
-  try {
-    const room = await RoomModel.findById(roomId);
-    if (!room) throw new Error("Room not found");
+  const room = await RoomModel.findById(roomId);
+  if (!room) throw new HttpError(404, "Room not found");
 
-    const guest = await GuestModel.findById(guestId);
-    if (!guest) throw new Error("Guest not found");
+  const guest = await GuestModel.findById(guestId);
+  if (!guest) throw new HttpError(404, "Guest not found");
 
-    if (String(guest.event) !== String(room.event)) {
-      throw new Error("Guest does not belong to the same event as the room");
-    }
-
-    guest.room = roomId;
-    await guest.save();
-    return guest;
-  } catch (error) {
-    throw new Error("Failed to assign guest to room: " + error.message);
+  if (String(guest.event) !== String(room.event)) {
+    throw new HttpError(400, "Guest does not belong to the same event as the room");
   }
+
+  // Already in this room: nothing to do (and they must not count against themselves).
+  if (guest.room && String(guest.room) === String(roomId)) return guest;
+
+  const capacity = room.capacity ?? 1;
+  const occupied = await GuestModel.countDocuments({
+    room: roomId,
+    _id: { $ne: guest._id },
+  });
+  if (occupied >= capacity) {
+    throw new HttpError(409, `Room ${room.number} is full (${occupied}/${capacity} guests)`);
+  }
+
+  const previousRoom = guest.room || null;
+  guest.room = roomId;
+  await guest.save();
+
+  // Race guard: someone else may have taken the last bed between the check and the save.
+  const occupiedAfter = await GuestModel.countDocuments({ room: roomId });
+  if (occupiedAfter > capacity) {
+    await GuestModel.updateOne(
+      { _id: guest._id, room: roomId },
+      previousRoom ? { $set: { room: previousRoom } } : { $unset: { room: "" } }
+    );
+    throw new HttpError(409, `Room ${room.number} just filled up — please pick another room`);
+  }
+
+  return guest;
 };
 
 /**
@@ -235,6 +301,7 @@ const bulkCreateRooms = async (eventId, rows) => {
 };
 
 module.exports = {
+  HttpError,
   createRoom,
   getRooms,
   getAllRoomsForExport,
