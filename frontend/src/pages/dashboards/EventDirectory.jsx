@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { getAllEvents } from '../../api/eventApi'
 import { Link } from 'react-router-dom'
+import EventCover from '../../components/EventCover'
 
 function EventDirectory() {
   const [events, setEvents] = useState([])
@@ -290,6 +291,7 @@ function EventDirectory() {
               >
                 {/* Event visual header */}
                 <div className={`relative h-44 overflow-hidden bg-gradient-to-br ${getEventAccent(index)} p-5`}>
+                  <EventCover event={event} />
                   <div className="absolute -right-10 -top-16 size-44 rounded-full border border-white/10 bg-white/[0.04]"></div>
                   <div className="absolute -bottom-24 -left-10 size-48 rounded-full border border-white/10 bg-white/[0.04]"></div>
 

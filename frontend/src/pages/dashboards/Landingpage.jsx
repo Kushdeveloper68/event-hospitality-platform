@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import EventTypeShowcase from "../../components/EventTypeShowcase";
 
 const headlineStyle = { fontFamily: "'Manrope', sans-serif" };
 const bodyStyle = { fontFamily: "'DM Sans', sans-serif" };
@@ -388,6 +389,9 @@ export default function Landingpage() {
             ))}
           </div>
         </div>
+
+        {/* EVENT TYPES — photo mosaic */}
+        <EventTypeShowcase />
 
         {/* PROBLEM */}
         <section className="ec-section ec-problem">
