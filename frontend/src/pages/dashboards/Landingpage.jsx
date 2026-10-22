@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import EventTypeShowcase from "../../components/EventTypeShowcase";
-
+import GuestJourneySection from "../../components/journey/GuestJourneySection";
 const headlineStyle = { fontFamily: "'Manrope', sans-serif" };
 const bodyStyle = { fontFamily: "'DM Sans', sans-serif" };
 const monoStyle = { fontFamily: "'IBM Plex Mono', monospace" };
@@ -547,6 +547,7 @@ export default function Landingpage() {
                 </div>
               ))}
             </div>
+             <GuestJourneySection />
           </div>
         </section>
 
