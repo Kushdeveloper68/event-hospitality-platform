@@ -39,4 +39,6 @@ const scheduleActivitySchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+scheduleActivitySchema.index({ eventId: 1 });
+
 module.exports = mongoose.model('ScheduleActivity', scheduleActivitySchema);

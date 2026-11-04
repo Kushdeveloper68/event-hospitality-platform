@@ -22,5 +22,11 @@ const GuestSchema = new Schema(
   { timestamps: true },
 );
 
+// Every guest list / check-in / analytics query filters by event, and room is used
+// for occupancy lookups. Without these indexes each request scans the whole collection.
+GuestSchema.index({ event: 1, createdAt: -1 });
+GuestSchema.index({ event: 1, checkedIn: 1, arrivalDatetime: 1 });
+GuestSchema.index({ room: 1 });
+
 const GuestModel = mongoose.model("Guest", GuestSchema);
 module.exports = GuestModel;

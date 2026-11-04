@@ -1,5 +1,10 @@
 const GuestModel = require("../models/guestModel");
 
+// The check-in desk only needs these fields. Sending whole guest documents
+// (plus a fully populated room) for every guest in the event made this the
+// heaviest request in the app.
+const DESK_FIELDS = "fullName groupName vipStatus arrivalDatetime checkedIn checkedInAt room";
+
 /**
  * Get guests arriving today who haven't checked in yet
  * Sorted by arrivalDatetime ASC (earliest first)
@@ -16,8 +21,10 @@ const getArrivingToday = async (eventId) => {
       checkedIn: false,
       arrivalDatetime: { $gte: todayStart, $lte: todayEnd },
     })
-      .populate("room")
-      .sort({ arrivalDatetime: 1 });
+      .select(DESK_FIELDS)
+      .populate("room", "number type")
+      .sort({ arrivalDatetime: 1 })
+      .lean();
 
     return guests;
   } catch (error) {
@@ -35,8 +42,10 @@ const getCheckedInGuests = async (eventId) => {
       event: eventId,
       checkedIn: true,
     })
-      .populate("room")
-      .sort({ checkedInAt: -1 });
+      .select(DESK_FIELDS)
+      .populate("room", "number type")
+      .sort({ checkedInAt: -1 })
+      .lean();
 
     return guests;
   } catch (error) {
@@ -65,8 +74,10 @@ const getPendingGuests = async (eventId) => {
         { arrivalDatetime: { $exists: false } },
       ],
     })
-      .populate("room")
-      .sort({ arrivalDatetime: 1 });
+      .select(DESK_FIELDS)
+      .populate("room", "number type")
+      .sort({ arrivalDatetime: 1 })
+      .lean();
 
     return guests;
   } catch (error) {

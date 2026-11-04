@@ -1,5 +1,9 @@
 const GuestModel = require("../models/guestModel");
 
+// Escapes regex special characters so free-text search can't build a broken
+// (or catastrophically slow) regular expression.
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
  * Parses a date/time string in the format the import template uses:
  * "YYYY-MM-DD HH:mm" (24-hour) or just "YYYY-MM-DD".
@@ -62,13 +66,14 @@ const getGuests = async ({
   status,
   page = 1,
   limit = 10,
+  slim = false,
 }) => {
   try {
     const query = {};
     if (eventId) query.event = eventId;
     if (typeof vip !== "undefined") query.vipStatus = vip;
     if (search) {
-      const regex = new RegExp(search, "i");
+      const regex = new RegExp(escapeRegex(search), "i");
       query.$or = [
         { fullName: regex },
         { email: regex },
@@ -92,11 +97,13 @@ const getGuests = async ({
 
     const skip = (page - 1) * limit;
     const total = await GuestModel.countDocuments(query);
-    const guests = await GuestModel.find(query)
-      .populate("room")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+    // `slim` is for pickers/dropdowns: only the fields they show, and the room
+    // reduced to its number/type instead of the whole room document.
+    let q = GuestModel.find(query);
+    q = slim
+      ? q.select("fullName email phoneNumber groupName vipStatus room").populate("room", "number type")
+      : q.populate("room");
+    const guests = await q.sort({ createdAt: -1 }).skip(skip).limit(limit).lean();
 
     return { total, page, limit, guests };
   } catch (error) {

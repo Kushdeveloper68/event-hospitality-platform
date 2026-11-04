@@ -40,7 +40,7 @@ const handleCreateRoom = async (req, res) => {
 // list
 const handleGetRooms = async (req, res) => {
   try {
-    const { eventId, page, limit, search, status } = req.query;
+    const { eventId, page, limit, search, status, slim } = req.query;
     const userId = req.user?.id;
 
     if (!eventId) {
@@ -59,6 +59,7 @@ const handleGetRooms = async (req, res) => {
       eventId,
       search,
       status,
+      slim: slim === "true",
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 20,
     });

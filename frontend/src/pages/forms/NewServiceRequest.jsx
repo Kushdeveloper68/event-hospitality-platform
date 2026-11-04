@@ -199,8 +199,8 @@ function NewServiceRequest({ eventId, memberId, onCancel, onDone }) {
     (async () => {
       try {
         const [roomsRes, guestsRes] = await Promise.all([
-          getRooms({ eventId, limit: 1000 }),
-          getGuests({ eventId, limit: 1000 }),
+          getRooms({ eventId, limit: 1000, slim: true }),
+          getGuests({ eventId, limit: 1000, slim: true }),
         ]);
         if (!alive) return;
         if (roomsRes.success) setRooms(roomsRes.rooms || []);

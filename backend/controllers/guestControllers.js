@@ -52,7 +52,7 @@ const handleCreateGuest = async (req, res) => {
  */
 const handleGetGuests = async (req, res) => {
   try {
-    const { eventId, search, vip, status, page, limit } = req.query;
+    const { eventId, search, vip, status, page, limit, slim } = req.query;
     const userId = req.user?.id;
 
     let resolvedEventId = eventId;
@@ -76,6 +76,7 @@ const handleGetGuests = async (req, res) => {
       status,
       page: parseInt(page) || 1,
       limit: parseInt(limit) || 10,
+      slim: slim === "true",
     };
     const result = await getGuests(opts);
     return res.status(200).json({ success: true, ...result });

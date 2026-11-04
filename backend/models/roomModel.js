@@ -15,5 +15,7 @@ const RoomSchema = new Schema(
   { timestamps: true },
 );
 
+RoomSchema.index({ event: 1, number: 1 });
+
 const RoomModel = mongoose.model("Room", RoomSchema);
 module.exports = RoomModel;

@@ -270,7 +270,7 @@ function RoomInventoryManagement() {
     setAssignError(null);
     setAvailableGuests([]);
     try {
-      const res = await getGuests({ eventId, limit: 1000 });
+      const res = await getGuests({ eventId, limit: 1000, slim: true });
       if (res.success) {
         setAvailableGuests(res.guests.filter((g) => !g.room));
       } else {

@@ -18,5 +18,7 @@ const ActivityLogSchema = new Schema(
   { timestamps: true },
 );
 
+ActivityLogSchema.index({ event: 1, timestamp: -1 });
+
 const ActivityLogModel = mongoose.model("ActivityLog", ActivityLogSchema);
 module.exports = ActivityLogModel;

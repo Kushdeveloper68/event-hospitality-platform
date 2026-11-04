@@ -45,8 +45,22 @@ const createRoom = async (roomData) => {
  * and filter-tab badges stay correct regardless of which page is loaded
  * or what's currently searched.
  */
-const getRooms = async ({ eventId, search, status, page = 1, limit = 20 } = {}) => {
+const getRooms = async ({ eventId, search, status, page = 1, limit = 20, slim = false } = {}) => {
   try {
+    // Pickers only need number/type — skip the occupancy $lookup and the
+    // event-wide stats aggregation, which are the expensive parts.
+    if (slim) {
+      const filter = eventId ? { event: new mongoose.Types.ObjectId(eventId) } : {};
+      const total = await RoomModel.countDocuments(filter);
+      const rooms = await RoomModel.find(filter)
+        .select("number type capacity")
+        .sort({ number: 1 })
+        .skip((Math.max(page, 1) - 1) * limit)
+        .limit(limit)
+        .lean();
+      return { total, page, limit, totalPages: Math.max(Math.ceil(total / limit), 1), rooms };
+    }
+
     const matchStage = {};
     if (eventId) matchStage.event = new mongoose.Types.ObjectId(eventId);
 

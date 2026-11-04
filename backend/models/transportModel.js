@@ -20,5 +20,7 @@ const TransportSchema = new Schema(
   { timestamps: true },
 );
 
+TransportSchema.index({ event: 1, createdAt: -1 });
+
 const TransportModel = mongoose.model("Transport", TransportSchema);
 module.exports = TransportModel;

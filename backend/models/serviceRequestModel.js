@@ -27,6 +27,8 @@ const ServiceRequestSchema = new Schema(
   { timestamps: true },
 );
 
+ServiceRequestSchema.index({ event: 1, createdAt: -1 });
+
 const ServiceRequestModel = mongoose.model(
   "ServiceRequest",
   ServiceRequestSchema,

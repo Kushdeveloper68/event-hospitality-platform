@@ -210,7 +210,7 @@ function TransportEntryForm({ eventId, transportId, onDone, onCancel }) {
     let alive = true;
     (async () => {
       try {
-        const guestRes = await getGuests({ eventId, limit: 1000 });
+        const guestRes = await getGuests({ eventId, limit: 1000, slim: true });
         if (alive && guestRes.success) setGuests(guestRes.guests || []);
       } catch (err) {
         console.error('Guest load error:', err);
