@@ -314,8 +314,46 @@ const bulkCreateRooms = async (eventId, rows) => {
   return { createdCount, failed };
 };
 
+/**
+ * Guests currently assigned to a room (for the "Manage guests" panel).
+ */
+const getRoomGuests = async (roomId) => {
+  const room = await RoomModel.findById(roomId);
+  if (!room) throw new HttpError(404, "Room not found");
+  return GuestModel.find({ room: roomId })
+    .select("fullName groupName vipStatus checkedIn email phoneNumber")
+    .sort({ fullName: 1 })
+    .lean();
+};
+
+/**
+ * Take a guest out of a room. (Moving a guest to a different room doesn't need
+ * this: assigning them to the new room already frees the old bed, because
+ * occupancy is counted from guests' `room` field.)
+ */
+const unassignGuestFromRoom = async (roomId, guestId) => {
+  const room = await RoomModel.findById(roomId);
+  if (!room) throw new HttpError(404, "Room not found");
+
+  const guest = await GuestModel.findById(guestId);
+  if (!guest) throw new HttpError(404, "Guest not found");
+
+  if (!guest.room || String(guest.room) !== String(roomId)) {
+    throw new HttpError(409, `${guest.fullName} is not assigned to room ${room.number}`);
+  }
+
+  // Conditional on the room still matching, so a concurrent move can't be undone by this.
+  const result = await GuestModel.updateOne({ _id: guestId, room: roomId }, { $unset: { room: "" } });
+  if (result.modifiedCount === 0) {
+    throw new HttpError(409, `${guest.fullName} is no longer in room ${room.number}`);
+  }
+  return guest;
+};
+
 module.exports = {
   HttpError,
+  getRoomGuests,
+  unassignGuestFromRoom,
   createRoom,
   getRooms,
   getAllRoomsForExport,

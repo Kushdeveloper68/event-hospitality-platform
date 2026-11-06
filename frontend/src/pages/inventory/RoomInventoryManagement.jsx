@@ -5,6 +5,8 @@ import {
   exportAllRooms,
   deleteRoom,
   assignGuestToRoom,
+  getRoomGuests,
+  unassignGuestFromRoom,
   bulkImportRooms,
 } from "../../api/roomApi";
 import { getGuests } from "../../api/guestApi";
@@ -106,6 +108,9 @@ function Modal({ children, onClose, wide }) {
   );
 }
 
+const initialsOf = (name) =>
+  name ? name.split(" ").filter(Boolean).map((w) => w[0]).join("").toUpperCase().slice(0, 2) : "?";
+
 function RoomInventoryManagement() {
   const { eventId: paramEventId } = useParams();
   const eventId = paramEventId;
@@ -147,6 +152,16 @@ function RoomInventoryManagement() {
   const [assigning, setAssigning] = useState(false);
   const [assignLoading, setAssignLoading] = useState(false);
   const [assignError, setAssignError] = useState(null);
+
+  // "Manage guests" panel: see who is in a room, remove them, or move them elsewhere
+  const [manageRoomId, setManageRoomId] = useState(null);
+  const [manageGuests, setManageGuests] = useState([]);
+  const [manageLoading, setManageLoading] = useState(false);
+  const [manageError, setManageError] = useState(null);
+  const [busyGuestId, setBusyGuestId] = useState(null);
+  const [moveGuestId, setMoveGuestId] = useState(null); // guest whose "move to" picker is open
+  const [moveTargets, setMoveTargets] = useState([]); // other rooms that still have space
+  const [moveTargetId, setMoveTargetId] = useState("");
 
   // delete confirmation modal state
   const [deleteRoomId, setDeleteRoomId] = useState(null);
@@ -311,6 +326,76 @@ function RoomInventoryManagement() {
       setAssignError(err.message || "Failed to assign");
     } finally {
       setAssigning(false);
+    }
+  };
+
+  // keepError: a refresh after a failed action must not wipe the message explaining the failure
+  const loadManageData = async (roomId, { keepError = false } = {}) => {
+    setManageLoading(true);
+    if (!keepError) setManageError(null);
+    try {
+      const [guestsRes, roomsRes] = await Promise.all([
+        getRoomGuests(roomId),
+        getRooms({ eventId, status: "available", limit: 200 }),
+      ]);
+      setManageGuests(guestsRes.guests || []);
+      setMoveTargets((roomsRes.rooms || []).filter((r) => r._id !== roomId));
+    } catch (err) {
+      setManageError(err.message || "Failed to load guests");
+    } finally {
+      setManageLoading(false);
+    }
+  };
+
+  const openManageModal = (roomId) => {
+    setManageRoomId(roomId);
+    setManageGuests([]);
+    setMoveGuestId(null);
+    setMoveTargetId("");
+    loadManageData(roomId);
+  };
+
+  const closeManageModal = () => {
+    setManageRoomId(null);
+    setManageGuests([]);
+    setMoveTargets([]);
+    setMoveGuestId(null);
+    setMoveTargetId("");
+    setManageError(null);
+    fetchRooms(); // card occupancy may have changed
+  };
+
+  const handleRemoveGuest = async (guest) => {
+    setBusyGuestId(guest._id);
+    setManageError(null);
+    try {
+      const res = await unassignGuestFromRoom(manageRoomId, guest._id);
+      showToast(res.message || "Guest removed from room", "success");
+      await loadManageData(manageRoomId);
+    } catch (err) {
+      setManageError(err.message || "Failed to remove guest");
+    } finally {
+      setBusyGuestId(null);
+    }
+  };
+
+  const handleMoveGuest = async (guest) => {
+    if (!moveTargetId) return;
+    const target = moveTargets.find((r) => r._id === moveTargetId);
+    setBusyGuestId(guest._id);
+    setManageError(null);
+    try {
+      // assigning to the new room frees the old bed automatically
+      await assignGuestToRoom(moveTargetId, guest._id);
+      showToast(`${guest.fullName} moved to room ${target?.number ?? ""}`.trim(), "success");
+      setMoveGuestId(null);
+      setMoveTargetId("");
+      await loadManageData(manageRoomId);
+    } catch (err) {
+      setManageError(err.message || "Failed to move guest");
+      loadManageData(manageRoomId, { keepError: true }); // the target may have just filled up — refresh the options
+    } finally {
+      setBusyGuestId(null);
     }
   };
 
@@ -579,13 +664,30 @@ function RoomInventoryManagement() {
                       Assign guest
                     </button>
                   )}
+                  {occupancy > 0 &&
+                    (occupancy >= capacity ? (
+                      <button
+                        onClick={() => openManageModal(room._id)}
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-900 text-xs font-bold text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                      >
+                        <span className="material-symbols-outlined text-[17px]">groups</span>
+                        Manage guests
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openManageModal(room._id)}
+                        title="Manage guests in this room"
+                        aria-label={`Manage guests in room ${room.number}`}
+                        className="inline-flex size-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">groups</span>
+                      </button>
+                    ))}
                   <button
                     onClick={() => handleEditRoom(room._id)}
                     title="Edit room"
                     aria-label={`Edit room ${room.number}`}
-                    className={`inline-flex size-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 ${
-                      occupancy >= capacity ? "flex-1" : ""
-                    }`}
+                    className="inline-flex size-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                   >
                     <span className="material-symbols-outlined text-[18px]">edit</span>
                   </button>
@@ -763,6 +865,151 @@ function RoomInventoryManagement() {
           </div>
         </Modal>
       )}
+
+      {/* Manage guests modal: remove or move */}
+      {manageRoomId && (() => {
+        const managedRoom = rooms.find((r) => r._id === manageRoomId);
+        return (
+          <Modal onClose={closeManageModal} wide>
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                  Guests in room {managedRoom?.number ?? ""}
+                </h3>
+                <p className="mt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Remove a guest to free the bed, or move them to another room.
+                </p>
+              </div>
+              <button
+                onClick={closeManageModal}
+                aria-label="Close"
+                className="flex size-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {manageError && (
+              <div className="mx-6 mt-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300">
+                <span className="material-symbols-outlined text-[18px]">error</span>
+                {manageError}
+              </div>
+            )}
+
+            <div className="min-h-[8rem] flex-1 overflow-y-auto p-6">
+              {manageLoading && manageGuests.length === 0 ? (
+                <div className="space-y-2">
+                  {[...Array(2)].map((_, i) => (
+                    <Skeleton key={i} className="h-14 w-full" />
+                  ))}
+                </div>
+              ) : manageGuests.length === 0 ? (
+                <div className="py-8 text-center">
+                  <div className="mx-auto mb-3 flex size-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                    <span className="material-symbols-outlined text-[22px]">bed</span>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">This room is empty now</p>
+                </div>
+              ) : (
+                <ul className="space-y-2">
+                  {manageGuests.map((guest) => {
+                    const busy = busyGuestId === guest._id;
+                    const picking = moveGuestId === guest._id;
+                    return (
+                      <li key={guest._id} className="rounded-xl border border-slate-200 p-3.5 dark:border-slate-700">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-extrabold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                              {initialsOf(guest.fullName)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">
+                                {guest.fullName}
+                                {guest.checkedIn && (
+                                  <span className="ml-2 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+                                    Checked in
+                                  </span>
+                                )}
+                              </p>
+                              {guest.groupName && (
+                                <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">{guest.groupName}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1.5">
+                            <button
+                              onClick={() => {
+                                setMoveGuestId(picking ? null : guest._id);
+                                setMoveTargetId("");
+                              }}
+                              disabled={busy}
+                              className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                            >
+                              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">swap_horiz</span>
+                              Move
+                            </button>
+                            <button
+                              onClick={() => handleRemoveGuest(guest)}
+                              disabled={busy}
+                              title="Remove from this room"
+                              aria-label={`Remove ${guest.fullName} from this room`}
+                              className="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200 px-2.5 text-xs font-bold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-red-500/30 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                            >
+                              <span aria-hidden="true" className={`material-symbols-outlined text-[16px] ${busy && !picking ? "animate-spin" : ""}`}>
+                                {busy && !picking ? "progress_activity" : "person_remove"}
+                              </span>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+
+                        {picking && (
+                          <div className="mt-3 flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800 sm:flex-row">
+                            {moveTargets.length === 0 ? (
+                              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                No other room has space right now.
+                              </p>
+                            ) : (
+                              <>
+                                <select
+                                  value={moveTargetId}
+                                  onChange={(e) => setMoveTargetId(e.target.value)}
+                                  className={`${FIELD} flex-1`}
+                                  aria-label="Move to room"
+                                >
+                                  <option value="">Choose a room…</option>
+                                  {moveTargets.map((r) => (
+                                    <option key={r._id} value={r._id}>
+                                      Room {r.number} — {r.occupancy || 0}/{r.capacity} filled{r.type ? ` · ${r.type}` : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => handleMoveGuest(guest)}
+                                  disabled={!moveTargetId || busy}
+                                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-4 text-xs font-bold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+                                >
+                                  {busy ? "Moving…" : "Move here"}
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+
+            <div className="flex justify-end border-t border-slate-100 px-6 py-4 dark:border-slate-800">
+              <button onClick={closeManageModal} className={BTN_SECONDARY}>
+                Done
+              </button>
+            </div>
+          </Modal>
+        );
+      })()}
 
       {/* Delete confirmation */}
       {deleteRoomId && (

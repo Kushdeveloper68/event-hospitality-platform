@@ -35,6 +35,28 @@ const getSignupTrend = async (days = 14) => {
 };
 
 /**
+ * Signups grouped by where they came from, with how many verified their email
+ * and how many went on to create an event ("activated"). Accounts created
+ * before tracking started show up as "unknown".
+ */
+const getSignupSources = async () => {
+  const organizerIds = await EventModel.distinct("createdBy");
+  const rows = await UserModel.aggregate([
+    {
+      $group: {
+        _id: { $ifNull: ["$signupSource.source", "unknown"] },
+        total: { $sum: 1 },
+        verified: { $sum: { $cond: ["$isEmailVerified", 1, 0] } },
+        activated: { $sum: { $cond: [{ $in: ["$_id", organizerIds] }, 1, 0] } },
+      },
+    },
+    { $sort: { total: -1 } },
+    { $limit: 12 },
+  ]);
+  return rows.map((r) => ({ source: r._id, total: r.total, verified: r.verified, activated: r.activated }));
+};
+
+/**
  * Full platform admin stats — everything the Admin Dashboard needs in one call.
  */
 const getPlatformStats = async () => {
@@ -59,6 +81,7 @@ const getPlatformStats = async () => {
     recentSignups,
     topOrganizers,
     signupTrend,
+    signupSources,
   ] = await Promise.all([
     UserModel.countDocuments({}),
     UserModel.countDocuments({ isEmailVerified: true }),
@@ -72,7 +95,7 @@ const getPlatformStats = async () => {
     UserModel.find({})
       .sort({ createdAt: -1 })
       .limit(10)
-      .select("name email organizationName isEmailVerified isAdmin createdAt"),
+      .select("name email organizationName isEmailVerified isAdmin createdAt signupSource signupMethod"),
     EventModel.aggregate([
       { $group: { _id: "$createdBy", eventCount: { $sum: 1 } } },
       { $sort: { eventCount: -1 } },
@@ -97,6 +120,7 @@ const getPlatformStats = async () => {
       },
     ]),
     getSignupTrend(14),
+    getSignupSources(),
   ]);
 
   return {
@@ -125,7 +149,12 @@ const getPlatformStats = async () => {
       isEmailVerified: u.isEmailVerified,
       isAdmin: u.isAdmin,
       createdAt: u.createdAt,
+      source: u.signupSource?.source || null,
+      medium: u.signupSource?.medium || null,
+      campaign: u.signupSource?.campaign || null,
+      method: u.signupMethod || null,
     })),
+    signupSources,
     topOrganizers,
   };
 };
@@ -133,4 +162,5 @@ const getPlatformStats = async () => {
 module.exports = {
   getPlatformStats,
   getSignupTrend,
+  getSignupSources,
 };

@@ -4,6 +4,8 @@ const {
   handleCreateRoom,
   handleGetRooms,
   handleExportRooms,
+  handleGetRoomGuests,
+  handleUnassignGuest,
   handleGetRoomById,
   handleUpdateRoom,
   handleDeleteRoom,
@@ -36,5 +38,9 @@ router.delete("/:roomId", authMiddleware, handleDeleteRoom);
 
 // assign guest to room
 router.post("/:roomId/assign", authMiddleware, handleAssignGuest);
+
+// who is in a room, and taking a guest out of it
+router.get("/:roomId/guests", authMiddleware, handleGetRoomGuests);
+router.delete("/:roomId/guests/:guestId", authMiddleware, handleUnassignGuest);
 
 module.exports = router;

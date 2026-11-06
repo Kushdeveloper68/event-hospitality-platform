@@ -2,6 +2,7 @@ const passport = require("passport");
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 const UserModel = require("../models/userModel");
 const { sendWelcomeEmail } = require("../helpers/emailHelper");
+const { decodeAttributionParam } = require("../helpers/attribution");
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET missing in .env");
@@ -14,8 +15,9 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: `${process.env.SERVER_URL || "http://localhost:7000"}/api/users/auth/google/callback`,
       scope: ["profile", "email"],
+      passReqToCallback: true,
     },
-    async (_accessToken, _refreshToken, profile, done) => {
+    async (req, _accessToken, _refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
         if (!email) {
@@ -54,6 +56,9 @@ passport.use(
           organizationName: name + "'s Organization",
           termCondition: true, // OAuth sign-up implies acceptance
           isEmailVerified: true,
+          signupMethod: "google",
+          // attribution rides along in the OAuth `state` param (see /auth/google route)
+          ...(decodeAttributionParam(req.query?.state) && { signupSource: decodeAttributionParam(req.query.state) }),
         });
 
         await user.save();

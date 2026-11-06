@@ -40,8 +40,26 @@ const User = new Schema({
     otpExpiry:{
         type:Date,
         default:null
+    },
+    // First marketing touch that led to this signup (set once, never overwritten).
+    // Missing on accounts created before tracking started.
+    signupSource: {
+        source: { type: String, default: null },
+        medium: { type: String, default: null },
+        campaign: { type: String, default: null },
+        referrer: { type: String, default: null },
+        landingPath: { type: String, default: null },
+        capturedAt: { type: Date, default: null },
+    },
+    signupMethod: {
+        type: String,
+        enum: ["email", "google"],
+        default: undefined,
     }
 }, {timestamps:true})
+
+// Admin dashboard groups signups by source
+User.index({ "signupSource.source": 1 })
 
 const UserModel = mongoose.model("User", User)
 

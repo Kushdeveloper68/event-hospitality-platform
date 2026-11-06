@@ -2,6 +2,8 @@ const {
   createRoom,
   getRooms,
   getAllRoomsForExport,
+  getRoomGuests,
+  unassignGuestFromRoom,
   getRoomById,
   updateRoom,
   deleteRoom,
@@ -239,7 +241,63 @@ const handleBulkImportRooms = async (req, res) => {
   }
 };
 
+// Shared by the guest-listing / unassign handlers: the signed-in user must own the room's event.
+const requireRoomOwner = async (req, res, roomId) => {
+  const room = await getRoomById(roomId);
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ success: false, message: "Authentication required" });
+    return null;
+  }
+  const ev = await getEventById(room.event);
+  const ownerId = ev.createdBy?._id || ev.createdBy;
+  if (String(ownerId) !== String(userId)) {
+    res.status(403).json({ success: false, message: "Forbidden: you do not own this room/event" });
+    return null;
+  }
+  return room;
+};
+
+/** GET /api/rooms/:roomId/guests — who is in this room */
+const handleGetRoomGuests = async (req, res) => {
+  try {
+    const room = await requireRoomOwner(req, res, req.params.roomId);
+    if (!room) return;
+    const guests = await getRoomGuests(room._id);
+    return res.status(200).json({ success: true, guests });
+  } catch (error) {
+    if (!error.status) console.error("Error fetching room guests", error);
+    return res.status(error.status || 500).json({ success: false, message: error.message || "Failed to fetch room guests" });
+  }
+};
+
+/** DELETE /api/rooms/:roomId/guests/:guestId — remove a guest from the room */
+const handleUnassignGuest = async (req, res) => {
+  try {
+    const { roomId, guestId } = req.params;
+    const room = await requireRoomOwner(req, res, roomId);
+    if (!room) return;
+
+    const guest = await unassignGuestFromRoom(roomId, guestId);
+
+    createActivityLog({
+      event: room.event,
+      type: "room-assignment",
+      message: `Guest ${guest.fullName} removed from room ${room.number}`,
+      relatedGuest: guestId,
+      priority: "normal",
+    });
+
+    return res.status(200).json({ success: true, message: `${guest.fullName} removed from room ${room.number}` });
+  } catch (error) {
+    if (!error.status) console.error("Error removing guest from room", error);
+    return res.status(error.status || 500).json({ success: false, message: error.message || "Failed to remove guest from room" });
+  }
+};
+
 module.exports = {
+  handleGetRoomGuests,
+  handleUnassignGuest,
   handleCreateRoom,
   handleGetRooms,
   handleExportRooms,

@@ -74,6 +74,26 @@ export const bulkImportRooms = async (eventId, rows) => {
     }
 };
 
+/** Guests currently assigned to a room. */
+export const getRoomGuests = async (roomId) => {
+    try {
+        const res = await api.get(`${API_BASE_PATH}/${roomId}/guests`);
+        return res.data;
+    } catch (error) {
+        throw error.response?.data || { success: false, message: 'Failed to load room guests' };
+    }
+};
+
+/** Take a guest out of a room (to move them, assign them to the new room instead). */
+export const unassignGuestFromRoom = async (roomId, guestId) => {
+    try {
+        const res = await api.delete(`${API_BASE_PATH}/${roomId}/guests/${guestId}`);
+        return res.data;
+    } catch (error) {
+        throw error.response?.data || { success: false, message: 'Failed to remove guest from room' };
+    }
+};
+
 export const assignGuestToRoom = async (roomId, guestId) => {
     try {
         const res = await api.post(`${API_BASE_PATH}/${roomId}/assign`, { guestId });

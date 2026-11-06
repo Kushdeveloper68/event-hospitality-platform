@@ -423,6 +423,53 @@ function AdminDashboard() {
           </Card>
         </div>
 
+        {/* Where signups come from */}
+        <Card
+          title="Signup sources"
+          subtitle="Which channel brings users — and how many go on to create an event"
+          icon="campaign"
+        >
+          {(stats.signupSources || []).length === 0 ? (
+            <EmptyState icon="campaign" message="No signups yet" />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] text-left">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800">
+                    {['Source', 'Signups', 'Verified', 'Created an event', 'Activation'].map((h) => (
+                      <th key={h} className="pb-2.5 pr-4 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {stats.signupSources.map((s) => {
+                    const pct = s.total ? Math.round((s.activated / s.total) * 100) : 0
+                    return (
+                      <tr key={s.source}>
+                        <td className="py-3 pr-4 text-sm font-bold capitalize text-slate-900 dark:text-slate-100">{s.source}</td>
+                        <td className="py-3 pr-4 text-sm font-extrabold tabular-nums text-slate-900 dark:text-slate-100">{fmtNum(s.total)}</td>
+                        <td className="py-3 pr-4 text-sm font-semibold tabular-nums text-slate-600 dark:text-slate-400">{fmtNum(s.verified)}</td>
+                        <td className="py-3 pr-4 text-sm font-semibold tabular-nums text-slate-600 dark:text-slate-400">{fmtNum(s.activated)}</td>
+                        <td className="py-3 pr-4">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                              <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="text-xs font-bold tabular-nums text-slate-600 dark:text-slate-400">{pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+              <p className="mt-3 text-xs font-medium text-slate-400 dark:text-slate-500">
+                <strong className="font-semibold">unknown</strong> = signed up before tracking started · <strong className="font-semibold">direct</strong> = no tagged link or referring site.
+              </p>
+            </div>
+          )}
+        </Card>
+
         {/* Recent signups */}
         <section className={`overflow-hidden ${CARD}`}>
           <div className="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 dark:border-slate-800 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
@@ -472,10 +519,10 @@ function AdminDashboard() {
             <EmptyState icon="person_off" message={stats.recentSignups?.length ? 'No signups match your search or filter' : 'No signups yet'} />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left">
+              <table className="w-full min-w-[760px] text-left">
                 <thead>
                   <tr className="border-b border-slate-100 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-800/40">
-                    {['Name', 'Email', 'Organization', 'Status', 'Joined'].map((h) => (
+                    {['Name', 'Email', 'Organization', 'Source', 'Status', 'Joined'].map((h) => (
                       <th key={h} className="px-5 py-3 text-[11px] font-bold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
                         {h}
                       </th>
@@ -500,6 +547,16 @@ function AdminDashboard() {
                       </td>
                       <td className="max-w-[240px] truncate px-5 py-3.5 text-sm font-medium text-slate-600 dark:text-slate-400">{u.email}</td>
                       <td className="max-w-[200px] truncate px-5 py-3.5 text-sm font-medium text-slate-600 dark:text-slate-400">{u.organizationName || '—'}</td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        {u.source ? (
+                          <>
+                            {u.source}
+                            {u.medium && <span className="font-medium text-slate-400 dark:text-slate-500"> · {u.medium}</span>}
+                          </>
+                        ) : (
+                          <span className="font-medium text-slate-400 dark:text-slate-500">—</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3.5">
                         {u.isEmailVerified ? (
                           <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">

@@ -1,4 +1,5 @@
 import React from "react";
+import { getAttributionParam } from "../utils/attribution";
 
 /**
  * Reusable Google Sign-In button.
@@ -14,7 +15,9 @@ function GoogleSignInButton({ mode = "signin" }) {
   const handleClick = () => {
     // Full page redirect — this must leave the SPA so the browser can follow
     // the OAuth redirect chain (Google → backend callback → frontend success page)
-    window.location.href = `${import.meta.env.VITE_API_URL}/users/auth/google`;
+    // `src` carries the visitor's marketing source through Google's redirect
+    const src = getAttributionParam();
+    window.location.href = `${import.meta.env.VITE_API_URL}/users/auth/google${src ? `?src=${encodeURIComponent(src)}` : ""}`;
   };
 
   return (

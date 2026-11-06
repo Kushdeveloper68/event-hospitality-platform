@@ -1,6 +1,7 @@
 const UserService = require("../services/userServices");
 const UserModel = require("../models/userModel");
 const bcrypt = require("bcryptjs");
+const { sanitizeAttribution } = require("../helpers/attribution");
 const {
   sendWelcomeEmail,
   sendWelcomeBackEmail,
@@ -9,7 +10,8 @@ const {
 // Step 1: Initiate signup and send OTP
 async function SignupInitiate(req, res) {
   try {
-    const { email, password, name, organizationName, termCondition } = req.body;
+    const { email, password, name, organizationName, termCondition, attribution } = req.body;
+    const signupSource = sanitizeAttribution(attribution);
 
     // Validation
     if (!email || !password || !name || !organizationName) {
@@ -49,7 +51,13 @@ async function SignupInitiate(req, res) {
         organizationName,
         termCondition,
         isEmailVerified: false,
+        signupMethod: "email",
+        ...(signupSource && { signupSource }),
       });
+      await user.save();
+    } else if (signupSource && !user.signupSource?.source) {
+      // Unverified account retrying signup: keep the first source, only fill a missing one
+      user.signupSource = signupSource;
       await user.save();
     }
 

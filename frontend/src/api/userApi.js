@@ -1,4 +1,5 @@
 import api from "./axios";
+import { getAttribution } from '../utils/attribution';
 
 const API_BASE_PATH = "/users";
 
@@ -13,7 +14,8 @@ const API_BASE_PATH = "/users";
 
 export const signupInitiate = async (userData) => {
     try {
-        const response = await api.post(`${API_BASE_PATH}/signup`, userData);
+        // attribution = which link first brought this visitor (Instagram, call, ...)
+        const response = await api.post(`${API_BASE_PATH}/signup`, { ...userData, attribution: getAttribution() });
         return response.data;
     } catch (error) {
         throw error.response?.data || { success: false, message: 'Signup failed' };
