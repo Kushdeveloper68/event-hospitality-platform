@@ -123,6 +123,7 @@ async function VerifyOTP(req, res) {
         name: user.name,
         organizationName: user.organizationName,
         isAdmin: user.isAdmin,
+        profilePicture: user.profilePicture || null,
       },
     });
   } catch (error) {
@@ -219,6 +220,7 @@ async function LoginUser(req, res) {
         name: user.name,
         organizationName: user.organizationName,
         isAdmin: user.isAdmin,
+        profilePicture: user.profilePicture || null,
       },
     });
   } catch (error) {

@@ -529,6 +529,11 @@ export default function PrivacyPolicy() {
                     Purpose: "Rate limiting, security",
                     Retention: "30 days",
                   },
+                  {
+                    "Data Type": "Signup source (link tag or referring site)",
+                    Purpose: "Understanding which channels bring new users",
+                    Retention: "Life of account",
+                  },
                 ]}
               />
 
@@ -1279,7 +1284,10 @@ export default function PrivacyPolicy() {
                 EventCure offers sign-in via Google OAuth 2.0. When you
                 authenticate via Google, we receive only the information you
                 authorize Google to share (typically your name, email, and
-                profile photo). We do not access your Google contacts, Drive,
+                profile photo). We save the link to your Google profile photo
+                and show it as your avatar inside EventCure; the image itself
+                stays on Google's servers, and the link is refreshed each time
+                you sign in with Google. We do not access your Google contacts, Drive,
                 Calendar, or other Google services. Google's privacy policy
                 governs Google's handling of your authentication data.
               </p>

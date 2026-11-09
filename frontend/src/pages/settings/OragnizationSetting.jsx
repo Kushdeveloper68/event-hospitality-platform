@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import UserAvatar from "../../components/UserAvatar";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import {
@@ -709,9 +710,12 @@ export default function OrganizationSetting() {
         {/* ── Sidebar (desktop) ── */}
         <aside className="hidden w-64 shrink-0 lg:sticky lg:top-6 lg:block">
           <div className={`mb-4 flex items-center gap-3 p-4 ${CARD}`}>
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-base font-extrabold text-white dark:bg-slate-100 dark:text-slate-900">
-              {initials}
-            </div>
+            <UserAvatar
+              user={user}
+              initials={initials}
+              size={128}
+              className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-base font-extrabold text-white dark:bg-slate-100 dark:text-slate-900"
+            />
             <div className="min-w-0">
               <p className="truncate text-sm font-extrabold text-slate-900 dark:text-slate-100">
                 {profileForm.name || user?.name || "—"}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import UserAvatar from "../../components/UserAvatar";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { getEventById } from "../../api/eventApi";
@@ -543,9 +544,12 @@ function EventWorkspaceShell() {
                     {user?.organizationName || "Operations"}
                   </p>
                 </div>
-                <div className="flex size-9 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white dark:bg-slate-100 dark:text-slate-900">
-                  {(user?.name || "O").charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar
+                  user={user}
+                  initials={(user?.name || "O").charAt(0).toUpperCase()}
+                  size={72}
+                  className="flex size-9 items-center justify-center rounded-full bg-slate-900 text-xs font-bold text-white dark:bg-slate-100 dark:text-slate-900"
+                />
               </div>
             </div>
           </div>

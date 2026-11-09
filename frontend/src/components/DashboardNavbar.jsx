@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import UserAvatar from './UserAvatar'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
@@ -130,9 +131,12 @@ function DashboardNavbar() {
 
           {/* User card */}
           <div className="flex items-center gap-3 px-3 py-3 mt-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60 justify-center lg:justify-start">
-            <div className="size-8 rounded-lg bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center text-primary-700 dark:text-primary-400 text-caption font-bold shrink-0">
-              {initials}
-            </div>
+            <UserAvatar
+              user={user}
+              initials={initials}
+              size={64}
+              className="size-8 rounded-lg bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center text-primary-700 dark:text-primary-400 text-caption font-bold shrink-0"
+            />
             <div className="hidden lg:block flex-1 min-w-0">
               <p className="text-caption font-semibold text-slate-800 dark:text-slate-200 truncate leading-none">
                 {user?.name || 'User'}

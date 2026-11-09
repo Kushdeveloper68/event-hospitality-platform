@@ -3,6 +3,7 @@ const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
 const UserModel = require("../models/userModel");
 const { sendWelcomeEmail } = require("../helpers/emailHelper");
 const { decodeAttributionParam } = require("../helpers/attribution");
+const { sanitizeProfilePicture } = require("../helpers/profilePicture");
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET missing in .env");
@@ -24,15 +25,25 @@ passport.use(
           return done(new Error("No email returned from Google"), null);
         }
 
+        // Google's profile photo link (null if missing / not a Google image host)
+        const profilePicture = sanitizeProfilePicture(profile.photos?.[0]?.value);
+
         // ── Find existing user ──────────────────────────────────────────────
         let user = await UserModel.findOne({ email });
 
         if (user) {
+          let changed = false;
           // Mark email as verified if it wasn't already (Google has verified it)
           if (!user.isEmailVerified) {
             user.isEmailVerified = true;
-            await user.save();
+            changed = true;
           }
+          // Keep the photo fresh: refresh it on every Google sign-in if it changed
+          if (profilePicture && user.profilePicture !== profilePicture) {
+            user.profilePicture = profilePicture;
+            changed = true;
+          }
+          if (changed) await user.save();
           return done(null, user);
         }
 
@@ -57,6 +68,7 @@ passport.use(
           termCondition: true, // OAuth sign-up implies acceptance
           isEmailVerified: true,
           signupMethod: "google",
+          ...(profilePicture && { profilePicture }),
           // attribution rides along in the OAuth `state` param (see /auth/google route)
           ...(decodeAttributionParam(req.query?.state) && { signupSource: decodeAttributionParam(req.query.state) }),
         });

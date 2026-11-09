@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import UserAvatar from "../../components/UserAvatar";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -484,9 +485,12 @@ function MainOprationDashboard() {
                   </p>
                 </div>
 
-                <div className="flex size-9 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-100 text-xs font-bold text-white dark:text-slate-900">
-                  {(user?.name || "O").charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar
+                  user={user}
+                  initials={(user?.name || "O").charAt(0).toUpperCase()}
+                  size={72}
+                  className="flex size-9 items-center justify-center rounded-full bg-slate-900 dark:bg-slate-100 text-xs font-bold text-white dark:text-slate-900"
+                />
               </div>
             </div>
           </div>

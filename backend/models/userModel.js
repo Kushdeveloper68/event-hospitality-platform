@@ -51,6 +51,11 @@ const User = new Schema({
         landingPath: { type: String, default: null },
         capturedAt: { type: Date, default: null },
     },
+    // Google profile photo link (only set for accounts that have signed in with Google)
+    profilePicture: {
+        type: String,
+        default: null,
+    },
     signupMethod: {
         type: String,
         enum: ["email", "google"],
