@@ -36,6 +36,8 @@ See LICENSE for details. Unauthorized code copy and use or distribution is prohi
 - [Key Features](#-key-features)
 - [Bulk CSV Import](#-bulk-csv-import)
 - [Installable App (PWA)](#-installable-app-pwa)
+- [Signup Source Tracking](#-signup-source-tracking)
+- [Performance](#-performance)
 - [Module Breakdown](#-module-breakdown)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
@@ -52,6 +54,7 @@ See LICENSE for details. Unauthorized code copy and use or distribution is prohi
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
 - [Developer](#-developer)
+- [Acknowledgements](#-acknowledgements)
 - [License](#-license)
 
 ---
@@ -101,6 +104,8 @@ EventCure is **mobile-friendly and installable** — open it on a phone, tablet 
 - Password reset via secure OTP email flow (3-step)
 - Per-event data isolation — ownership is verified on every event-scoped request; the guest, room and bulk-import handlers **fail closed** (a request with no authenticated user is rejected with `401`, never waved through)
 - `helmet` security headers, global rate limiting, and request-size limits (see [Security & Hardening](#-security--hardening))
+- Google sign-in also brings the user's **profile photo**, shown as their avatar across the app (initials as fallback; only links on Google's own image hosts are accepted)
+- Every new account records **where the user came from** (Instagram, WhatsApp, a call…) — see [Signup Source Tracking](#-signup-source-tracking)
 
 ### 📊 Operations Dashboard
 - Real-time KPI cards: Total Events, Active Events, Guests Today, Pending Check-ins, Open Services
@@ -134,6 +139,7 @@ EventCure is **mobile-friendly and installable** — open it on a phone, tablet 
 - Room categories: Standard Single, Double, Executive Suite, Meeting Room, ADA Accessible
 - One-click guest assignment modal with list of unassigned guests
 - **Capacity is enforced on the server** — assigning a guest to a full room returns `409 Room 101 is full (2/2 guests)`; a re-check after saving rolls back the assignment if two staff grab the last bed at the same moment
+- **Manage guests** on any occupied room: see who is in it, **remove** a guest to free the bed, or **move** them to another room that still has space (the move is capacity-checked like any assignment)
 - Room edits can't shrink capacity below the number of guests already assigned, and guest create/update can't set `room` directly (assignment only goes through the assign endpoint)
 - **Event-wide stat cards** (Total Rooms, Total Capacity, Current Occupancy, Available) computed on the server across *all* rooms — they don't change when you move between pages
 - **Server-side search and Available / Occupied filters** that search every room in the event, not just the page on screen
@@ -150,6 +156,7 @@ EventCure is **mobile-friendly and installable** — open it on a phone, tablet 
 - Live status bar showing running totals (Total / Checked-in / Pending)
 - Toast notifications for every check-in and check-out action
 - Silent background polling for real-time updates
+- **Lean, always-live lists** — the three lists fetch only the fields the desk shows, and the check-in desk is never cached, so several staff members always see current data
 
 ### 🚌 Transport Coordination
 - Log every vehicle trip: guest, driver, vehicle, pickup, dropoff, scheduled time, notes
@@ -223,6 +230,15 @@ EventCure is **mobile-friendly and installable** — open it on a phone, tablet 
 
 ### 📥 Bulk CSV Import
 Add guests, rooms or team members in bulk instead of filling forms one by one. See the dedicated [Bulk CSV Import](#-bulk-csv-import) section.
+
+### 🖼️ Public Website & Event Covers
+- Landing page with the product mockup, a click-to-play **walkthrough video**, an **event-type photo mosaic** (weddings, receptions, sangeet, conferences, corporate retreats, festivals) and a lazy-loaded isometric **guest-journey illustration**
+- **Event cards show a cover photo** picked from the event's name/description (wedding, reception, sangeet, conference, corporate, festival, or a default). Photos live in [`frontend/public/images/events/`](frontend/public/images/events); a missing photo simply falls back to the card's gradient
+- `event.coverImage` is already honoured if present, so letting users upload their own cover later needs no card changes
+
+### 🛠️ Platform Admin Dashboard
+- Admin-only page (`/admin`, backed by `GET /api/admin/stats`) with platform-wide totals, a 14-day signup trend, top organizers and recent signups
+- **Signup sources** table: signups per channel, how many verified their email, and how many went on to **create an event** (activation) — see [Signup Source Tracking](#-signup-source-tracking)
 
 ### 📱 Installable App & Mobile
 Install EventCure on Android, iOS or desktop and launch it like a native app — standalone window, home-screen icon, shortcuts, and an in-app prompt when a new version is ready. See [Installable App (PWA)](#-installable-app-pwa).
@@ -300,6 +316,47 @@ Then open DevTools → **Application** (manifest, service worker) and run a **Li
 
 ---
 
+## 📈 Signup Source Tracking
+
+Know which channel brings real users — not just visitors. Tag the links you share:
+
+```
+https://eventcure.in/?utm_source=instagram&utm_medium=bio
+https://eventcure.in/?utm_source=whatsapp&utm_medium=dm
+https://eventcure.in/?utm_source=call&utm_medium=followup&utm_campaign=oct-planners
+```
+
+(`?ref=instagram` works as a shorthand.)
+
+**How it works**
+- On first load the app remembers the visitor's source in `localStorage` (**first touch, kept for 30 days**). A new explicitly tagged link replaces it; `utm_source=pwa` (the installed app launching) is ignored.
+- Untagged visits fall back to the **referring site** (Instagram, Facebook, WhatsApp, Google, LinkedIn…), or `direct`.
+- On signup it is saved on the user as `signupSource` (`source`, `medium`, `campaign`, `referrer`, `landingPath`, `capturedAt`) plus `signupMethod` (`email` | `google`). Email signup sends it in the request body; for **Google** it rides through Google's redirect in the OAuth `state` parameter (`/api/users/auth/google?src=…`) and is saved only when a *new* account is created.
+- Everything coming from the browser is sanitised server-side to a few short plain-text fields; an existing user signing in again is never re-attributed.
+
+**Where to read it:** Admin Dashboard → *Signup sources* (signups, verified, created an event, activation %) and a *Source* column in *Recent signups*.
+
+**Good to know**
+- Accounts created before tracking started show as `unknown`.
+- Instagram opens links in its in-app browser; if the visitor continues in Chrome the source is lost (different browser), so a few Instagram signups will read as `direct`.
+- Code: [`frontend/src/utils/attribution.js`](frontend/src/utils/attribution.js), [`backend/helpers/attribution.js`](backend/helpers/attribution.js).
+
+---
+
+## ⚡ Performance
+
+Switching event-workspace tabs used to refetch everything each time. Now:
+
+- **GET cache** ([`frontend/src/api/requestCache.js`](frontend/src/api/requestCache.js), rules in `api/axios.js`): successful GETs are kept for **30 s** (Overview 15 s, activity logs 10 s). Identical simultaneous requests share one network call; entries are keyed per auth token; errors are never cached.
+  - **Any write (POST/PUT/PATCH/DELETE) clears the whole cache**, so you never see stale data after your own change.
+  - **Never cached:** auth/account routes, the **live check-in desk**, exports. Opt out per call with `{ cache: false }`.
+  - Trade-off: a change made by *another* user can take up to 30 s to appear (except on the check-in desk).
+- **Lean payloads:** check-in lists and the guest list use `.lean()`; check-in fetches only the fields the desk displays; pickers (assign-to-room, transport and service-request forms) ask for `slim=true` and receive just name / contact / room — rooms in slim mode skip the occupancy aggregation entirely.
+- **Database indexes** on every `event`-scoped collection (guests: `event+createdAt`, `event+checkedIn+arrivalDatetime`, `room`; rooms, transport, service requests, schedule, activity logs; users: `signupSource.source`) so list queries stop scanning whole collections. They are created automatically on first deploy, which can take a moment on a large collection.
+- **Code splitting:** the guest-journey illustration (~375 KB) is a separate chunk that only loads when the section is about to scroll into view.
+
+---
+
 ## 🧩 Module Breakdown
 
 ```
@@ -347,7 +404,7 @@ EventCure
 │   └── Notifications
 │
 └── Pages
-    ├── Platform Landing Page (with product walkthrough video)
+    ├── Platform Landing Page (walkthrough video, event-type photo mosaic, guest-journey illustration)
     ├── CSV Import Guide + downloadable templates
     ├── Terms & Conditions
     ├── Privacy Policy
@@ -431,12 +488,16 @@ event-hospitality-platform/
 │   │   │                           #   apple-touch-icon.png)
 │   │   ├── robots.txt              # Search engine crawl rules
 │   │   ├── sitemap.xml             # Public pages for Google Search Console
+│   │   ├── images/events/          # Event photos: wedding, reception, sangeet, conference,
+│   │   │                           #   corporate, festival, default (.webp)
 │   │   └── (logos, landing-page.png, manual images)
 │   ├── src/
-│   │   ├── api/                    # Axios API service files (one per module)
+│   │   ├── api/                    # Axios API service files (one per module) + requestCache.js (GET cache)
 │   │   ├── components/             # Shared UI: Footer, Navbar, DashboardNavbar,
-│   │   │                           #   CsvImportModal, PWAManager, GoogleSignInButton, error boundaries
+│   │   │                           #   CsvImportModal, PWAManager, GoogleSignInButton, EventCover,
+│   │   │                           #   EventTypeShowcase, UserAvatar, journey/ (landing illustration), error boundaries
 │   │   ├── context/                # AuthContext, ThemeContext, EventContext, ProtectedRoute
+│   │   ├── utils/                  # attribution.js (signup source), eventCovers.js (cover photo picker)
 │   │   ├── layouts/                # DashboardLayout
 │   │   ├── pages/
 │   │   │   ├── admin/              # AdminDashboard
@@ -474,8 +535,11 @@ event-hospitality-platform/
     ├── routes/                     # Express route definitions
     ├── middlewares/                # authMiddleware, adminMiddleware, globalLimiter, rateLimiter
     ├── helpers/
-    │   └── emailHelper.js          # OTP generation + email sending
-    ├── __tests__/                  # Jest suites (auth, events, middleware, password reset, export, room capacity)
+    │   ├── emailHelper.js          # OTP generation + email sending
+    │   ├── attribution.js          # Sanitises signup-source data from the browser
+    │   └── profilePicture.js       # Validates Google profile-photo links
+    ├── __tests__/                  # Jest suites (auth, events, middleware, password reset, export, room capacity,
+    │                               #   query optimisations, signup source & room guests, profile photo)
     ├── tests/helpers/              # Test app, in-memory DB and auth helpers
     ├── getGmailRefreshToken.js     # One-time script to mint the Gmail refresh token
     ├── server.js
@@ -614,7 +678,7 @@ All API routes are prefixed with `/api`. Signup, login, Google OAuth and passwor
 | POST | `/resend-otp` | Resend OTP |
 | POST | `/login` | Email + password login |
 | POST | `/logout` | Clear session |
-| GET | `/auth/google` | Start Google OAuth flow |
+| GET | `/auth/google` | Start Google OAuth flow (optional `?src=` carries the visitor's signup source) |
 | GET | `/auth/google/callback` | Google OAuth callback |
 
 ### Password reset (`/api/password-reset`)
@@ -637,8 +701,8 @@ All API routes are prefixed with `/api`. Signup, login, Google OAuth and passwor
 
 | Resource | Base path | Notes |
 |----------|-----------|-------|
-| Guests | `/api/guests` | `POST /`, `GET /` (filters: `search`, `vip`, `status`, `page`, `limit`), `GET/PUT/DELETE /:guestId`, `POST /bulk-import` |
-| Rooms | `/api/rooms` | `POST /`, `GET /` (filters: `search`, `status`, `page`, `limit`; returns event-wide `stats`), `GET /export`, `GET/PUT/DELETE /:roomId`, `POST /:roomId/assign` (`409` if the room is full), `POST /bulk-import` |
+| Guests | `/api/guests` | `POST /`, `GET /` (filters: `search`, `vip`, `status`, `page`, `limit`, `slim`), `GET/PUT/DELETE /:guestId`, `POST /bulk-import` |
+| Rooms | `/api/rooms` | `POST /`, `GET /` (filters: `search`, `status`, `page`, `limit`, `slim`; returns event-wide `stats` unless `slim`), `GET /export`, `GET/PUT/DELETE /:roomId`, `POST /:roomId/assign` (`409` if the room is full — also how you *move* a guest), `GET /:roomId/guests`, `DELETE /:roomId/guests/:guestId` (remove a guest from the room), `POST /bulk-import` |
 | Team | `/api/team` | `POST /`, `GET /`, `GET /summary`, `GET/PUT/DELETE /:memberId`, `POST /bulk-import` |
 
 > Room assignment is only possible through `POST /api/rooms/:roomId/assign`. `PUT/POST /api/guests` ignore any `room` (and, on update, `event`) in the request body; `PUT /api/rooms/:roomId` only accepts `number`, `capacity`, `type`, `notes`.
@@ -653,6 +717,12 @@ All API routes are prefixed with `/api`. Signup, login, Google OAuth and passwor
 | Schedule | `/api/schedules` | `POST /`, `GET /event/:eventId`, `PUT/DELETE /:id` |
 | Activity logs | `/api/activity-logs` | `GET /`, `/summary`, `/types` |
 | Overview | `/api/overview/:eventId` | Metrics for the event Overview tab |
+
+### Admin (`/api/admin`, admin only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/stats` | Platform totals, 14-day signup trend, top organizers, signup sources (with activation) and recent signups |
 
 ### Dashboards, analytics & exports
 
@@ -758,6 +828,7 @@ Restricted guest lists (private events), VIP tagging with special request notes 
 - **Rate limiting** — global limiter (1000 requests / 15 min per IP) plus stricter limiters on sensitive routes
 - **Request size cap** — JSON / URL-encoded bodies limited to 2 MB (enough for a full 1000-row import)
 - **Bulk import guardrails** — authenticated, ownership-verified, capped at 1000 rows, per-row validation; free-text search input is regex-escaped
+- **Untrusted browser data is sanitised** — signup-source tags are reduced to short plain-text fields, and a Google profile-photo link is stored only if it is an `https` URL on Google's image hosts
 - **PWA safety** — the service worker never caches `/api/*` or auth routes, so sensitive data is always fetched live
 - **Single CORS origin** — only `CLIENT_URL` is allowed, with credentials
 - **Passwords** hashed with bcrypt; OTPs expire after 10 minutes
@@ -778,6 +849,15 @@ cd frontend
 npm test
 npm run test:coverage
 ```
+
+**What is covered**
+
+| Area | Suites |
+|------|--------|
+| Backend | auth, events, middleware, password reset, event workbook export, room capacity, query optimisations (lean / slim / indexes-friendly queries), signup source + Google OAuth `state` round trip + room guest management, Google profile photo |
+| Frontend | auth context, password-reset API, request cache (TTL, invalidation, per-user isolation), signup-source attribution, Manage-guests modal (remove / move / errors), user avatar |
+
+> Several backend suites use `mongodb-memory-server`, which downloads a MongoDB binary on first run (needs internet access). The newer suites mock the models and run without a database.
 
 ---
 
@@ -813,6 +893,12 @@ npm run test:coverage
 - [ ] Real-time GPS tracking integration for transport
 
 ### Completed ✅
+- [x] **Remove / move guests between rooms** with the same capacity checks as assignment
+- [x] **Signup source tracking** (UTM tags + referrer) with an admin *Signup sources* table showing activation
+- [x] Google profile photo as the user's avatar
+- [x] **Performance pass** — request cache, lean/slim payloads, database indexes, lazy-loaded landing illustration
+- [x] Landing page: event-type photo mosaic, guest-journey illustration, event cover photos on cards
+- [x] Platform admin dashboard (`/admin`)
 - [x] Full CRUD for all operational modules
 - [x] Google OAuth 2.0 integration
 - [x] Gmail API mailer (OAuth2) for OTP delivery
@@ -867,6 +953,13 @@ Contributions are welcome. Please follow these steps:
 - ✉️ Support: [hello.eventcure@gmail.com](mailto:hello.eventcure@gmail.com)
 
 > Built with ❤️ from Gandhidham, Gujarat, India.
+
+---
+
+## 🙏 Acknowledgements
+
+- The isometric **guest-journey illustration** on the landing page is adapted from [**anatomy**](https://github.com/wheresryan22/anatomy) by Ryan, used under the MIT License — the original licence text is kept in [`frontend/src/components/journey/LICENSE-anatomy.txt`](frontend/src/components/journey/LICENSE-anatomy.txt).
+- Icons: [Material Symbols](https://fonts.google.com/icons). Fonts: Manrope, DM Sans, Syne, Inter and IBM Plex Mono (Google Fonts).
 
 ---
 
