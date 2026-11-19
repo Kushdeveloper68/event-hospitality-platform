@@ -194,7 +194,7 @@ export default function TermsAndConditions() {
             </nav>
             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <p className="text-[11px] text-slate-400 px-1">
-                Last updated: January 15, 2026
+                Last updated: November 2026
               </p>
             </div>
           </div>
@@ -233,7 +233,7 @@ export default function TermsAndConditions() {
                     >
                       calendar_today
                     </span>
-                    Effective: January 15, 2026
+                    Effective: November 2026
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-full">
                     <span
@@ -242,7 +242,7 @@ export default function TermsAndConditions() {
                     >
                       update
                     </span>
-                    Version 2.1
+                    Version 2.2
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-3 py-1.5 rounded-full">
                     <span
@@ -251,7 +251,7 @@ export default function TermsAndConditions() {
                     >
                       verified
                     </span>
-                    Legally Reviewed
+                    Currently in beta
                   </span>
                 </div>
               </div>
@@ -268,8 +268,7 @@ export default function TermsAndConditions() {
               <p>
                 Welcome to EventCure ("Company", "we", "our", or "us"). These
                 Terms and Conditions ("Terms") govern your access to and use of
-                the EventCure hospitality management platform, including our
-                website, mobile applications, APIs, and all related services
+                the EventCure hospitality management platform, including our website, web application (and its installable app version), APIs, and all related services
                 (collectively, the "Service").
               </p>
               <p>
@@ -302,7 +301,7 @@ export default function TermsAndConditions() {
                 {[
                   [
                     "Platform / Service",
-                    "The EventCure web application, mobile applications, APIs, and all associated features including guest management, room assignment, check-in operations, transport coordination, service requests, scheduling, and analytics.",
+                    "The EventCure web application (including its installable app version), APIs, and all associated features including guest management, room assignment, check-in operations, transport coordination, service requests, scheduling, and analytics.",
                   ],
                   [
                     "User / You",
@@ -322,7 +321,7 @@ export default function TermsAndConditions() {
                   ],
                   [
                     "Subscription",
-                    "A paid plan granting access to the Service for a defined period and feature set.",
+                    "A paid plan, if and when we offer one, granting access to the Service for a defined period and feature set.",
                   ],
                   [
                     "Organization",
@@ -413,8 +412,7 @@ export default function TermsAndConditions() {
               title="License & Permitted Use"
             >
               <p>
-                Subject to your compliance with these Terms and payment of
-                applicable fees, EventCure grants you a limited, non-exclusive,
+                Subject to your compliance with these Terms (and payment of applicable fees, once paid plans are offered), EventCure grants you a limited, non-exclusive,
                 non-transferable, revocable license to access and use the
                 Service for your internal business purposes.
               </p>
@@ -434,11 +432,7 @@ export default function TermsAndConditions() {
                   Using analytics and reporting features to improve event
                   operations
                 </li>
-                <li>
-                  Integrating the Service via our API within your authorized
-                  usage limits
-                </li>
-                <li>Exporting your own data in supported formats (CSV, PDF)</li>
+                <li>Exporting your own data in supported formats (CSV and Excel)</li>
                 <li>Training your staff members on the use of the Platform</li>
               </ul>
               <p>
@@ -560,10 +554,7 @@ export default function TermsAndConditions() {
                 <strong className="text-slate-800 dark:text-slate-200">
                   Data Security:
                 </strong>{" "}
-                We implement industry-standard security measures including TLS
-                1.3 encryption in transit, AES-256 encryption at rest, JWT-based
-                authentication with per-event ownership isolation, and regular
-                security audits. However, no method of transmission over the
+                We use reasonable security measures including HTTPS encryption in transit, encryption at rest provided by our cloud database provider, JWT-based authentication, and per-event ownership checks. However, no method of transmission over the
                 Internet is 100% secure.
               </p>
               <p>
@@ -584,9 +575,15 @@ export default function TermsAndConditions() {
             {/* 7. Payment */}
             <Section id="payment" icon="credit_card" title="Payment & Billing">
               <p>
-                Certain features of the Service require payment of fees. By
-                selecting a paid plan, you agree to pay the applicable fees as
-                described on our pricing page.
+                EventCure is currently offered in beta, free of charge. If we introduce paid plans, we will tell you before you are charged anything, and the terms in this section will apply to those paid plans. By selecting a paid plan, you agree to pay the applicable fees as described when you select it.
+              </p>
+              <p>
+                <strong className="text-slate-800 dark:text-slate-200">
+                  Beta service:
+                </strong>{" "}
+                While the Service is in beta, features may change or be removed,
+                and availability is not guaranteed. We recommend exporting
+                important event data (CSV or Excel) from time to time.
               </p>
               <p>
                 <strong className="text-slate-800 dark:text-slate-200">
@@ -738,8 +735,7 @@ export default function TermsAndConditions() {
                   Effect of Termination:
                 </strong>{" "}
                 Upon termination, all licenses granted herein will immediately
-                terminate. You may export your data for 30 days after
-                termination, after which all data will be permanently deleted.
+                terminate. You can export your data yourself at any time before your account is closed. After termination, we will delete your account data within 30 days of your request.
                 Sections on Intellectual Property, Limitation of Liability, and
                 Governing Law survive termination.
               </p>
@@ -801,7 +797,7 @@ export default function TermsAndConditions() {
               </p>
               <p>
                 We encourage you to review these Terms periodically. The most
-                current version will always be available at eventcure.io/terms.
+                current version will always be available at eventcure.in/terms.
               </p>
             </Section>
 

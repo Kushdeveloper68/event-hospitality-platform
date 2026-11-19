@@ -285,7 +285,7 @@ export default function PrivacyPolicy() {
             </nav>
             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
               <p className="text-[11px] text-slate-400 px-1">
-                Last updated: January 15, 2026
+                Last updated: November 2026
               </p>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function PrivacyPolicy() {
                     >
                       calendar_today
                     </span>
-                    Effective: January 15, 2026
+                    Effective: November 2026
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-full">
                     <span
@@ -334,7 +334,7 @@ export default function PrivacyPolicy() {
                     >
                       update
                     </span>
-                    Version 2.0
+                    Version 2.1
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-full">
                     <span
@@ -343,7 +343,7 @@ export default function PrivacyPolicy() {
                     >
                       verified
                     </span>
-                    GDPR Compliant
+                    GDPR-aligned
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 px-3 py-1.5 rounded-full">
                     <span
@@ -366,8 +366,7 @@ export default function PrivacyPolicy() {
                 This Privacy Policy applies to EventCure ("Company", "we",
                 "our", or "us") and describes how we collect, use, disclose, and
                 safeguard information when you use the EventCure hospitality
-                management platform, including our website, web application,
-                mobile applications, and APIs (collectively, the "Service").
+                management platform, including our website, web application (and its installable app version), and APIs (collectively, the "Service").
               </p>
               <p>
                 EventCure operates as both a{" "}
@@ -410,7 +409,7 @@ export default function PrivacyPolicy() {
                 <RightCard
                   icon="lock"
                   title="Encrypted at rest & transit"
-                  desc="AES-256 at rest, TLS 1.3 in transit — always on, no exceptions"
+                  desc="Encrypted in transit (HTTPS) and at rest by our cloud providers"
                   color="green"
                 />
                 <RightCard
@@ -441,19 +440,14 @@ export default function PrivacyPolicy() {
                 you provide directly:
               </p>
               <ul className="list-disc list-inside space-y-1 ml-2 text-sm">
-                <li>Full name and job title</li>
+                <li>Full name</li>
                 <li>Email address (used as your login identifier)</li>
                 <li>
                   Password (stored as a bcrypt hash — we never store plain-text
                   passwords)
                 </li>
-                <li>Organization name, industry, and website</li>
-                <li>Primary contact name and email for your organization</li>
-                <li>
-                  Billing address and payment method (processed by our payment
-                  provider — we do not store card numbers)
-                </li>
-                <li>Profile photo (optional)</li>
+                <li>Organization name, plus any organization details you choose to add in Settings (job title, industry, website, address, primary contact)</li>
+                <li>If you sign in with Google: your Google name, email and the link to your Google profile photo</li>
               </ul>
 
               <p className="font-bold text-slate-800 dark:text-slate-200 mt-4">
@@ -496,38 +490,23 @@ export default function PrivacyPolicy() {
                 rows={[
                   {
                     "Data Type": "IP address",
-                    Purpose: "Security, fraud detection",
-                    Retention: "90 days",
+                    Purpose: "Security, rate limiting, abuse prevention",
+                    Retention: "Server logs, kept per our hosting provider's log retention",
                   },
                   {
-                    "Data Type": "Browser type & version",
+                    "Data Type": "Browser type & device",
                     Purpose: "Compatibility, support",
-                    Retention: "90 days",
+                    Retention: "Server logs, kept per our hosting provider's log retention",
                   },
                   {
-                    "Data Type": "Device type & OS",
-                    Purpose: "Responsive UI optimization",
-                    Retention: "90 days",
+                    "Data Type": "Error logs & API request logs",
+                    Purpose: "Bug fixing, reliability, rate limiting",
+                    Retention: "Server logs, kept per our hosting provider's log retention",
                   },
                   {
-                    "Data Type": "Pages visited & click paths",
-                    Purpose: "Performance analytics",
-                    Retention: "12 months",
-                  },
-                  {
-                    "Data Type": "Session duration & timestamps",
-                    Purpose: "Security audit logs",
-                    Retention: "12 months",
-                  },
-                  {
-                    "Data Type": "Error logs & crash reports",
-                    Purpose: "Bug fixing & reliability",
-                    Retention: "6 months",
-                  },
-                  {
-                    "Data Type": "API request logs",
-                    Purpose: "Rate limiting, security",
-                    Retention: "30 days",
+                    "Data Type": "Activity log entries",
+                    Purpose: "In-app record of actions taken inside your events (check-ins, room assignments, imports…)",
+                    Retention: "Until the event is deleted",
                   },
                   {
                     "Data Type": "Signup source (link tag or referring site)",
@@ -564,25 +543,25 @@ export default function PrivacyPolicy() {
                 {[
                   {
                     title: "Providing and maintaining the Service",
-                    desc: "Processing your logins, serving your dashboard, executing API requests, storing your event data, and delivering all platform features you have subscribed to.",
+                    desc: "Processing your logins, serving your dashboard, executing API requests, storing your event data, and delivering the platform features you use.",
                     basis: "Contract performance",
                     icon: "check_circle",
                   },
                   {
                     title: "Account management",
-                    desc: "Managing your subscription, processing payments, sending transactional emails (account verification OTP, password reset, billing receipts), and maintaining your profile.",
+                    desc: "Sending transactional emails (account verification OTP, password reset, welcome email) and maintaining your profile.",
                     basis: "Contract performance",
                     icon: "manage_accounts",
                   },
                   {
                     title: "Security and fraud prevention",
-                    desc: "Monitoring for suspicious activity, enforcing rate limits, investigating security incidents, and protecting the integrity of the platform and other users.",
+                    desc: "Enforcing rate limits, reviewing activity logs, investigating security incidents, and protecting the integrity of the platform and other users.",
                     basis: "Legitimate interests",
                     icon: "security",
                   },
                   {
                     title: "Product improvement",
-                    desc: "Analyzing aggregated, anonymized usage patterns to understand which features are most valuable, identify UX friction, and prioritize development. Individual user behavior is never shared.",
+                    desc: "Looking at aggregate counts in our own database (for example, which signup channels lead to created events) to understand what is useful and prioritize development. Individual user behavior is never shared.",
                     basis: "Legitimate interests",
                     icon: "trending_up",
                   },
@@ -656,10 +635,7 @@ export default function PrivacyPolicy() {
               </p>
               <p>
                 We engage trusted third-party vendors who process data on our
-                behalf under strict data processing agreements (DPAs). All
-                sub-processors are contractually required to process data only
-                as instructed and maintain security standards equivalent to
-                ours.
+                behalf under the data-processing terms these providers offer. They process data only to provide their service to us.
               </p>
 
               <DataTable
@@ -667,44 +643,32 @@ export default function PrivacyPolicy() {
                   {
                     Vendor: "MongoDB Atlas",
                     Purpose: "Primary database hosting",
-                    Location: "India / US (AWS)",
+                    Location: "Provider data centres",
                     Data: "All platform data",
                   },
                   {
-                    Vendor: "Razorpay / Stripe",
-                    Purpose: "Payment processing",
-                    Location: "India / US",
-                    Data: "Billing info only",
-                  },
-                  {
-                    Vendor: "SendGrid / Nodemailer",
-                    Purpose: "Transactional email",
-                    Location: "US",
-                    Data: "Email, name",
-                  },
-                  {
-                    Vendor: "Cloudinary",
-                    Purpose: "Media / image storage",
-                    Location: "US",
-                    Data: "Uploaded images",
+                    Vendor: "Render",
+                    Purpose: "Backend (API) hosting",
+                    Location: "Provider data centres",
+                    Data: "All API requests and the data they carry",
                   },
                   {
                     Vendor: "Vercel",
                     Purpose: "Frontend hosting (CDN)",
                     Location: "Global edge",
-                    Data: "None (static files)",
+                    Data: "Static files; request metadata (IP, browser)",
                   },
                   {
-                    Vendor: "Render / Railway",
-                    Purpose: "Backend hosting",
-                    Location: "US / India",
-                    Data: "All API data",
+                    Vendor: "Google",
+                    Purpose: "Sign in with Google; sends our verification and notification emails (Gmail API)",
+                    Location: "Global",
+                    Data: "Name, email, profile photo link; email recipient and message",
                   },
                   {
-                    Vendor: "Sentry (optional)",
-                    Purpose: "Error monitoring",
-                    Location: "US",
-                    Data: "Anonymized error logs",
+                    Vendor: "YouTube / Google Fonts",
+                    Purpose: "Embedded tutorial video (loads only when you press play) and web fonts",
+                    Location: "Global",
+                    Data: "IP address and browser details when loaded",
                   },
                 ]}
               />
@@ -848,27 +812,27 @@ export default function PrivacyPolicy() {
                   {
                     icon: "lan",
                     title: "Encryption in transit",
-                    desc: "All data transmitted between your browser and our servers uses TLS 1.3. HTTP connections are automatically redirected to HTTPS.",
+                    desc: "All data between your browser and our servers is sent over HTTPS (TLS). Our hosting providers redirect plain HTTP to HTTPS.",
                   },
                   {
                     icon: "storage",
                     title: "Encryption at rest",
-                    desc: "All data stored in our databases is encrypted using AES-256. Database backups are encrypted with the same standard.",
+                    desc: "Data stored in our database is encrypted at rest by our cloud database provider.",
                   },
                   {
                     icon: "key",
                     title: "JWT authentication",
-                    desc: "All API requests require a valid JSON Web Token. Tokens are short-lived and rotated on logout. Cookie-based sessions use HttpOnly + Secure flags.",
+                    desc: "All API requests require a valid JSON Web Token. Tokens expire after 7 days and are cleared when you log out. The session cookie is HttpOnly, and Secure in production.",
                   },
                   {
                     icon: "domain_verification",
                     title: "Per-event data isolation",
-                    desc: "Every query is scoped to the authenticated organization. It is technically impossible for one organization's users to access another's data.",
+                    desc: "Event data is protected by ownership checks: each request is verified against the signed-in organization that owns the event.",
                   },
                   {
                     icon: "password",
                     title: "Password hashing",
-                    desc: "Passwords are hashed using bcrypt with a cost factor of 12 before storage. Plain-text passwords are never stored or logged anywhere.",
+                    desc: "Passwords are hashed using bcrypt with a cost factor of 10 before storage. Plain-text passwords are never stored or logged anywhere.",
                   },
                   {
                     icon: "mail_lock",
@@ -878,12 +842,12 @@ export default function PrivacyPolicy() {
                   {
                     icon: "monitor_heart",
                     title: "Security monitoring",
-                    desc: "We monitor platform activity for anomalies, rate-limit API endpoints to prevent abuse, and maintain audit logs of all privileged actions.",
+                    desc: "We rate-limit API endpoints to prevent abuse and keep an activity log of actions taken inside your events.",
                   },
                   {
                     icon: "security_update_good",
                     title: "Dependency management",
-                    desc: "We regularly audit and update all third-party dependencies to patch known security vulnerabilities using automated dependency scanning.",
+                    desc: "We keep third-party dependencies up to date and patch known security vulnerabilities as they are identified.",
                   },
                 ].map((item) => (
                   <div
@@ -944,40 +908,27 @@ export default function PrivacyPolicy() {
                 rows={[
                   {
                     "Data Category": "Account profile & credentials",
-                    "Retention Period":
-                      "Duration of account + 90 days after deletion",
-                    Basis: "Contract / Legal",
+                    "Retention Period": "While your account exists; deleted on request (see below)",
+                    Basis: "Contract",
                   },
                   {
                     "Data Category": "Event & guest data",
-                    "Retention Period":
-                      "Until you delete the event; no auto-expiry",
+                    "Retention Period": "Until you delete the event; no auto-expiry",
                     Basis: "Contract (your control)",
                   },
                   {
-                    "Data Category": "Billing records & invoices",
-                    "Retention Period": "7 years from transaction date",
-                    Basis: "Legal obligation (tax law)",
-                  },
-                  {
                     "Data Category": "Support communications",
-                    "Retention Period": "3 years from last interaction",
+                    "Retention Period": "Kept while needed to resolve your request",
                     Basis: "Legitimate interest",
                   },
                   {
-                    "Data Category": "Security & audit logs",
-                    "Retention Period": "12 months rolling",
+                    "Data Category": "Server & security logs",
+                    "Retention Period": "Per our hosting providers' log retention",
                     Basis: "Legitimate interest",
                   },
                   {
-                    "Data Category": "Usage analytics (anonymized)",
-                    "Retention Period": "24 months rolling",
-                    Basis: "Legitimate interest",
-                  },
-                  {
-                    "Data Category": "Inactive account data",
-                    "Retention Period":
-                      "Account deleted after 12 months of inactivity (with 30-day notice)",
+                    "Data Category": "Signup source",
+                    "Retention Period": "Life of account",
                     Basis: "Legitimate interest",
                   },
                 ]}
@@ -987,11 +938,7 @@ export default function PrivacyPolicy() {
                 <strong className="text-slate-800 dark:text-slate-200">
                   Account deletion:
                 </strong>{" "}
-                When you delete your EventCure account, we begin a 30-day grace
-                period during which you can restore your account. After 30 days,
-                all account data, event data, guest records, and associated
-                files are permanently and irreversibly deleted from our systems
-                and backups within 90 days.
+                There is no self-serve account deletion yet. To close your account, email hello.eventcure@gmail.com from your registered address; we will delete your account, events, guest records and associated data from our systems within 30 days of verifying your request. (You can already delete individual events yourself — see below.)
               </p>
               <p>
                 <strong className="text-slate-800 dark:text-slate-200">
@@ -1032,7 +979,7 @@ export default function PrivacyPolicy() {
                   {
                     right: "Right to Erasure ('Right to be Forgotten')",
                     desc: "You have the right to request deletion of your personal data, subject to certain legal retention obligations.",
-                    how: "Delete individual events in Event Settings → Danger Zone. Delete your account in Organization Settings. Or email hello.eventcure@gmail.com.",
+                    how: "Delete individual events in Event Settings → Danger Zone. To delete your account, email hello.eventcure@gmail.com.",
                     icon: "delete_forever",
                     color: "amber",
                   },
@@ -1133,36 +1080,40 @@ export default function PrivacyPolicy() {
             {/* 9. Cookies */}
             <Section id="cookies" icon="cookie" title="Cookies & Tracking">
               <p>
-                EventCure uses cookies and similar tracking technologies to
-                maintain your session, remember your preferences, and understand
-                how the Service is used. Here is a complete breakdown:
+                EventCure uses one session cookie and a few items in your browser's local storage to keep you signed in and remember your preferences. We do not use analytics or advertising trackers. Here is the complete list:
               </p>
 
               <DataTable
                 rows={[
                   {
-                    "Cookie Name": "authToken",
+                    "Cookie Name": "authToken (cookie)",
                     Type: "Essential",
-                    Purpose: "JWT authentication token to keep you logged in",
-                    Duration: "Session / 30 days (if Remember Me)",
+                    Purpose: "HttpOnly JWT that keeps you signed in",
+                    Duration: "Up to 7 days, or until you log out",
                   },
                   {
-                    "Cookie Name": "app-theme",
+                    "Cookie Name": "authToken, user (local storage)",
+                    Type: "Essential",
+                    Purpose: "Keeps your signed-in session and basic profile available to the app",
+                    Duration: "Until you log out (the token itself expires after 7 days)",
+                  },
+                  {
+                    "Cookie Name": "app-theme (local storage)",
                     Type: "Preference",
                     Purpose: "Stores your light/dark mode preference",
-                    Duration: "1 year",
+                    Duration: "Until you clear it",
                   },
                   {
-                    "Cookie Name": "_session_id",
-                    Type: "Essential",
-                    Purpose: "Server-side session identifier",
-                    Duration: "Session",
+                    "Cookie Name": "ec_attribution (local storage)",
+                    Type: "Functional",
+                    Purpose: "Remembers which link brought you to EventCure, so we know which channel a signup came from",
+                    Duration: "30 days",
                   },
                   {
-                    "Cookie Name": "csrfToken",
-                    Type: "Essential",
-                    Purpose: "CSRF protection for state-changing requests",
-                    Duration: "Session",
+                    "Cookie Name": "pwa-install-dismissed-at (local storage)",
+                    Type: "Preference",
+                    Purpose: "Remembers that you dismissed the install-app prompt",
+                    Duration: "7 days",
                   },
                 ]}
               />
@@ -1177,20 +1128,30 @@ export default function PrivacyPolicy() {
                   etc.)
                 </li>
                 <li>
-                  No third-party analytics that profile individual users (Google
-                  Analytics, Mixpanel, etc.) — we use only server-side,
-                  privacy-preserving analytics
+                  No third-party analytics or advertising services that profile individual users. If we add privacy-friendly analytics in future, we will update this policy first
                 </li>
                 <li>No cross-site tracking or fingerprinting technologies</li>
               </ul>
+
+              <p className="font-bold text-slate-800 dark:text-slate-200 mt-4">
+                Third-party content
+              </p>
+              <p>
+                The tutorial video on our landing page (YouTube) and our web
+                fonts (Google Fonts) are loaded from Google's servers, which
+                receive your IP address and browser details when they load. The
+                video only loads when you press play, and YouTube may set its
+                own cookies at that point. The installable app also stores the
+                app's own files (not your event data) in your browser's cache
+                so it loads faster.
+              </p>
 
               <p className="font-bold text-slate-800 dark:text-slate-200 mt-4">
                 Managing Cookies
               </p>
               <p>
                 Essential cookies cannot be disabled as they are required for
-                the Service to function. You can clear preference cookies by
-                resetting your browser's cookies for eventcure.io. Disabling
+                the Service to function. You can clear preferences by clearing your browser's cookies and site data for eventcure.in. Disabling
                 essential cookies will log you out of the Service.
               </p>
             </Section>
@@ -1202,8 +1163,7 @@ export default function PrivacyPolicy() {
               title="International Data Transfers"
             >
               <p>
-                EventCure is based in India and our primary infrastructure
-                operates in India and the United States. If you access the
+                EventCure is based in India. Our infrastructure providers (MongoDB Atlas, Render, Vercel and Google) may process data in the United States and other regions. If you access the
                 Service from the European Economic Area (EEA), United Kingdom,
                 or other regions with specific data transfer requirements, your
                 information may be transferred to and processed in countries
@@ -1219,8 +1179,7 @@ export default function PrivacyPolicy() {
                   <strong className="text-slate-800 dark:text-slate-200">
                     Standard Contractual Clauses (SCCs):
                   </strong>{" "}
-                  We execute the EU Commission-approved SCCs with all
-                  sub-processors receiving EEA personal data.
+                  Our infrastructure providers offer the EU Commission-approved SCCs as part of their standard data-processing terms, which apply to our use of their services.
                 </li>
                 <li>
                   <strong className="text-slate-800 dark:text-slate-200">
@@ -1233,8 +1192,7 @@ export default function PrivacyPolicy() {
                   <strong className="text-slate-800 dark:text-slate-200">
                     Supplementary measures:
                   </strong>{" "}
-                  We apply end-to-end encryption and pseudonymization to data
-                  before transfer where technically feasible.
+                  Data is encrypted in transit (HTTPS) and at rest by our providers.
                 </li>
               </ul>
               <p>
@@ -1290,15 +1248,6 @@ export default function PrivacyPolicy() {
                 you sign in with Google. We do not access your Google contacts, Drive,
                 Calendar, or other Google services. Google's privacy policy
                 governs Google's handling of your authentication data.
-              </p>
-              <p>
-                <strong className="text-slate-800 dark:text-slate-200">
-                  Payment processors:
-                </strong>{" "}
-                Payment information is processed directly by our payment
-                providers (Razorpay in India, Stripe elsewhere). We do not
-                receive or store your full credit card number. Only tokenized
-                payment references are stored in our system.
               </p>
               <p>
                 <strong className="text-slate-800 dark:text-slate-200">

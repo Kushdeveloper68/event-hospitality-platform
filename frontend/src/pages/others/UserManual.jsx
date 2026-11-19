@@ -444,7 +444,7 @@ export default function UserManual() {
                   <FeatureRow
                     icon="how_to_reg"
                     title="Check-in desk"
-                    desc="Process arrivals with one click. QR-ready and mobile-optimized."
+                    desc="Process arrivals with one click, from any phone or tablet."
                   />
                   <FeatureRow
                     icon="local_shipping"
@@ -502,9 +502,7 @@ export default function UserManual() {
                 </ul>
 
                 <Note type="info">
-                  This manual covers the full EventCure web platform. For API
-                  integration documentation, visit the developer reference at{" "}
-                  <strong>docs.eventcure.io</strong>.
+                  This manual covers the full EventCure web platform. EventCure can also be installed like an app on your phone or computer — see the FAQ at the end.
                 </Note>
               </div>
             </section>
@@ -526,9 +524,9 @@ export default function UserManual() {
                 <Step number="1" title="Navigate to the sign-up page">
                   Go to{" "}
                   <strong className="text-slate-700 dark:text-slate-300">
-                    eventcure.io/signup
+                    eventcure.in/signup
                   </strong>{" "}
-                  or click <em>Get Started Free</em> on the landing page. You
+                  or click <em>Request access</em> on the landing page. You
                   can also sign up using your Google account for faster access.
                 </Step>
                 <Step number="2" title="Fill in your details">
@@ -562,8 +560,7 @@ export default function UserManual() {
                   linked with Google OAuth.
                 </p>
                 <Note type="tip">
-                  Use the <strong>Remember me for 30 days</strong> checkbox on
-                  trusted devices so you don't need to log in every session.
+                  You stay signed in on a device for up to 7 days, or until you log out. On a shared computer, always log out when you're done.
                 </Note>
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
@@ -1154,7 +1151,20 @@ export default function UserManual() {
                   On a room card where occupancy is below capacity, click{" "}
                   <em>Assign Guest</em>. A modal lists all guests who haven't
                   been assigned a room yet. Click any guest's name to assign
-                  them. The occupancy bar updates instantly.
+                  them. The occupancy bar updates instantly. A room that is already at capacity can't take more guests — if a teammate fills the last bed first, you'll see a message and can simply pick another room.
+                </p>
+
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
+                  Removing or moving a guest
+                </h3>
+                <p>
+                  On any room that has guests, click <em>Manage guests</em> (the
+                  people icon on the room card). You'll see everyone in that
+                  room. Click <em>Remove</em> to take a guest out of the room
+                  and free the bed, or <em>Move</em>, choose another room that
+                  still has space, and confirm to move them in one step. A guest
+                  who has already checked in can be moved or removed too — their
+                  check-in status doesn't change.
                 </p>
 
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-6 mb-3">
@@ -2320,7 +2330,7 @@ export default function UserManual() {
                   },
                   {
                     q: "Can I import guests from a CSV file?",
-                    a: "Bulk CSV import is on the product roadmap. Currently, guests must be added individually through the Add Guest form or via the API (available on Operations and Enterprise plans). For large imports, contact support for assisted onboarding.",
+                    a: "Yes. On the Guests, Rooms and Team tabs, click Import CSV next to the Add button. Download the sample template, fill it in, upload it, and review the preview before importing. If some rows have problems, the rest still import and you see exactly which rows failed and why. The CSV Import Guide at eventcure.in/import-guide lists the exact columns (guests need a full name and an arrival date and time). Imports are limited to 1000 rows at a time.",
                   },
                   {
                     q: "Why is my event showing as 'Completed' even though it's still running?",
@@ -2351,12 +2361,16 @@ export default function UserManual() {
                     a: "Archiving hides the event from active operations views (Dashboard, Events Directory filters) but preserves all data — guests, rooms, service tickets, transport, schedule, and analytics. You can unarchive at any time from Event Settings → Danger Zone.",
                   },
                   {
+                    q: "Can I remove a guest from a room or move them to another room?",
+                    a: "Yes. On the Rooms tab, click Manage guests on a room that has guests. Use Remove to free the bed, or Move to send the guest to another room that still has space.",
+                  },
+                  {
                     q: "Is there a mobile app?",
-                    a: "EventCure is a fully responsive web application optimized for mobile browsers. The bottom tab bar navigation on mobile gives full access to all platform features. A native iOS/Android app is under consideration for a future release.",
+                    a: "EventCure is a fully responsive web app and can be installed like an app. On Android or desktop Chrome/Edge, tap the Install banner (or the browser menu → Install app). On iPhone or iPad, open it in Safari and choose Share → Add to Home Screen. There is no separate app-store app at the moment.",
                   },
                   {
                     q: "How do I contact support?",
-                    a: "Email hello.eventcure@gmail.com for general queries. For urgent operational issues during a live event, use the subject line URGENT. Our team aims to respond within 2 business hours for Operations and Enterprise customers.",
+                    a: "Email hello.eventcure@gmail.com for general queries. For urgent operational issues during a live event, use the subject line URGENT. We usually reply within 2 business days.",
                   },
                 ].map(({ q, a }) => (
                   <div
@@ -2401,10 +2415,7 @@ export default function UserManual() {
                     </p>
                     <p className="text-sm text-primary-700 dark:text-primary-400 leading-relaxed">
                       Our support team is available at{" "}
-                      <strong>hello.eventcure@gmail.com</strong>. For legal queries,
-                      contact <strong>hello.eventcure@gmail.com</strong>. For API and
-                      developer support, visit{" "}
-                      <strong>docs.eventcure.io</strong>.
+                      <strong>hello.eventcure@gmail.com</strong>. For legal or privacy queries, use the same address.
                     </p>
                   </div>
                 </div>
